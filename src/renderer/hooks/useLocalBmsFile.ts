@@ -39,7 +39,10 @@ export function useLocalBmsFile() {
       // Read file from disk via IPC
       const buffer = await window.api.file.readBms(filePath);
       const parser = new BMSParser();
-      const chart = parser.readBuffer(buffer);
+      // readBuffer is async: reads buffer → detects encoding → returns string
+      const bmsString = await parser.readBuffer(buffer);
+      // compileString parses the BMS text into a BMSChart structure
+      const chart = parser.compileString(bmsString);
       const songInfo = parser.getSongInfo();
       const notesObj = parser.getNotes();
 

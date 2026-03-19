@@ -16,7 +16,8 @@ import type {
   KeyMode,
 } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
-import { BMSWriter } from '@rhythm-archive/bms-core';
+import { BMSWriter, BMSParser } from '@rhythm-archive/bms-core';
+import type { EditableBMSChart } from '@rhythm-archive/bms-core';
 import type { CurrentFile } from '../App';
 import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
 
@@ -42,6 +43,7 @@ export function Editor({ file, onBack }: EditorProps) {
   const [currentKeysound, setCurrentKeysound] = useState('01');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [viewMode, setViewMode] = useState<'editor' | 'viewer'>('viewer');
+  const [originalEditableChart, setOriginalEditableChart] = useState<EditableBMSChart | null>(null);
 
   // Undo/Redo
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([]);
@@ -52,23 +54,40 @@ export function Editor({ file, onBack }: EditorProps) {
     load(file.path);
   }, [file.path, load]);
 
-  // Initialize notes from chart
+  // Initialize notes from chart + build editable chart for save
   useEffect(() => {
-    if (chart) {
-      const editableNotes: EditableBMSNote[] = chart.notes.map((n, i) => ({
-        id: `note-${i}`,
-        beat: n.beat,
-        column: n.column || '',
-        noteType: (n.noteType as EditableBMSNote['noteType']) || 'playable',
-        keysound: n.keysound || '00',
-        endBeat: n.endBeat,
-        measure: Math.floor(n.beat / 4),
-        channel: n.channel || '',
-      }));
-      setNotes(editableNotes);
-      nextNoteId.current = editableNotes.length + 1;
-    }
-  }, [chart]);
+    if (!chart) return;
+
+    const editableNotes: EditableBMSNote[] = chart.notes.map((n, i) => ({
+      id: `note-${i}`,
+      beat: n.beat,
+      column: n.column || '',
+      noteType: (n.noteType as EditableBMSNote['noteType']) || 'playable',
+      keysound: n.keysound || '00',
+      endBeat: n.endBeat,
+      measure: Math.floor(n.beat / 4),
+      channel: n.channel || '',
+    }));
+    setNotes(editableNotes);
+    nextNoteId.current = editableNotes.length + 1;
+
+    // Build EditableBMSChart from the parsed file (for save)
+    const loadEditableChart = async () => {
+      try {
+        const buffer = await window.api.file.readBms(file.path);
+        const parser = new BMSParser();
+        const bmsString = await parser.readBuffer(buffer);
+        parser.compileString(bmsString);
+        if (parser.chart) {
+          const ec = BMSWriter.fromBMSChart(parser.chart);
+          setOriginalEditableChart(ec);
+        }
+      } catch (err) {
+        console.warn('[Editor] Could not build editable chart for save:', err);
+      }
+    };
+    loadEditableChart();
+  }, [chart, file.path]);
 
   // WAV definitions map
   const wavDefinitions = useMemo(() => {
@@ -154,21 +173,22 @@ export function Editor({ file, onBack }: EditorProps) {
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!chart) return;
+    if (!chart || !originalEditableChart) return;
     try {
-      // Use BMSWriter to serialize
       const writer = new BMSWriter();
-      const bmsContent = writer.write({
-        notes,
-        headers: {}, // TODO: preserve original headers
-      });
+      // Merge current notes into the original editable chart structure
+      const chartToSave: EditableBMSChart = {
+        ...originalEditableChart,
+        notes, // Use current edited notes
+      };
+      const bmsContent = writer.write(chartToSave);
       await window.api.file.saveBms(file.path, bmsContent);
       setHasUnsavedChanges(false);
       console.log('[Editor] Saved successfully');
     } catch (err) {
       console.error('[Editor] Save failed:', err);
     }
-  }, [chart, notes, file.path]);
+  }, [chart, notes, file.path, originalEditableChart]);
 
   // Keyboard shortcuts
   useEffect(() => {

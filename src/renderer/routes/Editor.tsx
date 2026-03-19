@@ -1,11 +1,14 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { ArrowLeft, Save, RefreshCw, Undo2, Redo2 } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Undo2, Redo2, Music } from 'lucide-react';
 import {
-  NoteChartViewer,
   NoteChartEditor,
+  EditorToolbar,
   GRID_SNAP_OPTIONS,
   NoteInfoPanel,
-  generateLaneConfig,
+  KeysoundPanel,
+  HeaderEditorPanel,
+  Minimap,
+  StatusBar,
 } from '@rhythm-archive/bms-editor';
 import type {
   EditorTool,
@@ -38,44 +41,14 @@ export function Editor({ file, onBack }: EditorProps) {
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
   const [selectedNoteType, setSelectedNoteType] = useState<SelectedNoteType>('playable');
   const [currentKeysound, setCurrentKeysound] = useState('01');
+  const [currentBeat, setCurrentBeat] = useState(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [viewMode, setViewMode] = useState<'editor' | 'viewer'>('viewer');
   const [originalEditableChart, setOriginalEditableChart] = useState<EditableBMSChart | null>(null);
 
   // Undo/Redo
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([]);
   const [redoStack, setRedoStack] = useState<UndoEntry[]>([]);
   const nextNoteId = useRef(1);
-
-  // Dynamic chart area sizing
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [chartHeight, setChartHeight] = useState(600);
-  const [chartContainerWidth, setChartContainerWidth] = useState(800);
-
-  useEffect(() => {
-    const el = chartContainerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setChartHeight(Math.max(300, Math.floor(height) - 160));
-      setChartContainerWidth(Math.floor(width));
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // Auto-scale lane width to fill available space
-  // Base lane width for 7K+SC is ~221px, we want to fill the container
-  const laneWidthScale = useMemo(() => {
-    if (!chart) return 1.0;
-    const lanes = generateLaneConfig(chart.keyMode);
-    const baseLaneWidth = lanes.reduce((sum: number, l: { width: number }) => sum + l.width, 0);
-    if (baseLaneWidth <= 0) return 1.0;
-    // Target: use ~70% of container width for lanes (leave margin for text labels + minimap)
-    const targetWidth = chartContainerWidth * 0.65;
-    const scale = Math.max(1.0, targetWidth / baseLaneWidth);
-    return Math.min(scale, 5.0); // Cap at 5x
-  }, [chart, chartContainerWidth]);
 
   useEffect(() => {
     load(file.path);
@@ -98,7 +71,6 @@ export function Editor({ file, onBack }: EditorProps) {
     setNotes(editableNotes);
     nextNoteId.current = editableNotes.length + 1;
 
-    // Build EditableBMSChart from the parsed file (for save)
     const loadEditableChart = async () => {
       try {
         const buffer = await window.api.file.readBms(file.path);
@@ -106,8 +78,7 @@ export function Editor({ file, onBack }: EditorProps) {
         const bmsString = await parser.readBuffer(buffer);
         parser.compileString(bmsString);
         if (parser.chart) {
-          const ec = BMSWriter.fromBMSChart(parser.chart);
-          setOriginalEditableChart(ec);
+          setOriginalEditableChart(BMSWriter.fromBMSChart(parser.chart));
         }
       } catch (err) {
         console.warn('[Editor] Could not build editable chart for save:', err);
@@ -116,12 +87,38 @@ export function Editor({ file, onBack }: EditorProps) {
     loadEditableChart();
   }, [chart, file.path]);
 
-  // WAV definitions map
+  // WAV definitions
   const wavDefinitions = useMemo(() => {
     if (!chart) return new Map<string, string>();
     return new Map(Object.entries(chart.keysounds));
   }, [chart]);
 
+  const keysoundRecord = useMemo(() => chart?.keysounds || {}, [chart]);
+
+  // BPM changes in the format NoteChartEditor expects
+  const bpmChanges = useMemo(() => {
+    if (!chart) return [];
+    return chart.bpmChanges.map((b) => ({
+      beat: b.beat,
+      bpm: b.bpm,
+      measure: Math.floor(b.beat / 4),
+      fraction: (b.beat % 4) / 4,
+    }));
+  }, [chart]);
+
+  const stopEvents = useMemo(() => {
+    if (!chart) return [];
+    return chart.stops.map((s) => ({
+      beat: s.beat,
+      duration: s.duration,
+      measure: Math.floor(s.beat / 4),
+      fraction: (s.beat % 4) / 4,
+    }));
+  }, [chart]);
+
+  const totalBeats = chart?.totalBeats || 100;
+
+  // Undo/Redo
   const pushUndo = useCallback((currentNotes: EditableBMSNote[], description: string) => {
     setUndoStack((prev) => [...prev.slice(-50), { notes: [...currentNotes], description }]);
     setRedoStack([]);
@@ -207,15 +204,10 @@ export function Editor({ file, onBack }: EditorProps) {
     if (!chart || !originalEditableChart) return;
     try {
       const writer = new BMSWriter();
-      // Merge current notes into the original editable chart structure
-      const chartToSave: EditableBMSChart = {
-        ...originalEditableChart,
-        notes, // Use current edited notes
-      };
+      const chartToSave: EditableBMSChart = { ...originalEditableChart, notes };
       const bmsContent = writer.write(chartToSave);
       await window.api.file.saveBms(file.path, bmsContent);
       setHasUnsavedChanges(false);
-      console.log('[Editor] Saved successfully');
     } catch (err) {
       console.error('[Editor] Save failed:', err);
     }
@@ -232,7 +224,6 @@ export function Editor({ file, onBack }: EditorProps) {
     return () => window.removeEventListener('keydown', handler);
   }, [handleUndo, handleRedo, handleSave]);
 
-  // Must be above early returns to maintain consistent hook call order
   const selectedNotesList = useMemo(
     () => notes.filter((n) => selectedNotes.has(n.id)),
     [notes, selectedNotes],
@@ -242,7 +233,7 @@ export function Editor({ file, onBack }: EditorProps) {
     return (
       <div className="h-full flex items-center justify-center bg-zinc-950">
         <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-3 text-zinc-400">Loading chart for editing...</span>
+        <span className="ml-3 text-zinc-400">Loading chart...</span>
       </div>
     );
   }
@@ -257,160 +248,163 @@ export function Editor({ file, onBack }: EditorProps) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-zinc-950">
-      {/* Toolbar */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
-        <button onClick={onBack} className="p-1.5 rounded hover:bg-zinc-800 transition-colors">
+    <div className="h-full flex flex-col bg-zinc-950 overflow-hidden">
+      {/* ===== HEADER BAR ===== */}
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-zinc-800 bg-zinc-900 shrink-0">
+        <button onClick={onBack} className="p-1 rounded hover:bg-zinc-800 transition-colors">
           <ArrowLeft className="h-4 w-4" />
         </button>
-
-        <span className="text-sm font-medium truncate max-w-48">
-          {chart?.songInfo?.title || file.name}
-        </span>
-
-        {hasUnsavedChanges && <span className="text-xs text-yellow-500">*</span>}
-
-        <div className="mx-2 h-4 border-l border-zinc-700" />
-
-        {/* View toggle */}
-        <button
-          onClick={() => setViewMode(viewMode === 'viewer' ? 'editor' : 'viewer')}
-          className={`px-2 py-1 text-xs rounded ${viewMode === 'editor' ? 'bg-blue-600' : 'bg-zinc-700 hover:bg-zinc-600'} transition-colors`}
-        >
-          {viewMode === 'editor' ? 'Edit Mode' : 'View Mode'}
-        </button>
-
-        {viewMode === 'editor' && (
-          <>
-            <div className="mx-2 h-4 border-l border-zinc-700" />
-            {/* Undo/Redo */}
-            <button
-              onClick={handleUndo}
-              disabled={undoStack.length === 0}
-              className="p-1 rounded hover:bg-zinc-800 disabled:opacity-30 transition-colors"
-              title="Undo (Ctrl+Z)"
-            >
-              <Undo2 className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handleRedo}
-              disabled={redoStack.length === 0}
-              className="p-1 rounded hover:bg-zinc-800 disabled:opacity-30 transition-colors"
-              title="Redo (Ctrl+Y)"
-            >
-              <Redo2 className="h-4 w-4" />
-            </button>
-
-            <div className="mx-2 h-4 border-l border-zinc-700" />
-
-            {/* Grid snap */}
-            <label className="text-xs text-zinc-500">Grid:</label>
-            <select
-              value={gridSnap}
-              onChange={(e) => setGridSnap(Number(e.target.value) as GridSnap)}
-              className="text-xs bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5"
-            >
-              {GRID_SNAP_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>1/{opt}</option>
-              ))}
-            </select>
-          </>
-        )}
-
+        <span className="text-sm font-medium truncate">{chart?.songInfo?.title || file.name}</span>
+        {hasUnsavedChanges && <span className="text-yellow-500 text-xs font-bold">● 수정 중</span>}
         <div className="flex-1" />
-
         <button
           onClick={handleSave}
-          className="flex items-center gap-1.5 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+          disabled={!hasUnsavedChanges}
+          className="flex items-center gap-1.5 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-40 rounded transition-colors"
         >
           <Save className="h-3.5 w-3.5" />
-          Save
+          저장
         </button>
       </div>
 
-      {/* Main area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Chart area */}
-        <div ref={chartContainerRef} className="flex-1 overflow-hidden">
-          {chart && viewMode === 'viewer' && (
-            <NoteChartViewer
-              notes={chart.notes}
-              keyMode={chart.keyMode}
-              totalBeats={chart.totalBeats}
-              height={chartHeight}
-              laneWidthScale={laneWidthScale}
-              bpm={chart.bpm.initial}
-              bpmChanges={chart.bpmChanges}
-              stops={chart.stops}
-              scrollChanges={chart.scrollChanges}
-              keysounds={chart.keysounds}
-              positioning={chart.positioning}
-              timing={chart.timing}
-            />
-          )}
+      {/* ===== EDITOR TOOLBAR ===== */}
+      <EditorToolbar
+        activeTool={activeTool}
+        onToolChange={setActiveTool}
+        gridSnap={gridSnap}
+        onGridSnapChange={setGridSnap}
+        selectedNoteType={selectedNoteType}
+        onNoteTypeChange={setSelectedNoteType}
+        keyMode={chart?.keyMode || '7K'}
+        canUndo={undoStack.length > 0}
+        canRedo={redoStack.length > 0}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+      />
 
-          {chart && viewMode === 'editor' && (
-            <NoteChartEditor
-              notes={notes}
-              keyMode={chart.keyMode}
-              totalBeats={chart.totalBeats}
-              height={chartHeight}
-              activeTool={activeTool}
-              gridSnap={gridSnap}
-              selectedNotes={selectedNotes}
-              selectedNoteType={selectedNoteType}
-              currentKeysound={currentKeysound}
-              onNoteAdd={handleNoteAdd}
-              onNoteDelete={handleNoteDelete}
-              onNoteMove={handleNoteMove}
-              onNoteSelect={handleNoteSelect}
-              bpmChanges={chart.bpmChanges.map((b) => ({
-                beat: b.beat,
-                bpm: b.bpm,
-                measure: Math.floor(b.beat / 4),
-                fraction: (b.beat % 4) / 4,
-              }))}
-              baseBpm={chart.bpm.initial}
-              hasUnsavedChanges={hasUnsavedChanges}
-            />
-          )}
+      {/* ===== MAIN 3-COLUMN LAYOUT ===== */}
+      <div className="flex flex-1 min-h-0">
+
+        {/* --- LEFT: Keysound Panel --- */}
+        <div className="w-44 border-r border-zinc-800 flex flex-col bg-zinc-900 shrink-0">
+          <KeysoundPanel
+            keysounds={keysoundRecord}
+            currentKeysound={currentKeysound}
+            onSelect={setCurrentKeysound}
+          />
         </div>
 
-        {/* Right sidebar (editor mode) */}
-        {viewMode === 'editor' && (
-          <div className="w-56 border-l border-zinc-800 overflow-y-auto bg-zinc-900">
-            <NoteInfoPanel
-              selectedNotes={selectedNotesList}
-              wavDefinitions={wavDefinitions}
-              bpmChanges={chart?.bpmChanges.map((b) => ({
-                beat: b.beat,
-                bpm: b.bpm,
-                measure: Math.floor(b.beat / 4),
-                fraction: (b.beat % 4) / 4,
-              })) || []}
-              stopEvents={chart?.stops.map((s) => ({
-                beat: s.beat,
-                duration: s.duration,
-                measure: Math.floor(s.beat / 4),
-                fraction: (s.beat % 4) / 4,
-              })) || []}
-              initialBpm={chart?.bpm.initial || 130}
-              gridSnap={gridSnap}
-            />
+        {/* --- CENTER: Note Chart Editor --- */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 min-h-0">
+            {chart && (
+              <NoteChartEditor
+                notes={notes}
+                keyMode={chart.keyMode}
+                totalBeats={totalBeats}
+                height="100%"
+                activeTool={activeTool}
+                gridSnap={gridSnap}
+                selectedNotes={selectedNotes}
+                selectedNoteType={selectedNoteType}
+                currentKeysound={currentKeysound}
+                onNoteAdd={handleNoteAdd}
+                onNoteDelete={handleNoteDelete}
+                onNoteMove={handleNoteMove}
+                onNoteSelect={handleNoteSelect}
+                bpmChanges={bpmChanges}
+                baseBpm={chart.bpm.initial}
+                hasUnsavedChanges={hasUnsavedChanges}
+                scrollToBeat={currentBeat}
+                onScrollChange={setCurrentBeat}
+              />
+            )}
           </div>
-        )}
+        </div>
+
+        {/* --- RIGHT: Chart Info + Note Info + Minimap --- */}
+        <div className="w-56 border-l border-zinc-800 flex flex-col bg-zinc-900 shrink-0 min-h-0 overflow-hidden">
+          {/* Note Info (when notes selected) */}
+          {selectedNotesList.length > 0 && (
+            <div className="border-b border-zinc-800 shrink-0">
+              <NoteInfoPanel
+                selectedNotes={selectedNotesList}
+                wavDefinitions={wavDefinitions}
+                bpmChanges={bpmChanges}
+                stopEvents={stopEvents}
+                initialBpm={chart?.bpm.initial || 130}
+                gridSnap={gridSnap}
+              />
+            </div>
+          )}
+
+          {/* Chart Header Info */}
+          <div className="flex-1 min-h-0 overflow-y-auto p-3 text-xs space-y-3">
+            <h3 className="font-semibold text-zinc-300">차트 정보</h3>
+            {chart && (
+              <>
+                <div>
+                  <label className="text-zinc-500">제목</label>
+                  <div className="mt-0.5 text-zinc-200">{chart.songInfo?.title || '-'}</div>
+                </div>
+                <div>
+                  <label className="text-zinc-500">아티스트</label>
+                  <div className="mt-0.5 text-zinc-200">{chart.songInfo?.artist || '-'}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-zinc-500">BPM</label>
+                    <div className="mt-0.5 text-zinc-200">{chart.bpm.initial}</div>
+                  </div>
+                  <div>
+                    <label className="text-zinc-500">키 모드</label>
+                    <div className="mt-0.5 text-zinc-200">{chart.keyMode}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-zinc-500">Total</label>
+                    <div className="mt-0.5 text-zinc-200">{chart.stats.total}</div>
+                  </div>
+                  <div>
+                    <label className="text-zinc-500">LN</label>
+                    <div className="mt-0.5 text-zinc-200">{chart.stats.longNotes}</div>
+                  </div>
+                </div>
+                {chart.songInfo?.genre && (
+                  <div>
+                    <label className="text-zinc-500">장르</label>
+                    <div className="mt-0.5 text-zinc-200">{chart.songInfo.genre}</div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Minimap */}
+          <div className="border-t border-zinc-800 h-48 shrink-0">
+            {chart && (
+              <Minimap
+                notes={chart.notes}
+                totalBeats={totalBeats}
+                currentBeat={currentBeat}
+                viewportBeats={16}
+                onNavigate={setCurrentBeat}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Status bar */}
-      {chart && (
-        <div className="h-6 px-3 bg-zinc-900 border-t border-zinc-800 flex items-center text-xs text-zinc-500 gap-4">
-          <span>{chart.keyMode}</span>
-          <span>BPM {chart.bpm.initial}</span>
-          <span>{notes.length} notes</span>
-          <span>{selectedNotes.size} selected</span>
-          <span className="ml-auto">Grid 1/{gridSnap}</span>
-        </div>
-      )}
+      {/* ===== STATUS BAR ===== */}
+      <StatusBar
+        currentBeat={currentBeat}
+        gridSnap={gridSnap}
+        selectedCount={selectedNotes.size}
+        totalNotes={notes.length}
+        bpm={chart?.bpm.initial || 130}
+        zoom={1}
+      />
     </div>
   );
 }

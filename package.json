@@ -1,0 +1,71 @@
+{
+  "name": "bms-electron-app",
+  "version": "0.1.0",
+  "description": "BMS Desktop - Rhythm game player and chart editor",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "cross-env ELECTRON_RUN_AS_NODE= electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "cross-env ELECTRON_RUN_AS_NODE= electron-vite preview",
+    "start": "cross-env ELECTRON_RUN_AS_NODE= electron .",
+    "package": "electron-builder --win",
+    "type-check": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+  },
+  "dependencies": {
+    "@epic-web/invariant": "^1.0.0",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^9.5.0",
+    "@rhythm-archive/bms-core": "file:../bms-core",
+    "@rhythm-archive/bms-editor": "file:../bms-editor",
+    "@rhythm-archive/bms-player": "file:../bms-player",
+    "electron-store": "^10.0.0",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.460.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "three": "^0.170.0",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/lodash": "^4.17.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.170.0",
+    "cross-env": "^10.1.0",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.0.0",
+    "electron-vite": "^3.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  },
+  "build": {
+    "appId": "net.dotoritos.bms-desktop",
+    "productName": "BMS Desktop",
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "fileAssociations": [
+      {
+        "ext": [
+          "bms",
+          "bme",
+          "bml",
+          "pms",
+          "bmson"
+        ],
+        "name": "BMS Chart File",
+        "description": "Be-Music Script Chart"
+      }
+    ]
+  }
+}

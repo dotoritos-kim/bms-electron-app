@@ -47,9 +47,15 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
     if (path) {
       setFolderPath(path);
       setScanning(true);
-      const bmsFiles = await window.api.file.listBmsFolder(path);
-      setFiles(bmsFiles);
-      setScanning(false);
+      try {
+        const bmsFiles = await window.api.file.listBmsFolder(path);
+        setFiles(bmsFiles);
+      } catch (err) {
+        console.error('[Home] Folder scan failed:', err);
+        setFiles([]);
+      } finally {
+        setScanning(false);
+      }
     }
   }, []);
 

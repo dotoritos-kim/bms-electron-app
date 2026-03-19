@@ -3,17 +3,13 @@ import { ArrowLeft, Save, RefreshCw, Undo2, Redo2 } from 'lucide-react';
 import {
   NoteChartViewer,
   NoteChartEditor,
-  EditorToolbar,
   GRID_SNAP_OPTIONS,
-  Minimap,
-  StatusBar,
   NoteInfoPanel,
 } from '@rhythm-archive/bms-editor';
 import type {
   EditorTool,
   SelectedNoteType,
   GridSnap,
-  KeyMode,
 } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
 import { BMSWriter, BMSParser } from '@rhythm-archive/bms-core';
@@ -95,10 +91,10 @@ export function Editor({ file, onBack }: EditorProps) {
     return new Map(Object.entries(chart.keysounds));
   }, [chart]);
 
-  const pushUndo = useCallback((description: string) => {
-    setUndoStack((prev) => [...prev.slice(-50), { notes: [...notes], description }]);
+  const pushUndo = useCallback((currentNotes: EditableBMSNote[], description: string) => {
+    setUndoStack((prev) => [...prev.slice(-50), { notes: [...currentNotes], description }]);
     setRedoStack([]);
-  }, [notes]);
+  }, []);
 
   const handleUndo = useCallback(() => {
     if (undoStack.length === 0) return;
@@ -120,9 +116,11 @@ export function Editor({ file, onBack }: EditorProps) {
 
   const handleNoteAdd = useCallback(
     (note: Omit<EditableBMSNote, 'id'>) => {
-      pushUndo('Add note');
-      const id = `note-${nextNoteId.current++}`;
-      setNotes((prev) => [...prev, { ...note, id } as EditableBMSNote]);
+      setNotes((prev) => {
+        pushUndo(prev, 'Add note');
+        const id = `note-${nextNoteId.current++}`;
+        return [...prev, { ...note, id } as EditableBMSNote];
+      });
       setHasUnsavedChanges(true);
     },
     [pushUndo],
@@ -130,9 +128,11 @@ export function Editor({ file, onBack }: EditorProps) {
 
   const handleNoteDelete = useCallback(
     (noteIds: string[]) => {
-      pushUndo('Delete notes');
-      const idsSet = new Set(noteIds);
-      setNotes((prev) => prev.filter((n) => !idsSet.has(n.id)));
+      setNotes((prev) => {
+        pushUndo(prev, 'Delete notes');
+        const idsSet = new Set(noteIds);
+        return prev.filter((n) => !idsSet.has(n.id));
+      });
       setSelectedNotes(new Set());
       setHasUnsavedChanges(true);
     },
@@ -141,18 +141,18 @@ export function Editor({ file, onBack }: EditorProps) {
 
   const handleNoteMove = useCallback(
     (noteIds: string[], delta: { beat?: number; columnDelta?: number }) => {
-      pushUndo('Move notes');
-      const idsSet = new Set(noteIds);
-      setNotes((prev) =>
-        prev.map((n) => {
+      setNotes((prev) => {
+        pushUndo(prev, 'Move notes');
+        const idsSet = new Set(noteIds);
+        return prev.map((n) => {
           if (!idsSet.has(n.id)) return n;
           return {
             ...n,
             beat: n.beat + (delta.beat || 0),
             endBeat: n.endBeat !== undefined ? n.endBeat + (delta.beat || 0) : undefined,
           };
-        }),
-      );
+        });
+      });
       setHasUnsavedChanges(true);
     },
     [pushUndo],
@@ -219,7 +219,10 @@ export function Editor({ file, onBack }: EditorProps) {
     );
   }
 
-  const selectedNotesList = notes.filter((n) => selectedNotes.has(n.id));
+  const selectedNotesList = useMemo(
+    () => notes.filter((n) => selectedNotes.has(n.id)),
+    [notes, selectedNotes],
+  );
 
   return (
     <div className="h-full flex flex-col bg-zinc-950">
@@ -302,7 +305,6 @@ export function Editor({ file, onBack }: EditorProps) {
               notes={chart.notes}
               keyMode={chart.keyMode}
               totalBeats={chart.totalBeats}
-              height={window.innerHeight - 80}
               bpm={chart.bpm.initial}
               bpmChanges={chart.bpmChanges}
               stops={chart.stops}

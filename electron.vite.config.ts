@@ -33,6 +33,9 @@ export default defineConfig({
   renderer: {
     plugins: [tailwindcss()],
     root: resolve(__dirname, 'src/renderer'),
+    resolve: {
+      dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'three', '@react-three/fiber', 'zustand'],
+    },
     build: {
       outDir: resolve(__dirname, 'out/renderer'),
       rollupOptions: {

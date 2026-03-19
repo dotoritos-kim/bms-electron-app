@@ -201,6 +201,12 @@ export function Editor({ file, onBack }: EditorProps) {
     return () => window.removeEventListener('keydown', handler);
   }, [handleUndo, handleRedo, handleSave]);
 
+  // Must be above early returns to maintain consistent hook call order
+  const selectedNotesList = useMemo(
+    () => notes.filter((n) => selectedNotes.has(n.id)),
+    [notes, selectedNotes],
+  );
+
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center bg-zinc-950">
@@ -218,11 +224,6 @@ export function Editor({ file, onBack }: EditorProps) {
       </div>
     );
   }
-
-  const selectedNotesList = useMemo(
-    () => notes.filter((n) => selectedNotes.has(n.id)),
-    [notes, selectedNotes],
-  );
 
   return (
     <div className="h-full flex flex-col bg-zinc-950">

@@ -5,6 +5,7 @@ import {
   NoteChartEditor,
   GRID_SNAP_OPTIONS,
   NoteInfoPanel,
+  generateLaneConfig,
 } from '@rhythm-archive/bms-editor';
 import type {
   EditorTool,
@@ -49,18 +50,32 @@ export function Editor({ file, onBack }: EditorProps) {
   // Dynamic chart area sizing
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [chartHeight, setChartHeight] = useState(600);
+  const [chartContainerWidth, setChartContainerWidth] = useState(800);
 
   useEffect(() => {
     const el = chartContainerRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
-      // Subtract NoteChartViewer's internal header (~160px) to size the canvas area
-      const available = Math.floor(entry.contentRect.height);
-      setChartHeight(Math.max(300, available - 160));
+      const { width, height } = entry.contentRect;
+      setChartHeight(Math.max(300, Math.floor(height) - 160));
+      setChartContainerWidth(Math.floor(width));
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Auto-scale lane width to fill available space
+  // Base lane width for 7K+SC is ~221px, we want to fill the container
+  const laneWidthScale = useMemo(() => {
+    if (!chart) return 1.0;
+    const lanes = generateLaneConfig(chart.keyMode);
+    const baseLaneWidth = lanes.reduce((sum: number, l: { width: number }) => sum + l.width, 0);
+    if (baseLaneWidth <= 0) return 1.0;
+    // Target: use ~70% of container width for lanes (leave margin for text labels + minimap)
+    const targetWidth = chartContainerWidth * 0.65;
+    const scale = Math.max(1.0, targetWidth / baseLaneWidth);
+    return Math.min(scale, 5.0); // Cap at 5x
+  }, [chart, chartContainerWidth]);
 
   useEffect(() => {
     load(file.path);
@@ -323,6 +338,7 @@ export function Editor({ file, onBack }: EditorProps) {
               keyMode={chart.keyMode}
               totalBeats={chart.totalBeats}
               height={chartHeight}
+              laneWidthScale={laneWidthScale}
               bpm={chart.bpm.initial}
               bpmChanges={chart.bpmChanges}
               stops={chart.stops}

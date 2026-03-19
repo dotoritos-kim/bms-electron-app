@@ -1,11 +1,14 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Notechart, AudioPreloader, GamePlayer } from '@rhythm-archive/bms-player';
 import type { FileMap, ScoreState, NotechartInput } from '@rhythm-archive/bms-player';
+// AudioPreloader is used for construction, then wrapped via createKeysoundPlayerAdapter
 import { BMSParser, Timing, Positioning, Spacing, SongInfo, KeySounds, Notes } from '@rhythm-archive/bms-core';
 import type { CurrentFile } from '../App';
 import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
 import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
+import { createKeysoundPlayerAdapter } from '../lib/keysoundPlayerAdapter';
+import type { KeysoundPlayer } from '../lib/keysoundPlayerAdapter';
 
 interface PlayerProps {
   file: CurrentFile;
@@ -20,9 +23,22 @@ export function Player({ file, onBack }: PlayerProps) {
   const [audioProgress, setAudioProgress] = useState({ loaded: 0, total: 0 });
   const [audioError, setAudioError] = useState<string | null>(null);
   const [notechart, setNotechart] = useState<Notechart | null>(null);
-  const [preloader, setPreloader] = useState<AudioPreloader | null>(null);
+  const [keysoundPlayer, setKeysoundPlayer] = useState<KeysoundPlayer | null>(null);
   const [finalScore, setFinalScore] = useState<ScoreState | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 500, height: 700 });
+
+  // Track container size with ResizeObserver
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setContainerSize({ width: Math.round(width), height: Math.round(height) - 36 });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Load chart
   useEffect(() => {
@@ -56,7 +72,12 @@ export function Player({ file, onBack }: PlayerProps) {
         const allNotes = notesObj.all();
 
         // Build bar lines (one per measure)
-        const maxMeasure = Math.max(...allNotes.map(n => Math.floor(n.beat / 4)), 0) + 2;
+        let maxMeasure = 0;
+        for (const n of allNotes) {
+          const m = Math.floor(n.beat / 4);
+          if (m > maxMeasure) maxMeasure = m;
+        }
+        maxMeasure += 2;
         const barLines: number[] = [];
         for (let m = 0; m <= maxMeasure; m++) {
           barLines.push(bmsChart.timeSignatures.measureToBeat(m, 0));
@@ -116,7 +137,7 @@ export function Player({ file, onBack }: PlayerProps) {
         await audioPreloader.initAudioWorklet();
         if (cancelled) { audioPreloader.releaseAllResources(); return; }
 
-        setPreloader(audioPreloader);
+        setKeysoundPlayer(createKeysoundPlayerAdapter(audioPreloader));
         setAudioProgress({ loaded: total, total });
         setPhase('ready');
       } catch (err) {
@@ -135,12 +156,12 @@ export function Player({ file, onBack }: PlayerProps) {
     };
   }, [chart, isLoading, file.path, file.folderPath]);
 
-  // Cleanup preloader on unmount
+  // Cleanup keysoundPlayer on unmount
   useEffect(() => {
     return () => {
-      preloader?.releaseAllResources();
+      keysoundPlayer?.dispose();
     };
-  }, [preloader]);
+  }, [keysoundPlayer]);
 
   const handleComplete = useCallback((score: ScoreState, _cleared: boolean) => {
     setFinalScore(score);
@@ -148,9 +169,9 @@ export function Player({ file, onBack }: PlayerProps) {
   }, []);
 
   const handleExit = useCallback(() => {
-    preloader?.stopAllAudio();
+    keysoundPlayer?.stopAll();
     onBack();
-  }, [preloader, onBack]);
+  }, [keysoundPlayer, onBack]);
 
   // Error states
   if (error || phase === 'error') {
@@ -256,9 +277,9 @@ export function Player({ file, onBack }: PlayerProps) {
       <div className="flex-1 flex items-center justify-center">
         <GamePlayer
           notechart={notechart}
-          keysoundPlayer={preloader as unknown as Parameters<typeof GamePlayer>[0]['keysoundPlayer']}
-          width={containerRef.current?.clientWidth ?? 500}
-          height={(containerRef.current?.clientHeight ?? 800) - 36}
+          keysoundPlayer={keysoundPlayer}
+          width={containerSize.width}
+          height={containerSize.height}
           onComplete={handleComplete}
           onExit={handleExit}
           options={{ autoStart: false }}

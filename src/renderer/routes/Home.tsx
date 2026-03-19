@@ -149,7 +149,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
         )}
 
         {currentFile && chart && (
-          <div className="max-w-2xl">
+          <div>
             {/* Song Info */}
             <h1 className="text-2xl font-bold mb-1">
               {chart.songInfo?.title || currentFile.name}

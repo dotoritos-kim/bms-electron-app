@@ -10,7 +10,7 @@ interface LayoutProps {
 
 export function Layout({ route, onNavigate, currentFile, children }: LayoutProps) {
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full">
       {/* Sidebar */}
       <nav className="w-14 bg-zinc-900 border-r border-zinc-800 flex flex-col items-center py-3 gap-2 shrink-0">
         <NavButton

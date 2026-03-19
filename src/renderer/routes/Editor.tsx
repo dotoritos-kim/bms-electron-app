@@ -46,6 +46,22 @@ export function Editor({ file, onBack }: EditorProps) {
   const [redoStack, setRedoStack] = useState<UndoEntry[]>([]);
   const nextNoteId = useRef(1);
 
+  // Dynamic chart area sizing
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [chartHeight, setChartHeight] = useState(600);
+
+  useEffect(() => {
+    const el = chartContainerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      // Subtract NoteChartViewer's internal header (~160px) to size the canvas area
+      const available = Math.floor(entry.contentRect.height);
+      setChartHeight(Math.max(300, available - 160));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   useEffect(() => {
     load(file.path);
   }, [file.path, load]);
@@ -300,12 +316,13 @@ export function Editor({ file, onBack }: EditorProps) {
       {/* Main area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Chart area */}
-        <div className="flex-1 overflow-hidden">
+        <div ref={chartContainerRef} className="flex-1 overflow-hidden">
           {chart && viewMode === 'viewer' && (
             <NoteChartViewer
               notes={chart.notes}
               keyMode={chart.keyMode}
               totalBeats={chart.totalBeats}
+              height={chartHeight}
               bpm={chart.bpm.initial}
               bpmChanges={chart.bpmChanges}
               stops={chart.stops}
@@ -321,6 +338,7 @@ export function Editor({ file, onBack }: EditorProps) {
               notes={notes}
               keyMode={chart.keyMode}
               totalBeats={chart.totalBeats}
+              height={chartHeight}
               activeTool={activeTool}
               gridSnap={gridSnap}
               selectedNotes={selectedNotes}

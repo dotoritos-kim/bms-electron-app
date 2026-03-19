@@ -52,7 +52,7 @@ export function Player({ file, onBack }: PlayerProps) {
         const spacing = Spacing.fromBMSChart(bmsChart);
         const keysounds = KeySounds.fromBMSChart(bmsChart);
         const songInfo = SongInfo.fromBMSChart(bmsChart);
-        const notesObj = Notes.fromBMSChart(bmsChart, { mapping: bmsChart.headers.get('lntype') === '2' ? 2 : 1 });
+        const notesObj = Notes.fromBMSChart(bmsChart);
         const allNotes = notesObj.all();
 
         // Build bar lines (one per measure)

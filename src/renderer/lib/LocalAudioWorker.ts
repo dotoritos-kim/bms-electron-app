@@ -62,12 +62,16 @@ type OutgoingMessage = ProgressMessage | LoadedMessage | DoneMessage | ErrorMess
  */
 export function createLocalAudioWorker(bmsFilePath: string): Worker {
   const listeners: Array<(event: MessageEvent) => void> = [];
+  let onMessageHandler: ((event: MessageEvent) => void) | null = null;
 
   const fakeWorker = {
     postMessage(message: LoadAudioMessage) {
       if (message.type === 'LOAD_AUDIO') {
         loadAllViaIPC(message.payload.fileMap, bmsFilePath, (msg) => {
           const event = new MessageEvent('message', { data: msg });
+          // Call onmessage handler
+          if (onMessageHandler) onMessageHandler(event);
+          // Call addEventListener handlers
           for (const listener of listeners) {
             listener(event);
           }
@@ -89,13 +93,12 @@ export function createLocalAudioWorker(bmsFilePath: string): Worker {
     },
 
     set onmessage(handler: ((event: MessageEvent) => void) | null) {
-      // Clear existing listeners for onmessage
-      listeners.length = 0;
-      if (handler) listeners.push(handler);
+      // Store onmessage handler separately (don't clear addEventListener listeners)
+      onMessageHandler = handler;
     },
 
     get onmessage() {
-      return listeners[0] ?? null;
+      return onMessageHandler;
     },
 
     onerror: null as ((event: ErrorEvent) => void) | null,

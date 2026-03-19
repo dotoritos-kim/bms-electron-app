@@ -1,127 +1,236 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { Notechart, AudioPreloader, GamePlayer } from '@rhythm-archive/bms-player';
+import type { FileMap, ScoreState } from '@rhythm-archive/bms-player';
+import { createKeysoundPlayer } from '@rhythm-archive/bms-editor';
 import type { CurrentFile } from '../App';
 import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
+import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
 
 interface PlayerProps {
   file: CurrentFile;
   onBack: () => void;
 }
 
+type PlayerPhase = 'loading-chart' | 'loading-audio' | 'ready' | 'playing' | 'result' | 'error';
+
 export function Player({ file, onBack }: PlayerProps) {
   const { chart, isLoading, error, load } = useLocalBmsFile();
-  const [audioLoading, setAudioLoading] = useState(false);
+  const [phase, setPhase] = useState<PlayerPhase>('loading-chart');
   const [audioProgress, setAudioProgress] = useState({ loaded: 0, total: 0 });
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [notechart, setNotechart] = useState<Notechart | null>(null);
+  const [preloader, setPreloader] = useState<AudioPreloader | null>(null);
+  const [finalScore, setFinalScore] = useState<ScoreState | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Load chart
   useEffect(() => {
+    setPhase('loading-chart');
     load(file.path);
   }, [file.path, load]);
 
-  // Load audio when chart is ready
+  // Build notechart and load audio when chart is ready
   useEffect(() => {
-    if (!chart) return;
+    if (!chart || isLoading) return;
 
-    const loadAudio = async () => {
-      setAudioLoading(true);
+    let cancelled = false;
+
+    const initAudio = async () => {
+      setPhase('loading-audio');
+      setAudioError(null);
+
       try {
-        const { results, errors } = await window.api.audio.readBatch(
-          file.path,
-          chart.keysounds,
-        );
-        const total = Object.keys(chart.keysounds).length;
-        const loaded = Object.keys(results).length;
-        setAudioProgress({ loaded, total });
+        // Build Notechart from parsed notes
+        const nc = new Notechart(chart.notes, {
+          initialBpm: chart.bpm.initial,
+          lnType: chart.lnType,
+        });
+        if (cancelled) return;
+        setNotechart(nc);
 
-        if (Object.keys(errors).length > 0) {
-          console.warn(`[Player] ${Object.keys(errors).length} keysounds failed to load`);
+        // Create file map for AudioPreloader
+        const fileMap: FileMap = {};
+        for (const [id, filename] of Object.entries(chart.keysounds)) {
+          fileMap[id] = filename;
         }
 
-        // TODO: Initialize GamePlayer with loaded audio buffers
-        // This requires creating a LocalAudioPreloader adapter
-        console.log(`[Player] Loaded ${loaded}/${total} keysounds`);
+        // Create local audio worker shim
+        const worker = createLocalAudioWorker(file.path);
+
+        const total = Object.keys(fileMap).length;
+        const audioPreloader = new AudioPreloader(
+          file.folderPath,
+          fileMap,
+          worker,
+          (type, payload) => {
+            if (type === 'PROGRESS') {
+              const p = payload as { loadedCount: number; total: number };
+              setAudioProgress({ loaded: p.loadedCount, total: p.total });
+            }
+          },
+          { progressiveDecode: true, useCache: false, useIndexedDBCache: false },
+        );
+
+        if (cancelled) return;
+
+        // Load and decode all audio
+        await audioPreloader.loadAll();
+        if (cancelled) { audioPreloader.releaseAllResources(); return; }
+
+        await audioPreloader.decodeAll();
+        if (cancelled) { audioPreloader.releaseAllResources(); return; }
+
+        await audioPreloader.initAudioWorklet();
+        if (cancelled) { audioPreloader.releaseAllResources(); return; }
+
+        setPreloader(audioPreloader);
+        setAudioProgress({ loaded: total, total });
+        setPhase('ready');
       } catch (err) {
-        console.error('[Player] Audio loading failed:', err);
-      } finally {
-        setAudioLoading(false);
+        if (!cancelled) {
+          console.error('[Player] Audio init failed:', err);
+          setAudioError(err instanceof Error ? err.message : 'Audio loading failed');
+          setPhase('error');
+        }
       }
     };
 
-    loadAudio();
-  }, [chart, file.path]);
+    initAudio();
 
-  if (isLoading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-3 text-zinc-400">Loading chart...</span>
-      </div>
-    );
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [chart, isLoading, file.path, file.folderPath]);
 
-  if (error) {
+  // Cleanup preloader on unmount
+  useEffect(() => {
+    return () => {
+      preloader?.releaseAllResources();
+    };
+  }, [preloader]);
+
+  const handleComplete = useCallback((score: ScoreState, _cleared: boolean) => {
+    setFinalScore(score);
+    setPhase('result');
+  }, []);
+
+  const handleExit = useCallback(() => {
+    preloader?.stopAllAudio();
+    onBack();
+  }, [preloader, onBack]);
+
+  // Error states
+  if (error || phase === 'error') {
     return (
-      <div className="h-full flex flex-col items-center justify-center gap-4">
-        <div className="text-red-400">Error: {error}</div>
-        <button onClick={onBack} className="text-blue-400 hover:text-blue-300">
+      <div className="h-full flex flex-col items-center justify-center gap-4 bg-zinc-950">
+        <div className="text-red-400 text-center">
+          <p className="text-lg mb-1">Error</p>
+          <p className="text-sm">{error || audioError}</p>
+        </div>
+        <button onClick={onBack} className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded transition-colors">
           Back to Home
         </button>
       </div>
     );
   }
 
+  // Loading chart
+  if (phase === 'loading-chart' || isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-zinc-950">
+        <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
+        <span className="ml-3 text-zinc-400">Loading chart...</span>
+      </div>
+    );
+  }
+
+  // Loading audio
+  if (phase === 'loading-audio') {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-zinc-950">
+        <RefreshCw className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+        <div className="text-zinc-300 text-lg mb-1">
+          {chart?.songInfo?.title || file.name}
+        </div>
+        <div className="text-zinc-500 text-sm mb-4">
+          Loading keysounds... {audioProgress.loaded}/{audioProgress.total}
+        </div>
+        {audioProgress.total > 0 && (
+          <div className="w-80 h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all duration-150"
+              style={{ width: `${(audioProgress.loaded / audioProgress.total) * 100}%` }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Result screen
+  if (phase === 'result' && finalScore) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-zinc-950 gap-6">
+        <h2 className="text-2xl font-bold">Results</h2>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+          <span className="text-zinc-500">EX Score</span>
+          <span className="font-mono">{finalScore.exScore}</span>
+          <span className="text-zinc-500">Max Combo</span>
+          <span className="font-mono">{finalScore.maxCombo}</span>
+          <span className="text-zinc-500">PGREAT</span>
+          <span className="font-mono text-yellow-400">{finalScore.pgreat}</span>
+          <span className="text-zinc-500">GREAT</span>
+          <span className="font-mono text-yellow-300">{finalScore.great}</span>
+          <span className="text-zinc-500">GOOD</span>
+          <span className="font-mono text-green-400">{finalScore.good}</span>
+          <span className="text-zinc-500">BAD</span>
+          <span className="font-mono text-blue-400">{finalScore.bad}</span>
+          <span className="text-zinc-500">POOR</span>
+          <span className="font-mono text-red-400">{finalScore.poor}</span>
+        </div>
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={() => setPhase('ready')}
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded text-sm font-medium transition-colors"
+          >
+            Retry
+          </button>
+          <button
+            onClick={onBack}
+            className="px-6 py-2 bg-zinc-700 hover:bg-zinc-600 rounded text-sm font-medium transition-colors"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Ready / Playing - render GamePlayer
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 border-b border-zinc-800">
-        <button
-          onClick={onBack}
-          className="p-1.5 rounded hover:bg-zinc-800 transition-colors"
-        >
+    <div className="h-full flex flex-col bg-black" ref={containerRef}>
+      {/* Minimal header */}
+      <div className="flex items-center gap-3 px-4 py-1.5 bg-zinc-900/80 border-b border-zinc-800 z-10">
+        <button onClick={handleExit} className="p-1 rounded hover:bg-zinc-800 transition-colors">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">
-            {chart?.songInfo?.title || file.name}
-          </div>
-          {chart?.songInfo?.artist && (
-            <div className="text-xs text-zinc-500 truncate">{chart.songInfo.artist}</div>
-          )}
-        </div>
-        <div className="text-xs text-zinc-500">
-          {chart?.keyMode} | BPM {chart?.bpm.initial}
+        <div className="flex-1 min-w-0 text-xs text-zinc-400 truncate">
+          {chart?.songInfo?.title || file.name} — {chart?.keyMode} | BPM {chart?.bpm.initial}
         </div>
       </div>
 
-      {/* Game Area */}
-      <div className="flex-1 bg-black flex items-center justify-center">
-        {audioLoading ? (
-          <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-3" />
-            <div className="text-zinc-400">
-              Loading keysounds... {audioProgress.loaded}/{audioProgress.total}
-            </div>
-            {audioProgress.total > 0 && (
-              <div className="w-64 h-1.5 bg-zinc-800 rounded-full mt-3 mx-auto overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 rounded-full transition-all"
-                  style={{
-                    width: `${(audioProgress.loaded / audioProgress.total) * 100}%`,
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center text-zinc-600">
-            <p className="text-xl mb-2">Game Player</p>
-            <p className="text-sm">
-              GamePlayer component integration will be connected here.
-            </p>
-            <p className="text-sm mt-1">
-              Press Space or Enter to start when ready.
-            </p>
-          </div>
-        )}
+      {/* Game canvas */}
+      <div className="flex-1 flex items-center justify-center">
+        <GamePlayer
+          notechart={notechart}
+          keysoundPlayer={preloader as unknown as Parameters<typeof GamePlayer>[0]['keysoundPlayer']}
+          width={containerRef.current?.clientWidth ?? 500}
+          height={(containerRef.current?.clientHeight ?? 800) - 36}
+          onComplete={handleComplete}
+          onExit={handleExit}
+          options={{ autoStart: false }}
+        />
       </div>
     </div>
   );

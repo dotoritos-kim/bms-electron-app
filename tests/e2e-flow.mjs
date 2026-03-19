@@ -28,9 +28,12 @@ function log(ok, msg, detail = '') {
 
 async function main() {
   try {
-    const env = { ...process.env };
-    delete env.ELECTRON_RUN_AS_NODE;
+    // Clean environment: remove ELECTRON_RUN_AS_NODE completely
+    const env = Object.fromEntries(
+      Object.entries(process.env).filter(([k]) => k !== 'ELECTRON_RUN_AS_NODE')
+    );
     electronProcess = spawn(electronPath, [`--remote-debugging-port=${PORT}`, '--no-sandbox', appDir], { env, stdio: 'pipe' });
+    electronProcess.stdout.on('data', () => {});
     electronProcess.stderr.on('data', () => {});
 
     for (let i = 0; i < 15; i++) {

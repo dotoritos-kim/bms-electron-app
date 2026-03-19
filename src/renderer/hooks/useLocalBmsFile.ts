@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
-import { BMSParser, Timing, Positioning } from '@rhythm-archive/bms-core';
+import { BMSParser, Timing, Positioning, Spacing, SongInfo, KeySounds, Notes } from '@rhythm-archive/bms-core';
 import type { BMSNote, ISongInfoData } from '@rhythm-archive/bms-core';
+import { detectKeyMode } from '@rhythm-archive/bms-editor';
 import type { KeyMode, BpmChange, StopEvent, ScrollSpeedChange } from '@rhythm-archive/bms-editor';
 
 export interface LocalBmsChartInfo {
@@ -17,6 +18,11 @@ export interface LocalBmsChartInfo {
   keysounds: Record<string, string>;
   positioning: Positioning | null;
   timing: Timing | null;
+  // Full bms-core objects for Player (avoids re-parsing)
+  spacing: Spacing | null;
+  keysoundsObj: KeySounds | null;
+  songInfoObj: SongInfo | null;
+  barLines: number[];
 }
 
 interface UseLocalBmsFileState {
@@ -128,12 +134,26 @@ export function useLocalBmsFile() {
         }
       });
 
-      // Timing and Positioning
+      // Build all bms-core objects (avoids re-parsing in Player)
       const timing = Timing.fromBMSChart(chart);
       const positioning = Positioning.fromBMSChart(chart, timing);
+      const spacing = Spacing.fromBMSChart(chart);
+      const keysoundsObj = KeySounds.fromBMSChart(chart);
+      const songInfoObj = SongInfo.fromBMSChart(chart);
 
-      // Detect key mode
-      const { detectKeyMode } = await import('@rhythm-archive/bms-editor');
+      // Build bar lines
+      let maxMeasure = 0;
+      for (const n of notes) {
+        const m = Math.floor(n.beat / 4);
+        if (m > maxMeasure) maxMeasure = m;
+      }
+      maxMeasure += 2;
+      const barLines: number[] = [];
+      for (let m = 0; m <= maxMeasure; m++) {
+        barLines.push(chart.timeSignatures.measureToBeat(m, 0));
+      }
+
+      // Detect key mode (static import, no dynamic import)
       const keyMode = detectKeyMode(notes, chart.headers);
 
       // Calculate stats
@@ -182,6 +202,10 @@ export function useLocalBmsFile() {
           keysounds,
           positioning,
           timing,
+          spacing,
+          keysoundsObj,
+          songInfoObj,
+          barLines,
         },
         isLoading: false,
         error: null,

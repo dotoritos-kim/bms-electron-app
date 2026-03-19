@@ -9,7 +9,7 @@ function ok(msg, d='') { pass++; console.log(`✓ ${msg}${d ? ' — '+d : ''}`);
 function no(msg, d='') { fail++; console.log(`✗ ${msg}${d ? ' — '+d : ''}`); }
 
 async function main() {
-  const browser = await puppeteer.connect({ browserURL: 'http://127.0.0.1:9230' });
+  const browser = await puppeteer.connect({ browserURL: "http://127.0.0.1:9234" });
   const page = (await browser.pages()).find(p => p.url().includes('index.html'));
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));

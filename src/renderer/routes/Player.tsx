@@ -2,8 +2,6 @@ import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Notechart, AudioPreloader, GamePlayer } from '@rhythm-archive/bms-player';
 import type { FileMap, ScoreState, NotechartInput } from '@rhythm-archive/bms-player';
-// AudioPreloader is used for construction, then wrapped via createKeysoundPlayerAdapter
-import { BMSParser, Timing, Positioning, Spacing, SongInfo, KeySounds, Notes } from '@rhythm-archive/bms-core';
 import type { CurrentFile } from '../App';
 import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
 import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
@@ -57,49 +55,27 @@ export function Player({ file, onBack }: PlayerProps) {
       setAudioError(null);
 
       try {
-        // Re-parse the BMS file to get full bms-core objects for Notechart
-        const buffer = await window.api.file.readBms(file.path);
-        const parser = new BMSParser();
-        const bmsString = await parser.readBuffer(buffer);
-        const bmsChart = parser.compileString(bmsString);
-
-        const timing = Timing.fromBMSChart(bmsChart);
-        const positioning = Positioning.fromBMSChart(bmsChart, timing);
-        const spacing = Spacing.fromBMSChart(bmsChart);
-        const keysounds = KeySounds.fromBMSChart(bmsChart);
-        const songInfo = SongInfo.fromBMSChart(bmsChart);
-        const notesObj = Notes.fromBMSChart(bmsChart);
-        const allNotes = notesObj.all();
-
-        // Build bar lines (one per measure)
-        let maxMeasure = 0;
-        for (const n of allNotes) {
-          const m = Math.floor(n.beat / 4);
-          if (m > maxMeasure) maxMeasure = m;
-        }
-        maxMeasure += 2;
-        const barLines: number[] = [];
-        for (let m = 0; m <= maxMeasure; m++) {
-          barLines.push(bmsChart.timeSignatures.measureToBeat(m, 0));
+        // Use pre-built bms-core objects from useLocalBmsFile (no re-parsing)
+        if (!chart.timing || !chart.positioning || !chart.spacing || !chart.keysoundsObj || !chart.songInfoObj) {
+          throw new Error('Chart data incomplete — missing timing/positioning/spacing/keysounds/songInfo');
         }
 
-        // Separate playable vs landmine notes
-        const playableNotes = allNotes.filter(n => n.noteType !== 'landmine');
-        const landmineNotes = allNotes.filter(n => n.noteType === 'landmine');
+        const playableNotes = chart.notes.filter(n => n.noteType !== 'landmine');
+        const landmineNotes = chart.notes.filter(n => n.noteType === 'landmine');
 
         const notechartInput: NotechartInput = {
           notes: playableNotes,
           landmineNotes,
-          timing,
-          keysounds,
-          songInfo,
-          positioning,
-          spacing,
-          barLines,
+          timing: chart.timing,
+          keysounds: chart.keysoundsObj,
+          songInfo: chart.songInfoObj,
+          positioning: chart.positioning,
+          spacing: chart.spacing,
+          barLines: chart.barLines,
         };
 
-        const nc = new Notechart(notechartInput);
         if (cancelled) return;
+        const nc = new Notechart(notechartInput);
         setNotechart(nc);
 
         // Create file map for AudioPreloader

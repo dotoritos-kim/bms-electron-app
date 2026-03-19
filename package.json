@@ -37,6 +37,7 @@
     "electron": "^33.4.11",
     "electron-builder": "^25.0.0",
     "electron-vite": "^3.0.0",
+    "puppeteer-core": "^24.40.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.5"

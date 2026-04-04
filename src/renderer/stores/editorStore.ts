@@ -72,6 +72,11 @@ interface EditorState {
   playbackTime: number;
   playbackDuration: number;
 
+  // A-B Loop
+  loopA: number | null;
+  loopB: number | null;
+  metronomeEnabled: boolean;
+
   // UI
   inputDialog: InputDialog | null;
   showLeftPanel: boolean;
@@ -155,6 +160,11 @@ interface EditorState {
   toggleHeaderCollapsed: () => void;
   setToast: (toast: { message: string; type: 'success' | 'error' } | null) => void;
   setShowBackConfirm: (show: boolean) => void;
+
+  // A-B Loop
+  setLoopA: (beat: number | null) => void;
+  setLoopB: (beat: number | null) => void;
+  toggleMetronome: () => void;
 }
 
 const initialState = {
@@ -181,6 +191,9 @@ const initialState = {
   volume: 0.8,
   playbackTime: 0,
   playbackDuration: 0,
+  loopA: null as number | null,
+  loopB: null as number | null,
+  metronomeEnabled: false,
   inputDialog: null as InputDialog | null,
   showLeftPanel: true,
   showRightPanel: true,
@@ -676,4 +689,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   toggleHeaderCollapsed: () => set((s) => ({ headerCollapsed: !s.headerCollapsed })),
   setToast: (toast) => set({ toast }),
   setShowBackConfirm: (show) => set({ showBackConfirm: show }),
+
+  // A-B Loop
+  setLoopA: (beat) => set({ loopA: beat }),
+  setLoopB: (beat) => set({ loopB: beat }),
+  toggleMetronome: () => set((s) => ({ metronomeEnabled: !s.metronomeEnabled })),
 }));

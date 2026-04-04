@@ -10,8 +10,10 @@ import {
   Minimap,
   StatusBar,
   NoteSearchDialog,
+  BmsChartDiff,
   getLaneIds,
 } from '@rhythm-archive/bms-editor';
+import type { BmsChartDiffInfo } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote, EditableBMSChart, TimingAction } from '@rhythm-archive/bms-core';
 import { BMSWriter, Timing } from '@rhythm-archive/bms-core';
 import { AudioPreloader } from '@rhythm-archive/bms-player';
@@ -180,6 +182,39 @@ function estimateDifficulty(notes: EditableBMSNote[], bpm: number, totalBeats: n
   return Math.max(1, Math.min(12, Math.round(rawScore)));
 }
 
+function ChartStatsView({ notes, bpm, totalBeats }: { notes: EditableBMSNote[]; bpm: number; totalBeats: number }) {
+  const stats = useMemo(() => {
+    const playable = notes.filter((n) => n.noteType === 'playable').length;
+    const invisible = notes.filter((n) => n.noteType === 'invisible').length;
+    const landmine = notes.filter((n) => n.noteType === 'landmine').length;
+    const bgm = notes.filter((n) => n.noteType === 'bgm').length;
+    const ln = notes.filter((n) => n.endBeat !== undefined).length;
+    const durationSec = totalBeats > 0 && bpm > 0 ? (totalBeats / bpm) * 60 : 0;
+    const nps = durationSec > 0 ? playable / durationSec : 0;
+    const measures = totalBeats > 0 ? Math.ceil(totalBeats / 4) : 0;
+    return { playable, invisible, landmine, bgm, ln, durationSec, nps, measures };
+  }, [notes, bpm, totalBeats]);
+
+  const fmt = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
+      <div className="text-zinc-500">Playable</div><div className="text-zinc-300 text-right">{stats.playable}</div>
+      <div className="text-zinc-500">LN</div><div className="text-zinc-300 text-right">{stats.ln}</div>
+      <div className="text-zinc-500">BGM</div><div className="text-zinc-300 text-right">{stats.bgm}</div>
+      <div className="text-zinc-500">Invisible</div><div className="text-zinc-300 text-right">{stats.invisible}</div>
+      <div className="text-zinc-500">Landmine</div><div className="text-zinc-300 text-right">{stats.landmine}</div>
+      <div className="text-zinc-500">NPS</div><div className="text-zinc-300 text-right">{stats.nps.toFixed(1)}</div>
+      <div className="text-zinc-500">마디</div><div className="text-zinc-300 text-right">{stats.measures}</div>
+      <div className="text-zinc-500">재생 시간</div><div className="text-zinc-300 text-right">{fmt(stats.durationSec)}</div>
+    </div>
+  );
+}
+
 function BpmTapDialog({ onClose, onApply }: { onClose: () => void; onApply: (bpm: number) => void }) {
   const [taps, setTaps] = useState<number[]>([]);
   const bpm = useMemo(() => {
@@ -257,6 +292,8 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   const [showNoteSearch, setShowNoteSearch] = useState(false);
   const [showBpmTap, setShowBpmTap] = useState(false);
   const [measureDialog, setMeasureDialog] = useState<{ type: 'insert' | 'delete' } | null>(null);
+  const [showDiff, setShowDiff] = useState(false);
+  const originalChartInfoRef = useRef<BmsChartDiffInfo | null>(null);
   const measureInputRef = useRef<HTMLInputElement>(null);
 
   // Audio refs (imperative, not in store)
@@ -305,6 +342,14 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     if (chart.bmsChart) {
       const ec = BMSWriter.fromBMSChart(chart.bmsChart);
       store.initFromChart(ec, editableNotes, editableNotes.length + 1);
+      // Save original chart info for diff
+      originalChartInfoRef.current = {
+        notes: chart.notes,
+        keyMode: chart.keyMode,
+        totalBeats: chart.totalBeats || 100,
+        bpm: chart.bpm,
+        stats: chart.stats,
+      };
     }
   }, [chart]);
 
@@ -517,6 +562,9 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
           case 'b': store.setActiveTool('bpm'); break;
           case 't': store.setActiveTool('stop'); break;
           case 'q': store.quantizeNotes(); break;
+          case '[': store.setLoopA(useEditorStore.getState().currentBeat); break;
+          case ']': store.setLoopB(useEditorStore.getState().currentBeat); break;
+          case '\\': store.setLoopA(null); store.setLoopB(null); break;
         }
       }
     };
@@ -581,7 +629,13 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       store.setPlaybackTime(currentSec);
       store.setCurrentBeat(lo);
     }
-    if (currentSec >= useEditorStore.getState().playbackDuration) {
+    const es = useEditorStore.getState();
+    // A-B loop: if loopB is set and we've passed it, seek back to loopA
+    if (es.loopA !== null && es.loopB !== null && lo >= es.loopB) {
+      handleSeek(timing.beatToSeconds(es.loopA));
+      return;
+    }
+    if (currentSec >= es.playbackDuration) {
       handlePlaybackStop();
       return;
     }
@@ -872,6 +926,13 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
           {showRightPanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
         </button>
         <button
+          onClick={() => setShowDiff((v) => !v)}
+          className={`p-1 rounded hover:bg-zinc-800 transition-colors text-xs ${showDiff ? 'text-orange-400' : 'text-zinc-400'}`}
+          title="변경사항 비교"
+        >
+          Diff
+        </button>
+        <button
           onClick={() => setShowBpmTap(true)}
           className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
           title="BPM 탭"
@@ -984,6 +1045,16 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
                     {spd}x
                   </button>
                 ))}
+                {/* A-B Loop indicator */}
+                {(store.loopA !== null || store.loopB !== null) && (
+                  <button
+                    onClick={() => { store.setLoopA(null); store.setLoopB(null); }}
+                    className="px-1.5 py-0.5 rounded text-[10px] bg-orange-900/50 text-orange-300 hover:bg-orange-800/50"
+                    title="[ ] 루프 해제 (\)"
+                  >
+                    🔁 {store.loopA !== null ? Math.floor(store.loopA / 4) : '?'}-{store.loopB !== null ? Math.floor(store.loopB / 4) : '?'}
+                  </button>
+                )}
                 <div className="flex-1" />
                 <button onClick={() => store.setVolume(volume > 0 ? 0 : 0.8)} className="p-1 rounded hover:bg-muted transition-colors">
                   {volume > 0 ? <Volume2 className="h-3.5 w-3.5 text-muted-foreground" /> : <VolumeX className="h-3.5 w-3.5 text-zinc-500" />}
@@ -1076,6 +1147,11 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
               onPreview={previewKeysound}
               isAudioReady={isAudioReady}
             />
+          </div>
+          {/* Chart Statistics */}
+          <div className="border-b border-zinc-800 shrink-0 px-3 py-2">
+            <h3 className="text-xs font-semibold text-zinc-400 mb-1.5">통계</h3>
+            <ChartStatsView notes={notes} bpm={editedBaseBpm} totalBeats={totalBeats} />
           </div>
           <div className={headerCollapsed ? 'shrink-0' : 'flex-1 min-h-0 flex flex-col'}>
             <button
@@ -1263,6 +1339,32 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
             file={file}
             onBack={() => setPlayTestMode(false)}
             onRegisterGuard={() => {}}
+          />
+        </div>
+      )}
+
+      {/* ===== CHART DIFF ===== */}
+      {showDiff && chart && originalChartInfoRef.current && (
+        <div className="fixed inset-0 z-[55] bg-zinc-950/95 overflow-auto p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-zinc-200">변경사항 비교</h2>
+            <button onClick={() => setShowDiff(false)} className="px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-700 rounded">닫기 (Esc)</button>
+          </div>
+          <BmsChartDiff
+            oldChart={originalChartInfoRef.current}
+            newChart={{
+              notes: notes.map((n) => ({ beat: n.beat, column: n.column, keysound: n.keysound, noteType: n.noteType, endBeat: n.endBeat })),
+              keyMode: chart.keyMode,
+              totalBeats: totalBeats,
+              bpm: { initial: editedBaseBpm, min: editedBaseBpm, max: editedBaseBpm },
+              stats: {
+                total: notes.filter((n) => n.noteType === 'playable').length,
+                scratch: 0,
+                longNotes: notes.filter((n) => n.endBeat !== undefined).length,
+                landmines: notes.filter((n) => n.noteType === 'landmine').length,
+              },
+            }}
+            filePath={file.path}
           />
         </div>
       )}

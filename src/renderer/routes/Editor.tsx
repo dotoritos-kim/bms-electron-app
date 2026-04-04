@@ -149,6 +149,97 @@ function BeatKeysoundPanel({
   );
 }
 
+/** Estimate chart difficulty (1-12 scale) based on note density, BPM, LN ratio */
+function estimateDifficulty(notes: EditableBMSNote[], bpm: number, totalBeats: number): number {
+  if (notes.length === 0 || totalBeats <= 0) return 0;
+  const playableNotes = notes.filter((n) => n.noteType === 'playable' || n.noteType === 'invisible');
+  const totalPlayable = playableNotes.length;
+  if (totalPlayable === 0) return 0;
+
+  // Notes per second (assuming 4/4 time)
+  const durationSec = (totalBeats / bpm) * 60;
+  const nps = totalPlayable / Math.max(durationSec, 1);
+
+  // Peak density: max notes in any 1-beat window
+  const beatBuckets = new Map<number, number>();
+  for (const n of playableNotes) {
+    const bucket = Math.floor(n.beat);
+    beatBuckets.set(bucket, (beatBuckets.get(bucket) || 0) + 1);
+  }
+  const peakDensity = Math.max(...beatBuckets.values(), 0);
+
+  // Long note ratio
+  const lnCount = playableNotes.filter((n) => n.endBeat !== undefined).length;
+  const lnRatio = lnCount / totalPlayable;
+
+  // BPM factor
+  const bpmFactor = Math.min(bpm / 200, 1.5);
+
+  // Combined score → map to 1-12
+  const rawScore = (nps * 2.5) + (peakDensity * 0.8) + (bpmFactor * 2) + (lnRatio * 1.5);
+  return Math.max(1, Math.min(12, Math.round(rawScore)));
+}
+
+function BpmTapDialog({ onClose, onApply }: { onClose: () => void; onApply: (bpm: number) => void }) {
+  const [taps, setTaps] = useState<number[]>([]);
+  const bpm = useMemo(() => {
+    if (taps.length < 2) return 0;
+    const intervals: number[] = [];
+    for (let i = 1; i < taps.length; i++) {
+      intervals.push(taps[i] - taps[i - 1]);
+    }
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+    return Math.round((60000 / avgInterval) * 100) / 100;
+  }, [taps]);
+
+  const handleTap = useCallback(() => {
+    setTaps((prev) => {
+      const now = performance.now();
+      // Reset if gap > 3 seconds
+      if (prev.length > 0 && now - prev[prev.length - 1] > 3000) return [now];
+      return [...prev.slice(-20), now];
+    });
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.code === 'Space') { e.preventDefault(); handleTap(); }
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleTap, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-5 w-80 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-sm font-semibold text-zinc-200 mb-3">BPM 탭</h3>
+        <div className="text-center mb-4">
+          <div className="text-4xl font-bold text-blue-400 font-mono">{bpm > 0 ? bpm : '--'}</div>
+          <div className="text-xs text-zinc-500 mt-1">BPM ({taps.length} taps)</div>
+        </div>
+        <button
+          onClick={handleTap}
+          className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-semibold transition-colors mb-3"
+        >
+          탭 (Space)
+        </button>
+        <div className="flex justify-between">
+          <button onClick={() => setTaps([])} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">리셋</button>
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">취소</button>
+            <button
+              onClick={() => bpm > 0 && onApply(bpm)}
+              disabled={bpm <= 0}
+              className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded"
+            >적용</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   const { chart, isLoading, error, load } = useLocalBmsFile();
 
@@ -162,8 +253,11 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     inputDialog, showLeftPanel, showRightPanel, headerCollapsed, toast, showBackConfirm,
   } = store;
 
-  // Note search dialog (local state)
+  // Local dialog state
   const [showNoteSearch, setShowNoteSearch] = useState(false);
+  const [showBpmTap, setShowBpmTap] = useState(false);
+  const [measureDialog, setMeasureDialog] = useState<{ type: 'insert' | 'delete' } | null>(null);
+  const measureInputRef = useRef<HTMLInputElement>(null);
 
   // Audio refs (imperative, not in store)
   const audioPreloaderRef = useRef<AudioPreloader | null>(null);
@@ -280,6 +374,17 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     }
   }, []);
 
+  // --- Note hover preview ---
+  const lastHoverKeysoundRef = useRef<string | null>(null);
+  const handleNoteHover = useCallback((keysoundId: string | null) => {
+    if (keysoundId === lastHoverKeysoundRef.current) return;
+    lastHoverKeysoundRef.current = keysoundId;
+    if (keysoundId && audioPreloaderRef.current) {
+      audioPreloaderRef.current.stopAllAudio();
+      audioPreloaderRef.current.playAudioSync(keysoundId.toLowerCase());
+    }
+  }, []);
+
   const handleDropKeysound = useCallback((keysoundId: string, beat: number, column: string) => {
     const { selectedNoteType: snt } = useEditorStore.getState();
     const { measure, fraction } = beatToMF(beat);
@@ -382,6 +487,10 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       if (e.ctrlKey && e.key === 'a') { e.preventDefault(); store.selectAll(); }
       if (e.ctrlKey && e.key === 'f') { e.preventDefault(); setShowNoteSearch(true); }
       if (e.key === 'F5') { e.preventDefault(); handlePlayTest(); }
+      if (e.ctrlKey && e.key === 'm') { e.preventDefault(); store.mirrorNotes(laneIds); }
+      if (e.ctrlKey && e.key === 'r') { e.preventDefault(); store.randomNotes(laneIds); }
+      if (e.ctrlKey && e.shiftKey && e.key === 'I') { e.preventDefault(); setMeasureDialog({ type: 'insert' }); }
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') { e.preventDefault(); setMeasureDialog({ type: 'delete' }); }
       if (e.key === 'Delete') { e.preventDefault(); store.deleteNotes(Array.from(s.selectedNotes)); }
       if (e.key === 'Escape') {
         if (s.inputDialog) { store.setInputDialog(null); return; }
@@ -407,6 +516,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
           case 'k': store.setActiveTool('keysound'); break;
           case 'b': store.setActiveTool('bpm'); break;
           case 't': store.setActiveTool('stop'); break;
+          case 'q': store.quantizeNotes(); break;
         }
       }
     };
@@ -761,6 +871,20 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
         <button onClick={store.toggleRightPanel} className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="정보 패널">
           {showRightPanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
         </button>
+        <button
+          onClick={() => setShowBpmTap(true)}
+          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
+          title="BPM 탭"
+        >
+          BPM
+        </button>
+        <button
+          onClick={handlePlayTest}
+          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
+          title="플레이 테스트 (F5)"
+        >
+          F5
+        </button>
         <div className="w-px h-4 bg-zinc-700" />
         <button
           onClick={handleSaveWithCleanup}
@@ -916,6 +1040,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
                   onStopEditRequest={store.requestStopEdit}
                   onKeysoundAssign={handleKeysoundAssign}
                   onDropKeysound={handleDropKeysound}
+                  onNoteHover={handleNoteHover}
                   hasUnsavedChanges={hasUnsavedChanges}
                   scrollToBeat={currentBeat}
                   onScrollChange={store.setCurrentBeat}
@@ -994,7 +1119,15 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       </div>
 
       {/* ===== STATUS BAR ===== */}
-      <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} zoom={1} />
+      {/* ===== STATUS BAR + DIFFICULTY ===== */}
+      <div className="flex items-center border-t border-zinc-800 bg-zinc-900">
+        <div className="flex-1">
+          <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} zoom={1} />
+        </div>
+        <div className="px-3 text-[10px] text-zinc-500 shrink-0">
+          추정 난이도: <span className="text-zinc-300 font-semibold">{estimateDifficulty(notes, editedBaseBpm, totalBeats) || '-'}</span>/12
+        </div>
+      </div>
 
       {/* ===== INPUT DIALOG (BPM/STOP) ===== */}
       {inputDialog && (
@@ -1041,6 +1174,52 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
                 className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
               >저장 안 함</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== BPM TAP DIALOG ===== */}
+      {showBpmTap && (
+        <BpmTapDialog
+          onClose={() => setShowBpmTap(false)}
+          onApply={(bpm) => { store.changeHeader('bpm', bpm); setShowBpmTap(false); }}
+        />
+      )}
+
+      {/* ===== MEASURE INSERT/DELETE DIALOG ===== */}
+      {measureDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setMeasureDialog(null)}>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-72 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-zinc-200 mb-2">
+              {measureDialog.type === 'insert' ? '마디 삽입' : '마디 삭제'}
+            </h3>
+            <p className="text-[10px] text-zinc-500 mb-2">
+              {measureDialog.type === 'insert' ? '지정 마디 앞에 빈 마디를 삽입합니다.' : '지정 마디의 노트를 삭제하고 이후 내용을 당깁니다.'}
+            </p>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const val = parseInt(measureInputRef.current?.value || '');
+              if (isNaN(val) || val < 0) return;
+              if (measureDialog.type === 'insert') store.insertMeasure(val);
+              else store.deleteMeasure(val);
+              setMeasureDialog(null);
+            }}>
+              <input
+                ref={measureInputRef}
+                type="number" min={0} step={1}
+                defaultValue={Math.floor(currentBeat / 4)}
+                autoFocus
+                className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
+                placeholder="마디 번호"
+                onKeyDown={(e) => { if (e.key === 'Escape') setMeasureDialog(null); }}
+              />
+              <div className="flex justify-end gap-2 mt-3">
+                <button type="button" onClick={() => setMeasureDialog(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">취소</button>
+                <button type="submit" className={`px-3 py-1 text-xs text-white rounded ${measureDialog.type === 'insert' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'}`}>
+                  {measureDialog.type === 'insert' ? '삽입' : '삭제'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

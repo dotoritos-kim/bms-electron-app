@@ -101,6 +101,16 @@ interface EditorState {
   clearSelection: () => void;
   changeNoteType: (newType: NoteType) => void;
 
+  // Measure management
+  insertMeasure: (atMeasure: number) => void;
+  deleteMeasure: (atMeasure: number) => void;
+
+  // Transform operations
+  mirrorNotes: (laneIds: string[]) => void;
+  flipNotes: () => void;
+  randomNotes: (laneIds: string[]) => void;
+  quantizeNotes: () => void;
+
   // Keysound layers
   addKeysoundLayer: (noteId: string, keysoundId: string, layerType: 'invisible' | 'bgm') => void;
   removeKeysoundLayer: (noteId: string, layerIndex: number) => void;
@@ -326,6 +336,157 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     s.pushUndo('Change note type');
     set({
       notes: s.notes.map((n) => (s.selectedNotes.has(n.id) ? { ...n, noteType: newType } : n)),
+      hasUnsavedChanges: true,
+    });
+  },
+
+  // --- Measure management ---
+  insertMeasure: (atMeasure) => {
+    const s = get();
+    s.pushUndo('Insert measure');
+    const shiftBeat = atMeasure * 4; // 4 beats per measure (4/4)
+    const shiftAmount = 4;
+    set({
+      notes: s.notes.map((n) => {
+        if (n.beat < shiftBeat) return n;
+        const newBeat = n.beat + shiftAmount;
+        const { measure, fraction } = beatToMF(newBeat);
+        const newEndBeat = n.endBeat !== undefined ? n.endBeat + shiftAmount : undefined;
+        return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
+      }),
+      bpmChanges: s.bpmChanges.map((b) => {
+        const beat = b.measure * 4 + b.fraction * 4;
+        if (beat < shiftBeat) return b;
+        const newBeat = beat + shiftAmount;
+        const { measure, fraction } = beatToMF(newBeat);
+        return { ...b, measure, fraction };
+      }),
+      stopEvents: s.stopEvents.map((ev) => {
+        const beat = ev.measure * 4 + ev.fraction * 4;
+        if (beat < shiftBeat) return ev;
+        const newBeat = beat + shiftAmount;
+        const { measure, fraction } = beatToMF(newBeat);
+        return { ...ev, measure, fraction };
+      }),
+      hasUnsavedChanges: true,
+    });
+  },
+
+  deleteMeasure: (atMeasure) => {
+    const s = get();
+    s.pushUndo('Delete measure');
+    const startBeat = atMeasure * 4;
+    const endBeat = startBeat + 4;
+    set({
+      notes: s.notes
+        .filter((n) => n.beat < startBeat || n.beat >= endBeat)
+        .map((n) => {
+          if (n.beat < endBeat) return n;
+          const newBeat = n.beat - 4;
+          const { measure, fraction } = beatToMF(newBeat);
+          const newEndBeat = n.endBeat !== undefined ? n.endBeat - 4 : undefined;
+          return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
+        }),
+      bpmChanges: s.bpmChanges
+        .filter((b) => {
+          const beat = b.measure * 4 + b.fraction * 4;
+          return beat < startBeat || beat >= endBeat;
+        })
+        .map((b) => {
+          const beat = b.measure * 4 + b.fraction * 4;
+          if (beat < endBeat) return b;
+          const newBeat = beat - 4;
+          const { measure, fraction } = beatToMF(newBeat);
+          return { ...b, measure, fraction };
+        }),
+      stopEvents: s.stopEvents
+        .filter((ev) => {
+          const beat = ev.measure * 4 + ev.fraction * 4;
+          return beat < startBeat || beat >= endBeat;
+        })
+        .map((ev) => {
+          const beat = ev.measure * 4 + ev.fraction * 4;
+          if (beat < endBeat) return ev;
+          const newBeat = beat - 4;
+          const { measure, fraction } = beatToMF(newBeat);
+          return { ...ev, measure, fraction };
+        }),
+      hasUnsavedChanges: true,
+    });
+  },
+
+  // --- Transform operations ---
+  mirrorNotes: (laneIds) => {
+    const s = get();
+    if (s.selectedNotes.size === 0 || laneIds.length === 0) return;
+    s.pushUndo('Mirror notes');
+    set({
+      notes: s.notes.map((n) => {
+        if (!s.selectedNotes.has(n.id)) return n;
+        const idx = laneIds.indexOf(n.column);
+        if (idx < 0) return n;
+        return { ...n, column: laneIds[laneIds.length - 1 - idx] };
+      }),
+      hasUnsavedChanges: true,
+    });
+  },
+
+  flipNotes: () => {
+    const s = get();
+    if (s.selectedNotes.size === 0) return;
+    const selected = s.notes.filter((n) => s.selectedNotes.has(n.id));
+    if (selected.length < 2) return;
+    const minBeat = Math.min(...selected.map((n) => n.beat));
+    const maxBeat = Math.max(...selected.map((n) => n.beat));
+    s.pushUndo('Flip notes');
+    set({
+      notes: s.notes.map((n) => {
+        if (!s.selectedNotes.has(n.id)) return n;
+        const newBeat = maxBeat - (n.beat - minBeat);
+        const { measure, fraction } = beatToMF(newBeat);
+        return { ...n, beat: newBeat, measure, fraction };
+      }),
+      hasUnsavedChanges: true,
+    });
+  },
+
+  randomNotes: (laneIds) => {
+    const s = get();
+    if (s.selectedNotes.size === 0 || laneIds.length === 0) return;
+    s.pushUndo('Random notes');
+    // Build a shuffled column mapping
+    const shuffled = [...laneIds];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const mapping = new Map<string, string>();
+    laneIds.forEach((id, i) => mapping.set(id, shuffled[i]));
+    set({
+      notes: s.notes.map((n) => {
+        if (!s.selectedNotes.has(n.id)) return n;
+        const newCol = mapping.get(n.column);
+        return newCol ? { ...n, column: newCol } : n;
+      }),
+      hasUnsavedChanges: true,
+    });
+  },
+
+  quantizeNotes: () => {
+    const s = get();
+    if (s.selectedNotes.size === 0) return;
+    s.pushUndo('Quantize notes');
+    const gridStep = 4 / s.gridSnap;
+    set({
+      notes: s.notes.map((n) => {
+        if (!s.selectedNotes.has(n.id)) return n;
+        const newBeat = Math.round(n.beat / gridStep) * gridStep;
+        const { measure, fraction } = beatToMF(newBeat);
+        const newEndBeat = n.endBeat !== undefined
+          ? Math.round(n.endBeat / gridStep) * gridStep
+          : undefined;
+        return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
+      }),
       hasUnsavedChanges: true,
     });
   },

@@ -13,6 +13,20 @@ const api = {
       folderPath: string,
     ): Promise<Array<{ name: string; path: string; size: number; ext: string }>> =>
       ipcRenderer.invoke('file:listBmsFolder', folderPath),
+    importKeysounds: (
+      bmsFilePath: string,
+    ): Promise<Array<{ filename: string; destPath: string }>> =>
+      ipcRenderer.invoke('file:importKeysounds', bmsFilePath),
+    writeAutoSave: (filePath: string, content: string): Promise<boolean> =>
+      ipcRenderer.invoke('file:writeAutoSave', filePath, content),
+    checkAutoSave: (filePath: string): Promise<string | null> =>
+      ipcRenderer.invoke('file:checkAutoSave', filePath),
+    deleteAutoSave: (filePath: string): Promise<boolean> =>
+      ipcRenderer.invoke('file:deleteAutoSave', filePath),
+    createNewBms: (
+      opts: { title: string; artist: string; bpm: number; keyMode: string },
+    ): Promise<{ path: string; name: string; folderPath: string } | null> =>
+      ipcRenderer.invoke('file:createNewBms', opts),
   },
   audio: {
     readFile: (filePath: string): Promise<ArrayBuffer> =>

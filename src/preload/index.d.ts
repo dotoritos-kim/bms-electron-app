@@ -13,6 +13,11 @@ export interface ElectronAPI {
     saveBms: (filePath: string, content: string) => Promise<boolean>;
     saveAs: (content: string, defaultName?: string) => Promise<string | null>;
     listBmsFolder: (folderPath: string) => Promise<BmsFileInfo[]>;
+    importKeysounds: (bmsFilePath: string) => Promise<Array<{ filename: string; destPath: string }>>;
+    writeAutoSave: (filePath: string, content: string) => Promise<boolean>;
+    checkAutoSave: (filePath: string) => Promise<string | null>;
+    deleteAutoSave: (filePath: string) => Promise<boolean>;
+    createNewBms: (opts: { title: string; artist: string; bpm: number; keyMode: string }) => Promise<{ path: string; name: string; folderPath: string } | null>;
   };
   audio: {
     readFile: (filePath: string) => Promise<ArrayBuffer>;

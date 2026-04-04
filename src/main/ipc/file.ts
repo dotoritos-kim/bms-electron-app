@@ -228,6 +228,114 @@ export function registerFileIpc(): void {
     },
   );
 
+  // Open audio file for slicer
+  ipcMain.handle('dialog:openAudioFile', async (event) => {
+    const win = getWindowFromEvent(event);
+    if (!win) return null;
+
+    const result = await dialog.showOpenDialog(win, {
+      title: '오디오 파일 열기',
+      filters: [
+        { name: 'Audio Files', extensions: ['wav', 'mp3', 'ogg', 'flac', 'm4a'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+      properties: ['openFile'],
+    });
+
+    refocusWindow(win);
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
+
+  // Save WAV slice: receives PCM float32 data and writes as WAV file
+  ipcMain.handle(
+    'file:saveWavSlice',
+    async (
+      _event,
+      destPath: string,
+      pcmData: Float32Array,
+      sampleRate: number,
+      channels: number,
+    ) => {
+      const numSamples = pcmData.length / channels;
+      const byteRate = sampleRate * channels * 2; // 16-bit
+      const blockAlign = channels * 2;
+      const dataSize = numSamples * channels * 2;
+
+      const buffer = Buffer.alloc(44 + dataSize);
+      // RIFF header
+      buffer.write('RIFF', 0);
+      buffer.writeUInt32LE(36 + dataSize, 4);
+      buffer.write('WAVE', 8);
+      // fmt chunk
+      buffer.write('fmt ', 12);
+      buffer.writeUInt32LE(16, 16);
+      buffer.writeUInt16LE(1, 20); // PCM
+      buffer.writeUInt16LE(channels, 22);
+      buffer.writeUInt32LE(sampleRate, 24);
+      buffer.writeUInt32LE(byteRate, 28);
+      buffer.writeUInt16LE(blockAlign, 30);
+      buffer.writeUInt16LE(16, 32); // bits per sample
+      // data chunk
+      buffer.write('data', 36);
+      buffer.writeUInt32LE(dataSize, 40);
+
+      // Convert float32 to int16
+      for (let i = 0; i < pcmData.length; i++) {
+        const val = Math.max(-1, Math.min(1, pcmData[i]));
+        const int16 = val < 0 ? val * 0x8000 : val * 0x7fff;
+        buffer.writeInt16LE(Math.round(int16), 44 + i * 2);
+      }
+
+      await writeFile(destPath, buffer);
+      return true;
+    },
+  );
+
+  // Save multiple WAV slices at once (batch)
+  ipcMain.handle(
+    'file:saveWavSlices',
+    async (
+      _event,
+      bmsDir: string,
+      slices: Array<{ filename: string; pcmData: Float32Array; sampleRate: number; channels: number }>,
+    ) => {
+      const saved: string[] = [];
+      for (const slice of slices) {
+        const destPath = join(bmsDir, slice.filename);
+        const numSamples = slice.pcmData.length / slice.channels;
+        const byteRate = slice.sampleRate * slice.channels * 2;
+        const blockAlign = slice.channels * 2;
+        const dataSize = numSamples * slice.channels * 2;
+
+        const buffer = Buffer.alloc(44 + dataSize);
+        buffer.write('RIFF', 0);
+        buffer.writeUInt32LE(36 + dataSize, 4);
+        buffer.write('WAVE', 8);
+        buffer.write('fmt ', 12);
+        buffer.writeUInt32LE(16, 16);
+        buffer.writeUInt16LE(1, 20);
+        buffer.writeUInt16LE(slice.channels, 22);
+        buffer.writeUInt32LE(slice.sampleRate, 24);
+        buffer.writeUInt32LE(byteRate, 28);
+        buffer.writeUInt16LE(blockAlign, 30);
+        buffer.writeUInt16LE(16, 32);
+        buffer.write('data', 36);
+        buffer.writeUInt32LE(dataSize, 40);
+
+        for (let i = 0; i < slice.pcmData.length; i++) {
+          const val = Math.max(-1, Math.min(1, slice.pcmData[i]));
+          const int16 = val < 0 ? val * 0x8000 : val * 0x7fff;
+          buffer.writeInt16LE(Math.round(int16), 44 + i * 2);
+        }
+
+        await writeFile(destPath, buffer);
+        saved.push(slice.filename);
+      }
+      return saved;
+    },
+  );
+
   // List BMS files in folder (recursive)
   ipcMain.handle('file:listBmsFolder', async (_event, folderPath: string) => {
     const files: BmsFileInfo[] = [];

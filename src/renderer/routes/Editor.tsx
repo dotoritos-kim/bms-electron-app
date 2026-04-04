@@ -24,6 +24,23 @@ import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
 import { Player } from './Player';
 import { useEditorStore } from '../stores/editorStore';
 import type { AudioPhase } from '../stores/editorStore';
+import { PatternLibraryPanel } from '../components/PatternLibraryPanel';
+import { KeyBindingsDialog } from '../components/KeyBindingsDialog';
+import type { PatternTemplate } from '../lib/patternTemplates';
+import type { KeyBinding, KeyAction } from '../lib/keyBindings';
+import { loadKeyBindings, normalizeKeyCombo, buildActionMap, TOOL_ACTION_MAP } from '../lib/keyBindings';
+import { MidiMappingDialog } from '../components/MidiMappingDialog';
+import type { MidiMapping, MidiRecordingMode, MidiNoteEvent } from '../lib/midiInput';
+import {
+  createDefaultMapping,
+  loadMidiMapping,
+  connectMidiInput,
+  disconnectMidiInput,
+  requestMidiAccess,
+} from '../lib/midiInput';
+import { AudioSlicer } from '../components/AudioSlicer';
+import { AutoChartDialog } from '../components/AutoChartDialog';
+import type { GeneratedNote } from '../lib/autoChart';
 
 interface EditorProps {
   file: CurrentFile;
@@ -293,6 +310,15 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   const [showBpmTap, setShowBpmTap] = useState(false);
   const [measureDialog, setMeasureDialog] = useState<{ type: 'insert' | 'delete' } | null>(null);
   const [showDiff, setShowDiff] = useState(false);
+  const [leftPanelTab, setLeftPanelTab] = useState<'keysound' | 'pattern'>('keysound');
+  const [showKeyBindings, setShowKeyBindings] = useState(false);
+  const [keyBindings, setKeyBindings] = useState<KeyBinding[]>(() => loadKeyBindings());
+  const actionMapRef = useRef(buildActionMap(keyBindings));
+  const [showAudioSlicer, setShowAudioSlicer] = useState(false);
+  const [showAutoChart, setShowAutoChart] = useState(false);
+  const [showMidiDialog, setShowMidiDialog] = useState(false);
+  const [midiMapping, setMidiMapping] = useState<MidiMapping>(() => loadMidiMapping() || createDefaultMapping([]));
+  const [midiRecordingMode, setMidiRecordingMode] = useState<MidiRecordingMode>('off');
   const originalChartInfoRef = useRef<BmsChartDiffInfo | null>(null);
   const measureInputRef = useRef<HTMLInputElement>(null);
 
@@ -430,6 +456,72 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     }
   }, []);
 
+  // --- Pattern apply/save ---
+  const handleApplyPattern = useCallback((pattern: PatternTemplate) => {
+    const s = useEditorStore.getState();
+    store.applyPattern(pattern, laneIds, s.currentBeat, laneIds[0] || '', s.currentKeysound);
+  }, [laneIds]);
+
+  const handleSaveSelectionAsPattern = useCallback(() => {
+    const result = store.selectionToPatternData(laneIds);
+    return result ? { ...result, id: '', name: '', category: 'custom' as const, tags: [], isBuiltIn: false } : null;
+  }, [laneIds]);
+
+  // --- MIDI note input ---
+  const midiMappingRef = useRef(midiMapping);
+  const midiRecordingModeRef = useRef(midiRecordingMode);
+  useEffect(() => { midiMappingRef.current = midiMapping; }, [midiMapping]);
+  useEffect(() => { midiRecordingModeRef.current = midiRecordingMode; }, [midiRecordingMode]);
+
+  // Update default mapping when laneIds change
+  useEffect(() => {
+    if (laneIds.length > 0 && midiMapping.noteToLane.size === 0) {
+      setMidiMapping(loadMidiMapping() || createDefaultMapping(laneIds));
+    }
+  }, [laneIds]);
+
+  const handleMidiNote = useCallback((event: MidiNoteEvent) => {
+    const mode = midiRecordingModeRef.current;
+    if (mode === 'off') return;
+
+    const mapping = midiMappingRef.current;
+    const lane = mapping.noteToLane.get(event.note);
+    if (!lane) return;
+
+    const s = useEditorStore.getState();
+    const beat = s.currentBeat;
+    const gridStep = 4 / s.gridSnap;
+
+    const { measure, fraction } = beatToMF(beat);
+    store.addNote({
+      beat,
+      column: lane,
+      noteType: 'playable',
+      keysound: s.currentKeysound,
+      measure,
+      fraction,
+      channel: '',
+    });
+
+    // Preview keysound
+    if (audioPreloaderRef.current && s.currentKeysound !== '00') {
+      audioPreloaderRef.current.stopAllAudio();
+      audioPreloaderRef.current.playAudioSync(s.currentKeysound.toLowerCase());
+    }
+
+    // Step mode: advance cursor
+    if (mode === 'step') {
+      store.setCurrentBeat(beat + gridStep);
+    }
+  }, []);
+
+  // Connect MIDI on recording mode change
+  useEffect(() => {
+    if (midiRecordingMode !== 'off') {
+      requestMidiAccess();
+    }
+  }, [midiRecordingMode]);
+
   const handleDropKeysound = useCallback((keysoundId: string, beat: number, column: string) => {
     const { selectedNoteType: snt } = useEditorStore.getState();
     const { measure, fraction } = beatToMF(beat);
@@ -513,64 +605,62 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     }
   }, [chart, file.path, showToast]);
 
-  // --- Keyboard shortcuts ---
+  // --- Keyboard shortcuts (dynamic key bindings) ---
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 
-      if (e.ctrlKey && e.key === 's') { e.preventDefault(); handleSaveWithCleanup(); return; }
+      const combo = normalizeKeyCombo(e);
+      const action = actionMapRef.current.get(combo);
+
+      // Save always works even in input fields
+      if (action === 'save') { e.preventDefault(); handleSaveWithCleanup(); return; }
       if (isInput) return;
+      if (!action) return;
 
+      e.preventDefault();
       const s = useEditorStore.getState();
+      const gridStep = 4 / s.gridSnap;
+      const ids = Array.from(s.selectedNotes);
 
-      if (e.ctrlKey && e.key === 'z' && !e.shiftKey) { e.preventDefault(); store.undo(); }
-      if (e.ctrlKey && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); store.redo(); }
-      if (e.ctrlKey && e.key === 'c') { e.preventDefault(); store.copy(); }
-      if (e.ctrlKey && e.key === 'x') { e.preventDefault(); store.cut(); }
-      if (e.ctrlKey && e.key === 'v') { e.preventDefault(); store.paste(); }
-      if (e.ctrlKey && e.key === 'a') { e.preventDefault(); store.selectAll(); }
-      if (e.ctrlKey && e.key === 'f') { e.preventDefault(); setShowNoteSearch(true); }
-      if (e.key === 'F5') { e.preventDefault(); handlePlayTest(); }
-      if (e.ctrlKey && e.key === 'm') { e.preventDefault(); store.mirrorNotes(laneIds); }
-      if (e.ctrlKey && e.key === 'r') { e.preventDefault(); store.randomNotes(laneIds); }
-      if (e.ctrlKey && e.shiftKey && e.key === 'I') { e.preventDefault(); setMeasureDialog({ type: 'insert' }); }
-      if (e.ctrlKey && e.shiftKey && e.key === 'D') { e.preventDefault(); setMeasureDialog({ type: 'delete' }); }
-      if (e.key === 'Delete') { e.preventDefault(); store.deleteNotes(Array.from(s.selectedNotes)); }
-      if (e.key === 'Escape') {
-        if (s.inputDialog) { store.setInputDialog(null); return; }
-        store.clearSelection();
-      }
+      // Tool shortcuts
+      const tool = TOOL_ACTION_MAP[action];
+      if (tool) { store.setActiveTool(tool); return; }
 
-      if (s.selectedNotes.size > 0 && !e.ctrlKey) {
-        const gridStep = 4 / s.gridSnap;
-        switch (e.key) {
-          case 'ArrowUp': e.preventDefault(); store.moveNotes(Array.from(s.selectedNotes), { beat: gridStep }, laneIds); return;
-          case 'ArrowDown': e.preventDefault(); store.moveNotes(Array.from(s.selectedNotes), { beat: -gridStep }, laneIds); return;
-          case 'ArrowLeft': e.preventDefault(); store.moveNotes(Array.from(s.selectedNotes), { columnDelta: -1 }, laneIds); return;
-          case 'ArrowRight': e.preventDefault(); store.moveNotes(Array.from(s.selectedNotes), { columnDelta: 1 }, laneIds); return;
-        }
-      }
-
-      if (!e.ctrlKey && !e.altKey && !e.metaKey) {
-        switch (e.key.toLowerCase()) {
-          case 'v': store.setActiveTool('select'); break;
-          case 'a': store.setActiveTool('addNote'); break;
-          case 'd': store.setActiveTool('delete'); break;
-          case 'm': store.setActiveTool('move'); break;
-          case 'k': store.setActiveTool('keysound'); break;
-          case 'b': store.setActiveTool('bpm'); break;
-          case 't': store.setActiveTool('stop'); break;
-          case 'q': store.quantizeNotes(); break;
-          case '[': store.setLoopA(useEditorStore.getState().currentBeat); break;
-          case ']': store.setLoopB(useEditorStore.getState().currentBeat); break;
-          case '\\': store.setLoopA(null); store.setLoopB(null); break;
-        }
+      switch (action) {
+        case 'undo': store.undo(); break;
+        case 'redo': store.redo(); break;
+        case 'copy': store.copy(); break;
+        case 'cut': store.cut(); break;
+        case 'paste': store.paste(); break;
+        case 'selectAll': store.selectAll(); break;
+        case 'delete': store.deleteNotes(ids); break;
+        case 'escape':
+          if (s.inputDialog) store.setInputDialog(null);
+          else store.clearSelection();
+          break;
+        case 'noteSearch': setShowNoteSearch(true); break;
+        case 'playTest': handlePlayTest(); break;
+        case 'playToggle': handlePlaybackToggle(); break;
+        case 'mirror': store.mirrorNotes(laneIds); break;
+        case 'random': store.randomNotes(laneIds); break;
+        case 'quantize': store.quantizeNotes(); break;
+        case 'insertMeasure': setMeasureDialog({ type: 'insert' }); break;
+        case 'deleteMeasure': setMeasureDialog({ type: 'delete' }); break;
+        case 'moveUp': if (ids.length > 0) store.moveNotes(ids, { beat: gridStep }, laneIds); break;
+        case 'moveDown': if (ids.length > 0) store.moveNotes(ids, { beat: -gridStep }, laneIds); break;
+        case 'moveLeft': if (ids.length > 0) store.moveNotes(ids, { columnDelta: -1 }, laneIds); break;
+        case 'moveRight': if (ids.length > 0) store.moveNotes(ids, { columnDelta: 1 }, laneIds); break;
+        case 'setLoopA': store.setLoopA(s.currentBeat); break;
+        case 'setLoopB': store.setLoopB(s.currentBeat); break;
+        case 'clearLoop': store.setLoopA(null); store.setLoopB(null); break;
+        case 'togglePatternPanel': setLeftPanelTab((t) => t === 'pattern' ? 'keysound' : 'pattern'); break;
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleSaveWithCleanup, handlePlayTest, laneIds]);
+  }, [handleSaveWithCleanup, handlePlayTest, handlePlaybackToggle, laneIds]);
 
   // --- Audio playback ---
   const loadAudio = useCallback(async () => {
@@ -749,6 +839,9 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     }
   }, [onBack, handlePlaybackStop]);
 
+  // Keep actionMap in sync
+  useEffect(() => { actionMapRef.current = buildActionMap(keyBindings); }, [keyBindings]);
+
   // Keep speed/volume refs in sync
   useEffect(() => { speedRef.current = playbackSpeed; }, [playbackSpeed]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
@@ -834,20 +927,6 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     }
     setPlayTestMode(true);
   }, [handleSaveWithCleanup]);
-
-  // Space key
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        const tag = (e.target as HTMLElement)?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-        e.preventDefault();
-        handlePlaybackToggle();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [handlePlaybackToggle]);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -946,6 +1025,34 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
         >
           F5
         </button>
+        <button
+          onClick={() => setShowAutoChart(true)}
+          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
+          title="AI 차트 생성"
+        >
+          AI
+        </button>
+        <button
+          onClick={() => setShowAudioSlicer(true)}
+          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
+          title="오디오 슬라이서"
+        >
+          슬라이서
+        </button>
+        <button
+          onClick={() => setShowMidiDialog(true)}
+          className={`p-1 rounded hover:bg-zinc-800 transition-colors text-xs ${midiRecordingMode !== 'off' ? 'text-green-400' : 'text-zinc-400'}`}
+          title="MIDI 설정"
+        >
+          MIDI
+        </button>
+        <button
+          onClick={() => setShowKeyBindings(true)}
+          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
+          title="키 바인딩 설정"
+        >
+          ⌨
+        </button>
         <div className="w-px h-4 bg-zinc-700" />
         <button
           onClick={handleSaveWithCleanup}
@@ -959,18 +1066,43 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
       {/* ===== MAIN 3-COLUMN LAYOUT ===== */}
       <div className="flex flex-1 min-h-0">
-        {/* --- LEFT: Keysound Panel --- */}
+        {/* --- LEFT: Keysound / Pattern Panel --- */}
         {showLeftPanel && (
           <div className="w-52 border-r border-zinc-800 flex flex-col bg-zinc-900 shrink-0">
-            <KeysoundPanel
-              keysounds={keysoundRecord}
-              currentKeysound={currentKeysound}
-              onSelect={store.setCurrentKeysound}
-              onPreview={previewKeysound}
-              isAudioReady={isAudioReady}
-              isAudioLoading={audioPhase === 'loading'}
-              onUploadClick={handleImportKeysounds}
-            />
+            <div className="flex border-b border-zinc-800 shrink-0">
+              <button
+                onClick={() => setLeftPanelTab('keysound')}
+                className={`flex-1 px-2 py-1.5 text-[10px] font-semibold transition-colors ${
+                  leftPanelTab === 'keysound' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                키음
+              </button>
+              <button
+                onClick={() => setLeftPanelTab('pattern')}
+                className={`flex-1 px-2 py-1.5 text-[10px] font-semibold transition-colors ${
+                  leftPanelTab === 'pattern' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                패턴
+              </button>
+            </div>
+            {leftPanelTab === 'keysound' ? (
+              <KeysoundPanel
+                keysounds={keysoundRecord}
+                currentKeysound={currentKeysound}
+                onSelect={store.setCurrentKeysound}
+                onPreview={previewKeysound}
+                isAudioReady={isAudioReady}
+                isAudioLoading={audioPhase === 'loading'}
+                onUploadClick={handleImportKeysounds}
+              />
+            ) : (
+              <PatternLibraryPanel
+                onApplyPattern={handleApplyPattern}
+                onSaveSelection={handleSaveSelectionAsPattern}
+              />
+            )}
           </div>
         )}
 
@@ -1200,6 +1332,11 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
         <div className="flex-1">
           <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} zoom={1} />
         </div>
+        {midiRecordingMode !== 'off' && (
+          <div className="px-2 text-[10px] text-green-400 shrink-0">
+            MIDI: {midiRecordingMode === 'step' ? '스텝' : '실시간'}
+          </div>
+        )}
         <div className="px-3 text-[10px] text-zinc-500 shrink-0">
           추정 난이도: <span className="text-zinc-300 font-semibold">{estimateDifficulty(notes, editedBaseBpm, totalBeats) || '-'}</span>/12
         </div>
@@ -1381,6 +1518,83 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
           onNavigate={store.setCurrentBeat}
         />
       )}
+
+      {/* ===== AUTO CHART DIALOG ===== */}
+      {showAutoChart && (
+        <AutoChartDialog
+          open={showAutoChart}
+          onClose={() => setShowAutoChart(false)}
+          existingNotes={notes.filter((n) => n.noteType === 'playable').map((n) => ({
+            beat: n.beat,
+            column: n.column,
+            columnIndex: laneIds.indexOf(n.column),
+          }))}
+          laneIds={laneIds}
+          bpm={editedBaseBpm}
+          currentBeat={currentBeat}
+          gridSnap={gridSnap}
+          onApplyNotes={(generatedNotes: GeneratedNote[]) => {
+            const s = useEditorStore.getState();
+            store.pushUndo('Auto-generate chart');
+            let nextId = s.nextNoteId;
+            const newNotes = generatedNotes.map((gn) => {
+              const col = laneIds[gn.columnIndex] || laneIds[0] || '';
+              const { measure, fraction } = beatToMF(gn.beat);
+              return {
+                id: `note-${nextId++}`,
+                beat: gn.beat,
+                column: col,
+                noteType: gn.noteType,
+                keysound: s.currentKeysound,
+                measure,
+                fraction,
+                channel: '',
+                endBeat: gn.endBeat,
+              };
+            });
+            useEditorStore.setState({
+              notes: [...s.notes, ...newNotes],
+              nextNoteId: nextId,
+              hasUnsavedChanges: true,
+            });
+            showToast(`${newNotes.length}개 노트 생성 완료`, 'success');
+          }}
+        />
+      )}
+
+      {/* ===== AUDIO SLICER ===== */}
+      {showAudioSlicer && (
+        <AudioSlicer
+          open={showAudioSlicer}
+          onClose={() => setShowAudioSlicer(false)}
+          bmsFilePath={file.path}
+          usedWavIds={new Set(Object.keys(keysoundRecord).map((k) => k.toUpperCase()))}
+          onSlicesCreated={(wavDefs) => {
+            store.updateHeadersWithWavDefs(wavDefs);
+            showToast(`${Object.keys(wavDefs).length}개 슬라이스 저장 완료`, 'success');
+            setShowAudioSlicer(false);
+          }}
+        />
+      )}
+
+      {/* ===== MIDI MAPPING DIALOG ===== */}
+      <MidiMappingDialog
+        open={showMidiDialog}
+        onClose={() => setShowMidiDialog(false)}
+        laneIds={laneIds}
+        mapping={midiMapping}
+        onMappingChange={setMidiMapping}
+        recordingMode={midiRecordingMode}
+        onRecordingModeChange={setMidiRecordingMode}
+      />
+
+      {/* ===== KEY BINDINGS DIALOG ===== */}
+      <KeyBindingsDialog
+        open={showKeyBindings}
+        onClose={() => setShowKeyBindings(false)}
+        bindings={keyBindings}
+        onBindingsChange={setKeyBindings}
+      />
 
       {/* ===== TOAST ===== */}
       {toast && (

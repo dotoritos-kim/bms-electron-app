@@ -8,6 +8,7 @@ import type {
   NoteType,
 } from '@rhythm-archive/bms-core';
 import type { EditorTool, SelectedNoteType, GridSnap } from '@rhythm-archive/bms-editor';
+import type { PatternTemplate, PatternNote } from '../lib/patternTemplates';
 
 // --- Types ---
 
@@ -165,6 +166,10 @@ interface EditorState {
   setLoopA: (beat: number | null) => void;
   setLoopB: (beat: number | null) => void;
   toggleMetronome: () => void;
+
+  // Patterns
+  applyPattern: (pattern: PatternTemplate, laneIds: string[], startBeat: number, startColumn: string, keysound: string) => void;
+  selectionToPatternData: (laneIds: string[]) => { notes: PatternNote[]; columnCount: number; beatLength: number } | null;
 }
 
 const initialState = {
@@ -694,4 +699,64 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setLoopA: (beat) => set({ loopA: beat }),
   setLoopB: (beat) => set({ loopB: beat }),
   toggleMetronome: () => set((s) => ({ metronomeEnabled: !s.metronomeEnabled })),
+
+  // --- Patterns ---
+  applyPattern: (pattern, laneIds, startBeat, startColumn, keysound) => {
+    const s = get();
+    if (pattern.notes.length === 0 || laneIds.length === 0) return;
+    s.pushUndo('Apply pattern');
+    const startColIdx = laneIds.indexOf(startColumn);
+    const baseCol = startColIdx >= 0 ? startColIdx : 0;
+    let nextId = s.nextNoteId;
+    const newNotes: EditableBMSNote[] = [];
+    for (const pn of pattern.notes) {
+      const colIdx = baseCol + pn.columnIndex;
+      if (colIdx < 0 || colIdx >= laneIds.length) continue;
+      const beat = startBeat + pn.beatOffset;
+      if (beat < 0) continue;
+      const { measure, fraction } = beatToMF(beat);
+      const endBeat = pn.endBeatOffset !== undefined ? startBeat + pn.endBeatOffset : undefined;
+      newNotes.push({
+        id: `note-${nextId++}`,
+        beat,
+        column: laneIds[colIdx],
+        noteType: pn.noteType || 'playable',
+        keysound,
+        measure,
+        fraction,
+        channel: '',
+        endBeat,
+      } as EditableBMSNote);
+    }
+    set({
+      notes: [...s.notes, ...newNotes],
+      nextNoteId: nextId,
+      hasUnsavedChanges: true,
+      selectedNotes: new Set(newNotes.map((n) => n.id)),
+    });
+  },
+
+  selectionToPatternData: (laneIds) => {
+    const s = get();
+    if (s.selectedNotes.size === 0) return null;
+    const selected = s.notes.filter((n) => s.selectedNotes.has(n.id));
+    if (selected.length === 0) return null;
+    const minBeat = Math.min(...selected.map((n) => n.beat));
+    const maxBeat = Math.max(...selected.map((n) => n.endBeat ?? n.beat));
+    const colIndices = selected.map((n) => laneIds.indexOf(n.column)).filter((i) => i >= 0);
+    if (colIndices.length === 0) return null;
+    const minCol = Math.min(...colIndices);
+    const notes: PatternNote[] = selected.map((n) => {
+      const colIdx = laneIds.indexOf(n.column);
+      return {
+        beatOffset: n.beat - minBeat,
+        columnIndex: (colIdx >= 0 ? colIdx : 0) - minCol,
+        noteType: n.noteType,
+        endBeatOffset: n.endBeat !== undefined ? n.endBeat - minBeat : undefined,
+      };
+    });
+    const columnCount = Math.max(...notes.map((n) => n.columnIndex)) + 1;
+    const beatLength = maxBeat - minBeat || 0.25;
+    return { notes, columnCount, beatLength };
+  },
 }));

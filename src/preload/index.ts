@@ -27,6 +27,20 @@ const api = {
       opts: { title: string; artist: string; bpm: number; keyMode: string },
     ): Promise<{ path: string; name: string; folderPath: string } | null> =>
       ipcRenderer.invoke('file:createNewBms', opts),
+    openAudioFile: (): Promise<string | null> =>
+      ipcRenderer.invoke('dialog:openAudioFile'),
+    saveWavSlice: (
+      destPath: string,
+      pcmData: Float32Array,
+      sampleRate: number,
+      channels: number,
+    ): Promise<boolean> =>
+      ipcRenderer.invoke('file:saveWavSlice', destPath, pcmData, sampleRate, channels),
+    saveWavSlices: (
+      bmsDir: string,
+      slices: Array<{ filename: string; pcmData: Float32Array; sampleRate: number; channels: number }>,
+    ): Promise<string[]> =>
+      ipcRenderer.invoke('file:saveWavSlices', bmsDir, slices),
   },
   audio: {
     readFile: (filePath: string): Promise<ArrayBuffer> =>

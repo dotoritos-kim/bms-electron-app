@@ -18,6 +18,9 @@ export interface ElectronAPI {
     checkAutoSave: (filePath: string) => Promise<string | null>;
     deleteAutoSave: (filePath: string) => Promise<boolean>;
     createNewBms: (opts: { title: string; artist: string; bpm: number; keyMode: string }) => Promise<{ path: string; name: string; folderPath: string } | null>;
+    openAudioFile: () => Promise<string | null>;
+    saveWavSlice: (destPath: string, pcmData: Float32Array, sampleRate: number, channels: number) => Promise<boolean>;
+    saveWavSlices: (bmsDir: string, slices: Array<{ filename: string; pcmData: Float32Array; sampleRate: number; channels: number }>) => Promise<string[]>;
   };
   audio: {
     readFile: (filePath: string) => Promise<ArrayBuffer>;

@@ -21,11 +21,13 @@ export function registerAudioIpc(): void {
       const errors: Record<string, string> = {};
 
       // Build a baseName (lowercase, no ext) → actual file path lookup from directory listing
+      const entries = Object.entries(keysoundMap);
+
       let dirFiles: string[];
       try {
         dirFiles = await readdir(dir);
       } catch {
-        return { results, errors: Object.fromEntries(entries.map(([id, f]) => [id, `Directory not found: ${dir}`])) };
+        return { results, errors: Object.fromEntries(entries.map(([id]) => [id, `Directory not found: ${dir}`])) };
       }
       const baseNameToPath = new Map<string, string>();
       for (const f of dirFiles) {
@@ -34,8 +36,6 @@ export function registerAudioIpc(): void {
           baseNameToPath.set(parsed.name.toLowerCase(), join(dir, f));
         }
       }
-
-      const entries = Object.entries(keysoundMap);
 
       // Process in parallel batches of 20
       const batchSize = 20;

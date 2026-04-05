@@ -819,12 +819,14 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
   const handlePlaybackStop = useCallback(() => {
     isPlayingRef.current = false;
+    // Preserve current beat position so the editor stays at the playback point
+    const stoppedBeat = playbackBeatRef.current;
     playbackOffsetRef.current = 0;
     playbackBeatRef.current = 0;
     if (schedulerRef.current) cancelAnimationFrame(schedulerRef.current);
     audioPreloaderRef.current?.stopAllAudio();
     store.setPlaybackTime(0);
-    store.setCurrentBeat(0);
+    if (stoppedBeat > 0) store.setCurrentBeat(stoppedBeat);
     store.setAudioPhase(
       (['idle', 'loading'] as AudioPhase[]).includes(useEditorStore.getState().audioPhase)
         ? useEditorStore.getState().audioPhase

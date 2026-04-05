@@ -274,8 +274,8 @@ export function registerFileIpc(): void {
       buffer.writeUInt16LE(channels, 22);
       buffer.writeUInt32LE(sampleRate, 24);
       buffer.writeUInt32LE(byteRate, 28);
-      buffer.writeUInt16LE(blockAlign, 30);
-      buffer.writeUInt16LE(16, 32); // bits per sample
+      buffer.writeUInt16LE(blockAlign, 32);
+      buffer.writeUInt16LE(16, 34); // bits per sample
       // data chunk
       buffer.write('data', 36);
       buffer.writeUInt32LE(dataSize, 40);
@@ -318,8 +318,8 @@ export function registerFileIpc(): void {
         buffer.writeUInt16LE(slice.channels, 22);
         buffer.writeUInt32LE(slice.sampleRate, 24);
         buffer.writeUInt32LE(byteRate, 28);
-        buffer.writeUInt16LE(blockAlign, 30);
-        buffer.writeUInt16LE(16, 32);
+        buffer.writeUInt16LE(blockAlign, 32);
+        buffer.writeUInt16LE(16, 34);
         buffer.write('data', 36);
         buffer.writeUInt32LE(dataSize, 40);
 

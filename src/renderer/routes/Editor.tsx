@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
-import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Music, Headphones } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical } from 'lucide-react';
+// Removed react-resizable-panels — using custom resize handles instead
 import {
   NoteChartEditor,
   EditorToolbar,
@@ -16,14 +17,15 @@ import {
 import type { BmsChartDiffInfo } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote, EditableBMSChart, TimingAction } from '@rhythm-archive/bms-core';
 import { BMSWriter, Timing } from '@rhythm-archive/bms-core';
-import { AudioPreloader } from '@rhythm-archive/bms-player';
-import type { FileMap } from '@rhythm-archive/bms-player';
+import { AudioPreloader, WorkerAudioScheduler } from '@rhythm-archive/bms-player';
+import type { FileMap, SchedulerNote } from '@rhythm-archive/bms-player';
+import AudioSchedulerWorkerConstructor from '../workers/audioScheduler.worker?worker';
 import type { CurrentFile, NavigationGuard } from '../App';
 import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
 import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
 import { Player } from './Player';
 import { useEditorStore } from '../stores/editorStore';
-import type { AudioPhase } from '../stores/editorStore';
+import type { AudioPhase, PasteAnalysis } from '../stores/editorStore';
 import { PatternLibraryPanel } from '../components/PatternLibraryPanel';
 import { KeyBindingsDialog } from '../components/KeyBindingsDialog';
 import type { PatternTemplate } from '../lib/patternTemplates';
@@ -40,322 +42,89 @@ import {
 } from '../lib/midiInput';
 import { AudioSlicer } from '../components/AudioSlicer';
 import { AutoChartDialog } from '../components/AutoChartDialog';
+import { BeatKeysoundPanel } from '../components/BeatKeysoundPanel';
+import { ChartStatsView, estimateDifficulty } from '../components/ChartStatsView';
+import { BpmTapDialog } from '../components/BpmTapDialog';
+import { AccessibleDialog } from '../components/AccessibleDialog';
+import { ToastStack, useToastStack } from '../components/ToastStack';
 import type { GeneratedNote } from '../lib/autoChart';
+import { createBeatConverter } from '../lib/beatConverter';
+// WaveformOverlay removed — requires NoteChartEditor internal coordinate sync to work correctly
+
+type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | null;
+type OverlayType = 'diff' | 'audioSlicer' | 'playTest' | null;
 
 interface EditorProps {
   file: CurrentFile;
   onBack: () => void;
+  onClearFile?: () => void;
+  onOpenFile?: (file: CurrentFile) => void;
   onRegisterGuard: (guard: NavigationGuard | null) => void;
 }
 
-/** beat → { measure, fraction } (4/4 기준) */
-function beatToMF(beat: number): { measure: number; fraction: number } {
-  const measure = Math.floor(beat / 4);
-  const fraction = (beat % 4) / 4;
-  return { measure, fraction };
-}
 
-/** BMSBpmChange → beat */
-function bpmBeat(b: { measure: number; fraction: number }): number {
-  return b.measure * 4 + b.fraction * 4;
-}
-
-/** Beat-position keysound overview */
-function BeatKeysoundPanel({
-  notes,
-  currentBeat,
-  wavDefinitions,
-  onPreview,
-  isAudioReady,
-}: {
-  notes: EditableBMSNote[];
-  currentBeat: number;
-  wavDefinitions: Map<string, string>;
-  onPreview?: (id: string) => void;
-  isAudioReady?: boolean;
-}) {
-  const BEAT_RANGE = 0.125;
-  const nearbyNotes = useMemo(() => {
-    const grouped = new Map<string, { beat: number; playable: EditableBMSNote[]; bgm: EditableBMSNote[] }>();
-    for (const n of notes) {
-      if (n.keysound === '00') continue;
-      if (Math.abs(n.beat - currentBeat) > 8) continue;
-      const beatKey = n.beat.toFixed(4);
-      let entry = grouped.get(beatKey);
-      if (!entry) {
-        entry = { beat: n.beat, playable: [], bgm: [] };
-        grouped.set(beatKey, entry);
-      }
-      if (n.noteType === 'bgm') entry.bgm.push(n);
-      else entry.playable.push(n);
-    }
-    return Array.from(grouped.values())
-      .sort((a, b) => a.beat - b.beat)
-      .filter((g) => g.beat >= currentBeat - 2 && g.beat <= currentBeat + 8);
-  }, [notes, currentBeat]);
-
-  if (nearbyNotes.length === 0) {
-    return (
-      <div className="px-3 py-2">
-        <h3 className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5 mb-1">
-          <Headphones className="h-3 w-3" />
-          키음 타임라인
-        </h3>
-        <div className="text-[10px] text-zinc-600">현재 위치 근처에 키음 없음</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="px-3 py-2">
-      <h3 className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5 mb-1.5">
-        <Headphones className="h-3 w-3" />
-        키음 타임라인
-      </h3>
-      <div className="space-y-1">
-        {nearbyNotes.map((group) => {
-          const isCurrent = Math.abs(group.beat - currentBeat) < BEAT_RANGE;
-          const measure = Math.floor(group.beat / 4);
-          const frac = ((group.beat % 4) / 4).toFixed(2);
-          return (
-            <div
-              key={group.beat.toFixed(4)}
-              className={`rounded px-2 py-1 text-[10px] ${
-                isCurrent ? 'bg-blue-900/40 border border-blue-700/50' : 'bg-zinc-800/50'
-              }`}
-            >
-              <div className="flex items-center gap-1 mb-0.5">
-                <span className="font-mono text-zinc-500">#{String(measure).padStart(3, '0')}:{frac}</span>
-                <span className="font-mono text-zinc-600">({group.beat.toFixed(2)})</span>
-                {isCurrent && <span className="text-blue-400 text-[9px]">◀ 현재</span>}
-              </div>
-              {group.playable.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-0.5">
-                  {group.playable.map((n) => (
-                    <button
-                      key={n.id}
-                      onClick={() => isAudioReady && onPreview?.(n.keysound)}
-                      className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-green-900/40 text-green-300 hover:bg-green-800/50 transition-colors"
-                      title={`${n.column || 'P'} — ${n.keysound}: ${wavDefinitions.get(n.keysound) || '?'}`}
-                    >
-                      <Music className="h-2.5 w-2.5" />
-                      <span className="font-mono">{n.keysound}</span>
-                      {n.column && <span className="text-green-500">({n.column})</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {group.bgm.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-0.5">
-                  {group.bgm.map((n) => (
-                    <button
-                      key={n.id}
-                      onClick={() => isAudioReady && onPreview?.(n.keysound)}
-                      className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-purple-900/40 text-purple-300 hover:bg-purple-800/50 transition-colors"
-                      title={`BGM — ${n.keysound}: ${wavDefinitions.get(n.keysound) || '?'}`}
-                    >
-                      <Headphones className="h-2.5 w-2.5" />
-                      <span className="font-mono">{n.keysound}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** Estimate chart difficulty (1-12 scale) based on note density, BPM, LN ratio */
-function estimateDifficulty(notes: EditableBMSNote[], bpm: number, totalBeats: number): number {
-  if (notes.length === 0 || totalBeats <= 0) return 0;
-  const playableNotes = notes.filter((n) => n.noteType === 'playable' || n.noteType === 'invisible');
-  const totalPlayable = playableNotes.length;
-  if (totalPlayable === 0) return 0;
-
-  // Notes per second (assuming 4/4 time)
-  const durationSec = (totalBeats / bpm) * 60;
-  const nps = totalPlayable / Math.max(durationSec, 1);
-
-  // Peak density: max notes in any 1-beat window
-  const beatBuckets = new Map<number, number>();
-  for (const n of playableNotes) {
-    const bucket = Math.floor(n.beat);
-    beatBuckets.set(bucket, (beatBuckets.get(bucket) || 0) + 1);
-  }
-  const peakDensity = Math.max(...beatBuckets.values(), 0);
-
-  // Long note ratio
-  const lnCount = playableNotes.filter((n) => n.endBeat !== undefined).length;
-  const lnRatio = lnCount / totalPlayable;
-
-  // BPM factor
-  const bpmFactor = Math.min(bpm / 200, 1.5);
-
-  // Combined score → map to 1-12
-  const rawScore = (nps * 2.5) + (peakDensity * 0.8) + (bpmFactor * 2) + (lnRatio * 1.5);
-  return Math.max(1, Math.min(12, Math.round(rawScore)));
-}
-
-function ChartStatsView({ notes, bpm, totalBeats }: { notes: EditableBMSNote[]; bpm: number; totalBeats: number }) {
-  const stats = useMemo(() => {
-    const playable = notes.filter((n) => n.noteType === 'playable').length;
-    const invisible = notes.filter((n) => n.noteType === 'invisible').length;
-    const landmine = notes.filter((n) => n.noteType === 'landmine').length;
-    const bgm = notes.filter((n) => n.noteType === 'bgm').length;
-    const ln = notes.filter((n) => n.endBeat !== undefined).length;
-    const durationSec = totalBeats > 0 && bpm > 0 ? (totalBeats / bpm) * 60 : 0;
-    const nps = durationSec > 0 ? playable / durationSec : 0;
-    const measures = totalBeats > 0 ? Math.ceil(totalBeats / 4) : 0;
-    return { playable, invisible, landmine, bgm, ln, durationSec, nps, measures };
-  }, [notes, bpm, totalBeats]);
-
-  const fmt = (sec: number) => {
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
-  return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
-      <div className="text-zinc-500">Playable</div><div className="text-zinc-300 text-right">{stats.playable}</div>
-      <div className="text-zinc-500">LN</div><div className="text-zinc-300 text-right">{stats.ln}</div>
-      <div className="text-zinc-500">BGM</div><div className="text-zinc-300 text-right">{stats.bgm}</div>
-      <div className="text-zinc-500">Invisible</div><div className="text-zinc-300 text-right">{stats.invisible}</div>
-      <div className="text-zinc-500">Landmine</div><div className="text-zinc-300 text-right">{stats.landmine}</div>
-      <div className="text-zinc-500">NPS</div><div className="text-zinc-300 text-right">{stats.nps.toFixed(1)}</div>
-      <div className="text-zinc-500">마디</div><div className="text-zinc-300 text-right">{stats.measures}</div>
-      <div className="text-zinc-500">재생 시간</div><div className="text-zinc-300 text-right">{fmt(stats.durationSec)}</div>
-    </div>
-  );
-}
-
-function BpmTapDialog({ onClose, onApply }: { onClose: () => void; onApply: (bpm: number) => void }) {
-  const [taps, setTaps] = useState<number[]>([]);
-  const bpm = useMemo(() => {
-    if (taps.length < 2) return 0;
-    const intervals: number[] = [];
-    for (let i = 1; i < taps.length; i++) {
-      intervals.push(taps[i] - taps[i - 1]);
-    }
-    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-    return Math.round((60000 / avgInterval) * 100) / 100;
-  }, [taps]);
-
-  const handleTap = useCallback(() => {
-    setTaps((prev) => {
-      const now = performance.now();
-      // Reset if gap > 3 seconds
-      if (prev.length > 0 && now - prev[prev.length - 1] > 3000) return [now];
-      return [...prev.slice(-20), now];
-    });
-  }, []);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.code === 'Space') { e.preventDefault(); e.stopImmediatePropagation(); handleTap(); }
-      if (e.key === 'Escape') { e.stopImmediatePropagation(); onClose(); }
-    };
-    // Use capture phase so this fires before Editor's keydown handler
-    window.addEventListener('keydown', handler, true);
-    return () => window.removeEventListener('keydown', handler, true);
-  }, [handleTap, onClose]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-5 w-80 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-sm font-semibold text-zinc-200 mb-3">BPM 탭</h3>
-        <div className="text-center mb-4">
-          <div className="text-4xl font-bold text-blue-400 font-mono">{bpm > 0 ? bpm : '--'}</div>
-          <div className="text-xs text-zinc-500 mt-1">BPM ({taps.length} taps)</div>
-        </div>
-        <button
-          onClick={handleTap}
-          className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-lg font-semibold transition-colors mb-3"
-        >
-          탭 (Space)
-        </button>
-        <div className="flex justify-between">
-          <button onClick={() => setTaps([])} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">리셋</button>
-          <div className="flex gap-2">
-            <button onClick={onClose} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">취소</button>
-            <button
-              onClick={() => bpm > 0 && onApply(bpm)}
-              disabled={bpm <= 0}
-              className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded"
-            >적용</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
+export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard }: EditorProps) {
   const { chart, isLoading, error, load } = useLocalBmsFile();
 
   // --- Zustand store ---
   const store = useEditorStore();
   const {
-    notes, bpmChanges, stopEvents, headers, timeSignatures, editableChart,
+    notes, bpmChanges, stopEvents, headers, timeSignatures, editableChart, keyMode,
     hasUnsavedChanges, activeTool, gridSnap, selectedNotes, selectedNoteType,
     currentKeysound, currentBeat, clipboard, undoStack, redoStack,
     audioPhase, audioLoadProgress, playbackSpeed, volume, playbackTime, playbackDuration,
-    inputDialog, showLeftPanel, showRightPanel, headerCollapsed, toast, showBackConfirm,
+    noteHeight, inputDialog, showLeftPanel, showRightPanel, headerCollapsed, showBackConfirm,
   } = store;
 
-  // Local dialog state
-  const [showNoteSearch, setShowNoteSearch] = useState(false);
-  const [showBpmTap, setShowBpmTap] = useState(false);
-  const [measureDialog, setMeasureDialog] = useState<{ type: 'insert' | 'delete' } | null>(null);
-  const [showDiff, setShowDiff] = useState(false);
+  // Local dialog state — 2-layer enum (modal + overlay)
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [activeOverlay, setActiveOverlay] = useState<OverlayType>(null);
   const [leftPanelTab, setLeftPanelTab] = useState<'keysound' | 'pattern'>('keysound');
-  const [showKeyBindings, setShowKeyBindings] = useState(false);
   const [keyBindings, setKeyBindings] = useState<KeyBinding[]>(() => loadKeyBindings());
   const actionMapRef = useRef(buildActionMap(keyBindings));
-  const [showAudioSlicer, setShowAudioSlicer] = useState(false);
-  const [showAutoChart, setShowAutoChart] = useState(false);
-  const [showMidiDialog, setShowMidiDialog] = useState(false);
   const [midiMapping, setMidiMapping] = useState<MidiMapping>(() => loadMidiMapping() || createDefaultMapping([]));
   const [midiRecordingMode, setMidiRecordingMode] = useState<MidiRecordingMode>('off');
   const originalChartInfoRef = useRef<BmsChartDiffInfo | null>(null);
   const measureInputRef = useRef<HTMLInputElement>(null);
+  const [showToolMenu, setShowToolMenu] = useState(false);
+  // showWaveform removed — WaveformOverlay needs NoteChartEditor coordinate integration
+  const [leftPanelWidth, setLeftPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-left-w') || '208'));
+  const [rightPanelWidth, setRightPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-right-w') || '224'));
+  const toolMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close all modal dialogs (prevents overlap)
-  const closeAllDialogs = useCallback(() => {
-    setShowNoteSearch(false);
-    setShowBpmTap(false);
-    setMeasureDialog(null);
-    setShowKeyBindings(false);
-    setShowAudioSlicer(false);
-    setShowAutoChart(false);
-    setShowMidiDialog(false);
-    setShowDiff(false);
-  }, []);
+  // Close tool menu on outside click
+  useEffect(() => {
+    if (!showToolMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (toolMenuRef.current && !toolMenuRef.current.contains(e.target as Node)) {
+        setShowToolMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showToolMenu]);
+
+  // Open modal (auto-closes any other modal)
+  const openModal = useCallback((modal: ModalType) => setActiveModal(modal), []);
+  // Open overlay (auto-closes any other overlay)
+  const openOverlay = useCallback((overlay: OverlayType) => setActiveOverlay(overlay), []);
 
   // Audio refs (imperative, not in store)
   const audioPreloaderRef = useRef<AudioPreloader | null>(null);
-  const schedulerRef = useRef<number | null>(null);
+  const audioSchedulerRef = useRef<WorkerAudioScheduler | null>(null);
   const isPlayingRef = useRef(false);
-  const playbackStartRef = useRef(0);
   const playbackOffsetRef = useRef(0);
   const speedRef = useRef(1);
   const volumeRef = useRef(0.8);
   const playbackBeatRef = useRef(0);
-  const lastUiUpdateRef = useRef(0);
   const editedTimingRef = useRef<Timing | null>(null);
+  // Preview track isolation
+  const lastPreviewTrackRef = useRef<string | null>(null);
   const inputDialogRef = useRef<HTMLInputElement>(null);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const savingRef = useRef(false);
 
-  // Toast helper
-  const showToast = useCallback((message: string, type: 'success' | 'error') => {
-    store.setToast({ message, type });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => store.setToast(null), 2500);
-  }, []);
+  // Toast stack (replaces single toast)
+  const { toasts: toastStack, show: showToast, dismiss: dismissToast } = useToastStack();
 
   useEffect(() => {
     store.reset();
@@ -365,23 +134,25 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   // Initialize from chart
   useEffect(() => {
     if (!chart) return;
-    const editableNotes: EditableBMSNote[] = chart.notes.map((n, i) => {
-      const { measure, fraction } = beatToMF(n.beat);
-      return {
-        id: `note-${i}`,
-        beat: n.beat,
-        column: n.column || '',
-        noteType: (n.noteType as EditableBMSNote['noteType']) || 'playable',
-        keysound: n.keysound || '00',
-        endBeat: n.endBeat,
-        measure,
-        fraction,
-        channel: n.channel || '',
-      };
-    });
     if (chart.bmsChart) {
       const ec = BMSWriter.fromBMSChart(chart.bmsChart);
-      store.initFromChart(ec, editableNotes, editableNotes.length + 1);
+      // Create converter from chart's timeSignatures for initial note mapping
+      const initConverter = createBeatConverter(ec.timeSignatures);
+      const editableNotes: EditableBMSNote[] = chart.notes.map((n, i) => {
+        const { measure, fraction } = initConverter.beatToMF(n.beat);
+        return {
+          id: `note-${i}`,
+          beat: n.beat,
+          column: n.column || '',
+          noteType: (n.noteType as EditableBMSNote['noteType']) || 'playable',
+          keysound: n.keysound || '00',
+          endBeat: n.endBeat,
+          measure,
+          fraction,
+          channel: n.channel || '',
+        };
+      });
+      store.initFromChart(ec, editableNotes, editableNotes.length + 1, chart.keyMode);
       // Save original chart info for diff
       originalChartInfoRef.current = {
         notes: chart.notes,
@@ -392,6 +163,10 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       };
     }
   }, [chart]);
+
+  // Auto-load audio when chart is loaded (placed after loadAudio definition via ref)
+  const autoLoadedRef = useRef(false);
+  const loadAudioRef = useRef<(() => Promise<void>) | null>(null);
 
   // WAV definitions
   const wavDefinitions = useMemo(() => {
@@ -407,11 +182,10 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
   const keysoundRecord = useMemo(() => chart?.keysounds || {}, [chart]);
 
-  // Lane config
+  // Lane config (uses store keyMode so mode switching works)
   const laneIds = useMemo(() => {
-    if (!chart) return [];
-    return getLaneIds(chart.keyMode);
-  }, [chart]);
+    return getLaneIds(keyMode);
+  }, [keyMode]);
 
   const totalBeats = chart?.totalBeats || 100;
 
@@ -429,15 +203,27 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     if (!chart) return null;
     const actions: TimingAction[] = [];
     for (const bc of bpmChanges) {
-      actions.push({ type: 'bpm', beat: bc.measure * 4 + bc.fraction * 4, bpm: bc.bpm });
+      actions.push({ type: 'bpm', beat: store.mfToBeat(bc.measure, bc.fraction), bpm: bc.bpm });
     }
     for (const se of stopEvents) {
-      actions.push({ type: 'stop', beat: se.measure * 4 + se.fraction * 4, stopBeats: se.duration / 48 });
+      actions.push({ type: 'stop', beat: store.mfToBeat(se.measure, se.fraction), stopBeats: se.duration / 48 });
     }
     return new Timing(editedBaseBpm, actions);
-  }, [chart, bpmChanges, stopEvents, editedBaseBpm]);
+  }, [chart, bpmChanges, stopEvents, editedBaseBpm, timeSignatures]);
 
   editedTimingRef.current = editedTiming;
+
+  // --- Preview sound helper: stops only previous preview, not playback tracks ---
+  const playPreview = useCallback((keysoundId: string) => {
+    const preloader = audioPreloaderRef.current;
+    if (!preloader) return;
+    // Stop only the previous preview track instead of all audio
+    if (lastPreviewTrackRef.current) {
+      preloader.stopAudio(lastPreviewTrackRef.current);
+    }
+    const trackId = preloader.playAudioSync(keysoundId.toLowerCase());
+    lastPreviewTrackRef.current = trackId;
+  }, []);
 
   // --- Note selection with keysound preview ---
   const handleNoteSelect = useCallback((noteIds: string[], additive?: boolean) => {
@@ -445,19 +231,18 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     if (noteIds.length === 1 && audioPreloaderRef.current) {
       const note = useEditorStore.getState().notes.find((n) => n.id === noteIds[0]);
       if (note && note.keysound && note.keysound !== '00') {
-        audioPreloaderRef.current.stopAllAudio();
-        audioPreloaderRef.current.playAudioSync(note.keysound.toLowerCase());
+        playPreview(note.keysound);
       }
     }
-  }, []);
+  }, [playPreview]);
 
   // --- Keysound assignment ---
   const handleKeysoundAssign = useCallback((noteId: string, keysoundId: string) => {
     store.updateNote(noteId, { keysound: keysoundId });
     if (audioPreloaderRef.current && keysoundId !== '00') {
-      audioPreloaderRef.current.playAudioSync(keysoundId.toLowerCase());
+      playPreview(keysoundId);
     }
-  }, []);
+  }, [playPreview]);
 
   // --- Note hover preview ---
   const lastHoverKeysoundRef = useRef<string | null>(null);
@@ -465,10 +250,9 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     if (keysoundId === lastHoverKeysoundRef.current) return;
     lastHoverKeysoundRef.current = keysoundId;
     if (keysoundId && audioPreloaderRef.current) {
-      audioPreloaderRef.current.stopAllAudio();
-      audioPreloaderRef.current.playAudioSync(keysoundId.toLowerCase());
+      playPreview(keysoundId);
     }
-  }, []);
+  }, [playPreview]);
 
   // --- Pattern apply/save ---
   const handleApplyPattern = useCallback((pattern: PatternTemplate) => {
@@ -511,7 +295,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     const rawBeat = mode === 'realtime' ? playbackBeatRef.current : s.currentBeat;
     const beat = Math.round(rawBeat / gridStep) * gridStep;
 
-    const { measure, fraction } = beatToMF(beat);
+    const { measure, fraction } = store.beatToMF(beat);
     store.addNote({
       beat,
       column: lane,
@@ -524,8 +308,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
     // Preview keysound
     if (audioPreloaderRef.current && s.currentKeysound !== '00') {
-      audioPreloaderRef.current.stopAllAudio();
-      audioPreloaderRef.current.playAudioSync(s.currentKeysound.toLowerCase());
+      playPreview(s.currentKeysound);
     }
 
     // Step mode: advance cursor
@@ -543,15 +326,18 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
   const handleDropKeysound = useCallback((keysoundId: string, beat: number, column: string) => {
     const { selectedNoteType: snt } = useEditorStore.getState();
-    const { measure, fraction } = beatToMF(beat);
+    const { measure, fraction } = store.beatToMF(beat);
+    const isBgm = column === 'BGM' || snt === 'bgm';
     store.addNote({
-      beat, column, noteType: snt === 'longNote' ? 'playable' : snt,
+      beat,
+      column: isBgm ? undefined : column,
+      noteType: isBgm ? 'bgm' : (snt === 'longNote' ? 'playable' : snt),
       keysound: keysoundId, measure, fraction, channel: '',
     });
     if (audioPreloaderRef.current && keysoundId !== '00') {
-      audioPreloaderRef.current.playAudioSync(keysoundId.toLowerCase());
+      playPreview(keysoundId);
     }
-  }, []);
+  }, [playPreview]);
 
   // --- Note move (needs laneIds) ---
   const handleNoteMove = useCallback((noteIds: string[], delta: { beat?: number; columnDelta?: number }) => {
@@ -587,20 +373,13 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   }, [file.path, keysoundRecord, showToast]);
 
   // --- Save ---
-  const handleSave = useCallback(async () => {
-    const s = useEditorStore.getState();
-    if (!chart || !s.editableChart || savingRef.current) return;
+  const handleSave = useCallback(async (): Promise<boolean> => {
+    if (!chart || savingRef.current) return false;
+    const chartToSave = store.savableChart();
+    if (!chartToSave) return false;
     savingRef.current = true;
     try {
       const writer = new BMSWriter();
-      const chartToSave: EditableBMSChart = {
-        headers: s.headers || s.editableChart.headers,
-        notes: s.notes,
-        timeSignatures: s.timeSignatures,
-        bpmChanges: s.bpmChanges,
-        stopEvents: s.stopEvents,
-        bgaEvents: s.editableChart.bgaEvents,
-      };
       const wavKeys = new Set(chartToSave.headers.wav.keys());
       const undefinedKeys = new Set<string>();
       for (const note of chartToSave.notes) {
@@ -610,21 +389,55 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       }
       if (undefinedKeys.size > 0) {
         console.warn('[Editor] Notes reference undefined WAV keys:', [...undefinedKeys]);
-        showToast(`경고: ${undefinedKeys.size}개 미정의 WAV 참조 (${[...undefinedKeys].slice(0, 3).join(', ')}${undefinedKeys.size > 3 ? '...' : ''})`, 'error');
+        showToast(`경고: ${undefinedKeys.size}개 미정의 WAV 참조 (${[...undefinedKeys].slice(0, 3).join(', ')}${undefinedKeys.size > 3 ? '...' : ''})`, 'warning');
       }
       const bmsContent = writer.write(chartToSave);
       await window.api.file.saveBms(file.path, bmsContent);
       store.setHasUnsavedChanges(false);
       showToast('저장 완료', 'success');
+      return true;
     } catch (err) {
       console.error('[Editor] Save failed:', err);
       showToast('저장 실패: ' + (err instanceof Error ? err.message : String(err)), 'error');
+      return false;
     } finally {
       savingRef.current = false;
     }
   }, [chart, file.path, showToast]);
 
-  // --- Keyboard shortcuts (dynamic key bindings) ---
+  // Clean up autosave on explicit save
+  const originalHandleSave = handleSave;
+  const handleSaveWithCleanup = useCallback(async (): Promise<boolean> => {
+    const success = await originalHandleSave();
+    if (success) {
+      window.api.file.deleteAutoSave(file.path).catch(() => {});
+    }
+    return success;
+  }, [originalHandleSave, file.path]);
+
+  // Save As
+  const handleSaveAs = useCallback(async () => {
+    const chartToSave = store.savableChart();
+    if (!chart || !chartToSave) return;
+    try {
+      const writer = new BMSWriter();
+      const bmsContent = writer.write(chartToSave);
+      const newPath = await window.api.file.saveAs(bmsContent, file.name);
+      if (newPath) {
+        showToast('다른 이름으로 저장 완료', 'success');
+      }
+    } catch (err) {
+      console.error('[Editor] Save As failed:', err);
+      showToast('저장 실패: ' + (err instanceof Error ? err.message : String(err)), 'error');
+    }
+  }, [chart, file.name, showToast]);
+
+  // --- Keyboard shortcuts (refs to avoid TDZ with callbacks defined later) ---
+  const handleSaveRef = useRef(handleSaveWithCleanup);
+  handleSaveRef.current = handleSaveWithCleanup;
+  const handlePlayTestRef = useRef<(() => void) | null>(null);
+  const handlePlaybackToggleRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -633,8 +446,9 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       const combo = normalizeKeyCombo(e);
       const action = actionMapRef.current.get(combo);
 
-      // Save always works even in input fields
-      if (action === 'save') { e.preventDefault(); handleSaveWithCleanup(); return; }
+      // Save/SaveAs always works even in input fields
+      if (action === 'save') { e.preventDefault(); handleSaveRef.current(); return; }
+      if (action === 'saveAs') { e.preventDefault(); handleSaveAs(); return; }
       if (isInput) return;
       if (!action) return;
 
@@ -648,33 +462,50 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       if (tool) { store.setActiveTool(tool); return; }
 
       switch (action) {
-        case 'undo': store.undo(); break;
-        case 'redo': store.redo(); break;
+        case 'undo': {
+          const desc = useEditorStore.getState().undoStack.at(-1)?.description;
+          store.undo();
+          if (desc) showToast(`실행 취소: ${desc}`, 'info');
+          break;
+        }
+        case 'redo': {
+          const desc = useEditorStore.getState().redoStack.at(-1)?.description;
+          store.redo();
+          if (desc) showToast(`다시 실행: ${desc}`, 'info');
+          break;
+        }
         case 'copy': store.copy(); break;
         case 'cut': store.cut(); break;
-        case 'paste': store.paste(); break;
+        case 'paste': {
+          const result = store.preparePaste(laneIds);
+          if (result) {
+            if (result.droppedCount > 0) {
+              showToast(`${result.droppedCount}개 노트가 현재 키 모드 범위 밖이라 제외됨`, 'warning');
+            }
+            if (result.conflicts.length > 0) {
+              // For now: auto-replace conflicts (full dialog UI deferred to P1)
+              store.executePaste(result, 'replace');
+              showToast(`${result.conflicts.length}개 중복 노트 교체됨`, 'info');
+            }
+          }
+          break;
+        }
         case 'selectAll': store.selectAll(); break;
         case 'delete': store.deleteNotes(ids); break;
         case 'escape':
           if (s.inputDialog) store.setInputDialog(null);
-          else if (showDiff) setShowDiff(false);
-          else if (showBpmTap) setShowBpmTap(false);
-          else if (measureDialog) setMeasureDialog(null);
-          else if (showNoteSearch) setShowNoteSearch(false);
-          else if (showAutoChart) setShowAutoChart(false);
-          else if (showAudioSlicer) setShowAudioSlicer(false);
-          else if (showMidiDialog) setShowMidiDialog(false);
-          else if (showKeyBindings) setShowKeyBindings(false);
+          else if (activeModal) setActiveModal(null);
+          else if (activeOverlay) setActiveOverlay(null);
           else store.clearSelection();
           break;
-        case 'noteSearch': setShowNoteSearch(true); break;
-        case 'playTest': handlePlayTest(); break;
-        case 'playToggle': handlePlaybackToggle(); break;
+        case 'noteSearch': openModal('noteSearch'); break;
+        case 'playTest': handlePlayTestRef.current?.(); break;
+        case 'playToggle': handlePlaybackToggleRef.current?.(); break;
         case 'mirror': store.mirrorNotes(laneIds); break;
         case 'random': store.randomNotes(laneIds); break;
         case 'quantize': store.quantizeNotes(); break;
-        case 'insertMeasure': setMeasureDialog({ type: 'insert' }); break;
-        case 'deleteMeasure': setMeasureDialog({ type: 'delete' }); break;
+        case 'insertMeasure': openModal('measureInsert'); break;
+        case 'deleteMeasure': openModal('measureDelete'); break;
         case 'moveUp': if (ids.length > 0) store.moveNotes(ids, { beat: gridStep }, laneIds); break;
         case 'moveDown': if (ids.length > 0) store.moveNotes(ids, { beat: -gridStep }, laneIds); break;
         case 'moveLeft': if (ids.length > 0) store.moveNotes(ids, { columnDelta: -1 }, laneIds); break;
@@ -683,11 +514,12 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
         case 'setLoopB': store.setLoopB(s.currentBeat); break;
         case 'clearLoop': store.setLoopA(null); store.setLoopB(null); break;
         case 'togglePatternPanel': setLeftPanelTab((t) => t === 'pattern' ? 'keysound' : 'pattern'); break;
+        case 'toggleDiff': activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff'); break;
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleSaveWithCleanup, handlePlayTest, handlePlaybackToggle, laneIds, showDiff, showBpmTap, measureDialog, showNoteSearch, showAutoChart, showAudioSlicer, showMidiDialog, showKeyBindings]);
+  }, [laneIds, activeModal, activeOverlay, handleSaveAs]);
 
   // --- Audio playback ---
   const loadAudio = useCallback(async () => {
@@ -712,6 +544,8 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       await preloader.loadAll();
       await preloader.decodeAll();
       await preloader.initAudioWorklet();
+      audioSchedulerRef.current?.dispose();
+      audioSchedulerRef.current = null;
       audioPreloaderRef.current?.releaseAllResources();
       audioPreloaderRef.current = preloader;
       preloader = null; // transferred ownership
@@ -731,87 +565,130 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     }
   }, [chart, file.path, audioPhase, editedTiming]);
 
+  // Auto-load audio effect (must be after loadAudio definition)
+  loadAudioRef.current = loadAudio;
+  useEffect(() => {
+    if (!chart || autoLoadedRef.current) return;
+    if (Object.keys(chart.keysounds).length > 0) {
+      autoLoadedRef.current = true;
+      const timer = setTimeout(() => loadAudioRef.current?.(), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [chart]);
+
   const handleSeekRef = useRef<(s: number) => void>(() => {});
-  const playbackLoopRef = useRef<() => void>(() => {});
 
-  const playbackLoop = useCallback(() => {
+  /** Build sorted notes for audio scheduler */
+  const buildSchedulerNotes = useCallback((): SchedulerNote[] => {
     const timing = editedTimingRef.current;
-    if (!isPlayingRef.current || !timing) return;
-    const elapsed = (performance.now() - playbackStartRef.current) / 1000 * speedRef.current;
-    const currentSec = playbackOffsetRef.current + elapsed;
-    let lo = 0, hi = totalBeats;
-    for (let i = 0; i < 30; i++) {
-      const mid = (lo + hi) / 2;
-      if (timing.beatToSeconds(mid) < currentSec) lo = mid;
-      else hi = mid;
-    }
-    playbackBeatRef.current = lo;
-    const now = performance.now();
-    if (now - lastUiUpdateRef.current > 100) {
-      lastUiUpdateRef.current = now;
-      store.setPlaybackTime(currentSec);
-      store.setCurrentBeat(lo);
-    }
+    if (!timing) return [];
     const es = useEditorStore.getState();
-    // A-B loop: if loopEnd is set and we've passed it, seek back to loopStart
-    if (es.loopA !== null && es.loopB !== null) {
-      const loopStart = Math.min(es.loopA, es.loopB);
-      const loopEnd = Math.max(es.loopA, es.loopB);
-      if (loopStart < loopEnd && lo >= loopEnd) {
-        handleSeekRef.current(timing.beatToSeconds(loopStart));
-        return;
-      }
-    }
-    if (currentSec >= es.playbackDuration) {
-      handlePlaybackStop();
-      return;
-    }
-    schedulerRef.current = requestAnimationFrame(playbackLoopRef.current);
-  }, [totalBeats]);
-
-  /** Schedule all keysound playback from startSec onward. Returns true if scheduling succeeded. */
-  const scheduleNotes = useCallback((startSec: number, speed: number): boolean => {
-    const timing = editedTimingRef.current;
-    const preloader = audioPreloaderRef.current;
-    if (!timing || !preloader) return false;
-    const ctx = preloader.context;
-    if (!ctx) return false;
-    if (ctx.state === 'suspended') ctx.resume();
-
-    const es = useEditorStore.getState();
-    const loopEndSec = es.loopA !== null && es.loopB !== null
-      ? timing.beatToSeconds(Math.max(es.loopA, es.loopB))
-      : Infinity;
-    const allNotes = [...es.notes].filter((n) => n.noteType !== 'landmine').sort((a, b) => a.beat - b.beat);
-    for (const note of allNotes) {
-      if (!note.keysound || note.keysound === '00') continue;
-      const noteSec = timing.beatToSeconds(note.beat);
-      if (noteSec < startSec) continue;
-      if (noteSec >= loopEndSec) break;
-      const delay = (noteSec - startSec) / speed;
-      preloader.playAudioSync(note.keysound.toLowerCase(), false, true, 0, ctx.currentTime + delay, volumeRef.current);
-    }
-    return true;
+    return [...es.notes]
+      .filter((n) => n.noteType !== 'landmine' && n.keysound && n.keysound !== '00')
+      .sort((a, b) => a.beat - b.beat)
+      .map((n) => ({
+        sec: timing.beatToSeconds(n.beat),
+        keysound: n.keysound.toLowerCase(),
+        offset: 0,
+        volume: volumeRef.current,
+      }));
   }, []);
 
-  const handlePlaybackPlay = useCallback(() => {
+  /** Create or recreate the audio scheduler worker */
+  const createAudioScheduler = useCallback(() => {
+    const preloader = audioPreloaderRef.current;
+    if (!preloader) return;
+
+    // Dispose old scheduler
+    audioSchedulerRef.current?.dispose();
+
+    const worker = new AudioSchedulerWorkerConstructor();
+    const notes = buildSchedulerNotes();
+
+    const scheduler = new WorkerAudioScheduler({
+      worker,
+      preloader,
+      notes,
+    });
+
+    // UI updates from worker tick (~50ms)
+    // Throttle store updates to ~10fps to reduce re-renders during playback
+    let lastStoreUpdate = 0;
+    scheduler.setOnTick((currentSec: number) => {
+      const timing = editedTimingRef.current;
+      if (!timing || !isPlayingRef.current) return;
+
+      // Binary search for current beat
+      let lo = 0, hi = totalBeats;
+      for (let i = 0; i < 30; i++) {
+        const mid = (lo + hi) / 2;
+        if (timing.beatToSeconds(mid) < currentSec) lo = mid;
+        else hi = mid;
+      }
+      playbackBeatRef.current = lo;
+      playbackOffsetRef.current = currentSec;
+
+      // Throttle store updates to ~100ms (10fps) — refs are always instant
+      const now = performance.now();
+      if (now - lastStoreUpdate > 100) {
+        lastStoreUpdate = now;
+        store.setPlaybackTime(currentSec);
+        store.setCurrentBeat(lo);
+      }
+
+      // A-B loop check
+      const es = useEditorStore.getState();
+      if (es.loopA !== null && es.loopB !== null) {
+        const loopStart = Math.min(es.loopA, es.loopB);
+        const loopEnd = Math.max(es.loopA, es.loopB);
+        if (loopStart < loopEnd && lo >= loopEnd) {
+          handleSeekRef.current(timing.beatToSeconds(loopStart));
+          return;
+        }
+      }
+
+      // End of track
+      if (currentSec >= es.playbackDuration) {
+        handlePlaybackStop();
+      }
+    });
+
+    scheduler.setOnEnd(() => {
+      handlePlaybackStop();
+    });
+
+    audioSchedulerRef.current = scheduler;
+  }, [totalBeats, buildSchedulerNotes]);
+
+  const handlePlaybackPlay = useCallback(async () => {
     if (audioPhase !== 'ready' && audioPhase !== 'paused') return;
     if (!editedTimingRef.current || !audioPreloaderRef.current) return;
+    const ctx = audioPreloaderRef.current.context;
+    if (ctx?.state === 'suspended') await ctx.resume();
+
+    // Create scheduler if needed (first play or after notes change)
+    if (!audioSchedulerRef.current) {
+      createAudioScheduler();
+    }
+
     isPlayingRef.current = true;
     speedRef.current = playbackSpeed;
-    playbackStartRef.current = performance.now();
-    if (!scheduleNotes(playbackOffsetRef.current, playbackSpeed)) return;
+    audioPreloaderRef.current?.setPlaybackRate(playbackSpeed);
     store.setAudioPhase('playing');
-    schedulerRef.current = requestAnimationFrame(playbackLoopRef.current);
-  }, [audioPhase, playbackSpeed, scheduleNotes]);
+
+    if (audioPhase === 'paused') {
+      audioSchedulerRef.current?.resume(playbackOffsetRef.current, playbackSpeed);
+    } else {
+      audioSchedulerRef.current?.play(playbackOffsetRef.current, playbackSpeed);
+    }
+  }, [audioPhase, playbackSpeed, createAudioScheduler]);
 
   const handlePlaybackPause = useCallback(() => {
     if (audioPhase !== 'playing') return;
     isPlayingRef.current = false;
-    const elapsed = (performance.now() - playbackStartRef.current) / 1000 * speedRef.current;
-    playbackOffsetRef.current += elapsed;
-    if (schedulerRef.current) cancelAnimationFrame(schedulerRef.current);
+    audioSchedulerRef.current?.pause();
     audioPreloaderRef.current?.stopAllAudio();
+    // playbackOffsetRef is continuously updated by onTick
     store.setCurrentBeat(playbackBeatRef.current);
     store.setPlaybackTime(playbackOffsetRef.current);
     store.setAudioPhase('paused');
@@ -819,12 +696,10 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
   const handlePlaybackStop = useCallback(() => {
     isPlayingRef.current = false;
-    // Preserve current beat position so the editor stays at the playback point
     const stoppedBeat = playbackBeatRef.current;
     playbackOffsetRef.current = 0;
     playbackBeatRef.current = 0;
-    if (schedulerRef.current) cancelAnimationFrame(schedulerRef.current);
-    audioPreloaderRef.current?.stopAllAudio();
+    audioSchedulerRef.current?.stop();
     store.setPlaybackTime(0);
     if (stoppedBeat > 0) store.setCurrentBeat(stoppedBeat);
     store.setAudioPhase(
@@ -838,6 +713,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     if (audioPhase === 'playing') handlePlaybackPause();
     else handlePlaybackPlay();
   }, [audioPhase, handlePlaybackPause, handlePlaybackPlay]);
+  handlePlaybackToggleRef.current = handlePlaybackToggle;
 
   const handleSeek = useCallback((targetSec: number) => {
     const timing = editedTimingRef.current;
@@ -845,11 +721,10 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     const dur = useEditorStore.getState().playbackDuration;
     const clampedSec = Math.max(0, Math.min(targetSec, dur));
     const wasPlaying = isPlayingRef.current;
-    isPlayingRef.current = false;
-    if (schedulerRef.current) cancelAnimationFrame(schedulerRef.current);
-    audioPreloaderRef.current?.stopAllAudio();
+
     playbackOffsetRef.current = clampedSec;
     store.setPlaybackTime(clampedSec);
+
     let lo = 0, hi = totalBeats;
     for (let i = 0; i < 30; i++) {
       const mid = (lo + hi) / 2;
@@ -858,18 +733,17 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     }
     playbackBeatRef.current = lo;
     store.setCurrentBeat(lo);
-    if (wasPlaying && audioPreloaderRef.current) {
-      isPlayingRef.current = true;
-      playbackStartRef.current = performance.now();
-      if (scheduleNotes(clampedSec, speedRef.current)) {
-        store.setAudioPhase('playing');
-        schedulerRef.current = requestAnimationFrame(playbackLoopRef.current);
-      }
-    } else if (!wasPlaying) {
+
+    if (audioSchedulerRef.current) {
+      // Always update Worker position (even when paused, for accurate resume)
+      audioPreloaderRef.current?.stopAllAudio();
+      audioSchedulerRef.current.seek(clampedSec, speedRef.current);
+    }
+    if (!wasPlaying) {
       const phase = useEditorStore.getState().audioPhase;
       if (phase === 'playing') store.setAudioPhase('paused');
     }
-  }, [totalBeats, scheduleNotes]);
+  }, [totalBeats]);
 
   const handleBack = useCallback(() => {
     if (useEditorStore.getState().hasUnsavedChanges) {
@@ -880,25 +754,34 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     }
   }, [onBack, handlePlaybackStop]);
 
-  // Keep refs in sync (avoid stale closures in playbackLoop/handleSeek)
+  // Keep refs in sync (avoid stale closures in handleSeek)
   useLayoutEffect(() => {
     handleSeekRef.current = handleSeek;
-    playbackLoopRef.current = playbackLoop;
   });
 
   // Keep actionMap in sync
   useEffect(() => { actionMapRef.current = buildActionMap(keyBindings); }, [keyBindings]);
 
   // Keep speed/volume refs in sync
-  useEffect(() => { speedRef.current = playbackSpeed; }, [playbackSpeed]);
+  useEffect(() => {
+    speedRef.current = playbackSpeed;
+    // Set audio playback rate (pitch+speed of keysounds)
+    audioPreloaderRef.current?.setPlaybackRate(playbackSpeed);
+    if (audioSchedulerRef.current && isPlayingRef.current) {
+      // Clear already-scheduled sounds before changing speed
+      audioPreloaderRef.current?.stopAllAudio();
+      audioSchedulerRef.current.setSpeed(playbackSpeed);
+    }
+  }, [playbackSpeed]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
 
   // Cleanup
   useEffect(() => {
     return () => {
+      audioSchedulerRef.current?.dispose();
+      audioSchedulerRef.current = null;
       audioPreloaderRef.current?.releaseAllResources();
       audioPreloaderRef.current = null;
-      if (schedulerRef.current) cancelAnimationFrame(schedulerRef.current);
     };
   }, []);
 
@@ -906,18 +789,10 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   const autoSaveRef = useRef<ReturnType<typeof setInterval>>();
   useEffect(() => {
     autoSaveRef.current = setInterval(async () => {
-      const s = useEditorStore.getState();
-      if (!s.hasUnsavedChanges || !s.editableChart) return;
+      const chartToSave = store.savableChart();
+      if (!useEditorStore.getState().hasUnsavedChanges || !chartToSave) return;
       try {
         const writer = new BMSWriter();
-        const chartToSave: EditableBMSChart = {
-          headers: s.headers || s.editableChart.headers,
-          notes: s.notes,
-          timeSignatures: s.timeSignatures,
-          bpmChanges: s.bpmChanges,
-          stopEvents: s.stopEvents,
-          bgaEvents: s.editableChart.bgaEvents,
-        };
         const content = writer.write(chartToSave);
         await window.api.file.writeAutoSave(file.path, content);
       } catch (err) {
@@ -928,24 +803,16 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   }, [file.path]);
 
   // Check for autosave on mount
-  const [showAutoSaveRecovery, setShowAutoSaveRecovery] = useState(false);
   const autoSaveContentRef = useRef<string | null>(null);
   useEffect(() => {
     (async () => {
       const content = await window.api.file.checkAutoSave(file.path);
       if (content) {
         autoSaveContentRef.current = content;
-        setShowAutoSaveRecovery(true);
+        openModal('autoSaveRecovery');
       }
     })();
   }, [file.path]);
-
-  // Clean up autosave on explicit save
-  const originalHandleSave = handleSave;
-  const handleSaveWithCleanup = useCallback(async () => {
-    await originalHandleSave();
-    window.api.file.deleteAutoSave(file.path).catch(() => {});
-  }, [originalHandleSave, file.path]);
 
   // Navigation guard
   useEffect(() => {
@@ -965,17 +832,18 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   }, [onRegisterGuard]);
 
   // Play test mode
-  const [playTestMode, setPlayTestMode] = useState(false);
   const handlePlayTest = useCallback(async () => {
     // Stop editor playback before entering play test
     handlePlaybackStop();
     // Auto-save before play test
     const s = useEditorStore.getState();
     if (s.hasUnsavedChanges && s.editableChart) {
-      await handleSaveWithCleanup();
+      const ok = await handleSaveWithCleanup();
+      if (!ok) return; // Don't enter play test if save failed
     }
-    setPlayTestMode(true);
+    openOverlay('playTest');
   }, [handleSaveWithCleanup, handlePlaybackStop]);
+  handlePlayTestRef.current = handlePlayTest;
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -989,12 +857,12 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   );
 
   const bpmChangesWithBeat = useMemo(
-    () => bpmChanges.map((b) => ({ ...b, beat: bpmBeat(b) })),
+    () => bpmChanges.map((b) => ({ ...b, beat: store.mfToBeat(b.measure, b.fraction) })),
     [bpmChanges],
   );
 
   const stopEventsWithBeat = useMemo(
-    () => stopEvents.map((s) => ({ ...s, beat: bpmBeat(s) })),
+    () => stopEvents.map((s) => ({ ...s, beat: store.mfToBeat(s.measure, s.fraction) })),
     [stopEvents],
   );
 
@@ -1014,10 +882,9 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
   const previewKeysound = useCallback((id: string) => {
     if (audioPreloaderRef.current) {
-      audioPreloaderRef.current.stopAllAudio();
-      audioPreloaderRef.current.playAudioSync(id.toLowerCase());
+      playPreview(id);
     }
-  }, []);
+  }, [playPreview]);
 
   if (isLoading) {
     return (
@@ -1030,9 +897,48 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
   if (error) {
     return (
-      <div className="h-full flex flex-col items-center justify-center gap-4 bg-zinc-950">
-        <div className="text-red-400">Error: {error}</div>
-        <button onClick={onBack} className="text-blue-400 hover:text-blue-300">Back to Home</button>
+      <div className="h-full flex flex-col items-center justify-center gap-6 bg-zinc-950 px-8">
+        <div className="text-center max-w-md">
+          <div className="text-red-400 text-lg font-semibold mb-2">파일을 열 수 없습니다</div>
+          <p className="text-sm text-zinc-400 mb-3">이 파일의 형식이 올바르지 않거나 손상되었을 수 있습니다.</p>
+          <div className="text-xs text-zinc-600 mb-1">파일 경로:</div>
+          <div className="text-xs text-zinc-400 font-mono bg-zinc-900 rounded px-3 py-1.5 mb-3 break-all select-all">{file.path}</div>
+          <div className="text-xs text-zinc-600 mb-1">오류 상세:</div>
+          <div className="text-xs text-red-300/80 bg-red-950/30 border border-red-900/50 rounded px-3 py-1.5 mb-3 break-all select-all max-h-24 overflow-y-auto">{error}</div>
+          <button
+            onClick={() => navigator.clipboard.writeText(`파일: ${file.path}\n오류: ${error}`)}
+            className="text-[10px] text-zinc-500 hover:text-zinc-300 underline"
+          >
+            오류 정보 복사
+          </button>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => load(file.path)}
+            className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded transition-colors text-zinc-300"
+          >
+            다시 시도
+          </button>
+          <button
+            onClick={async () => {
+              const filePath = await window.api.file.openBmsFile();
+              if (filePath && onOpenFile) {
+                const name = filePath.split(/[/\\]/).pop() || '';
+                const folder = filePath.replace(/[/\\][^/\\]*$/, '');
+                onOpenFile({ path: filePath, name, folderPath: folder });
+              }
+            }}
+            className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors text-white"
+          >
+            다른 파일 열기
+          </button>
+          <button
+            onClick={() => { onClearFile?.(); onBack(); }}
+            className="text-blue-400 hover:text-blue-300 px-4 py-2 text-sm"
+          >
+            홈으로
+          </button>
+        </div>
       </div>
     );
   }
@@ -1041,83 +947,123 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     <div className="h-full flex flex-col bg-zinc-950 overflow-hidden">
       {/* ===== HEADER BAR ===== */}
       <div className="flex items-center gap-3 px-4 py-2 border-b border-zinc-800 bg-zinc-900 shrink-0">
-        <button onClick={handleBack} className="p-1 rounded hover:bg-zinc-800 transition-colors">
+        <button onClick={handleBack} className="p-1 rounded hover:bg-zinc-800 transition-colors" data-testid="back-btn">
           <ArrowLeft className="h-4 w-4" />
         </button>
         <span className="text-sm font-medium truncate">{chart?.songInfo?.title || file.name}</span>
-        {hasUnsavedChanges && <span className="text-yellow-500 text-xs font-bold">● 수정 중</span>}
-        <div className="flex-1" />
-        <button onClick={store.toggleLeftPanel} className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="키사운드 패널">
-          {showLeftPanel ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-        </button>
-        <button onClick={store.toggleRightPanel} className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="정보 패널">
-          {showRightPanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
-        </button>
-        <button
-          onClick={() => setShowDiff((v) => !v)}
-          className={`p-1 rounded hover:bg-zinc-800 transition-colors text-xs ${showDiff ? 'text-orange-400' : 'text-zinc-400'}`}
-          title="변경사항 비교"
-        >
-          Diff
-        </button>
-        <button
-          onClick={() => { closeAllDialogs(); setShowBpmTap(true); }}
-          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
-          title="BPM 탭"
-        >
-          BPM
-        </button>
-        <button
-          onClick={handlePlayTest}
-          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
-          title="플레이 테스트 (F5)"
-        >
-          F5
-        </button>
-        <button
-          onClick={() => { closeAllDialogs(); setShowAutoChart(true); }}
-          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
-          title="AI 차트 생성"
-        >
-          AI
-        </button>
-        <button
-          onClick={() => { closeAllDialogs(); setShowAudioSlicer(true); }}
-          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
-          title="오디오 슬라이서"
-        >
-          슬라이서
-        </button>
-        <button
-          onClick={() => { closeAllDialogs(); setShowMidiDialog(true); }}
-          className={`p-1 rounded hover:bg-zinc-800 transition-colors text-xs ${midiRecordingMode !== 'off' ? 'text-green-400' : 'text-zinc-400'}`}
-          title="MIDI 설정"
-        >
-          MIDI
-        </button>
-        <button
-          onClick={() => { closeAllDialogs(); setShowKeyBindings(true); }}
-          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
-          title="키 바인딩 설정"
-        >
-          ⌨
-        </button>
-        <div className="w-px h-4 bg-zinc-700" />
+        {/* 저장 버튼 — 파일명 바로 옆, 변경 시 강조 */}
         <button
           onClick={handleSaveWithCleanup}
           disabled={!hasUnsavedChanges}
-          className="flex items-center gap-1.5 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-40 rounded transition-colors"
+          className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded transition-all ${
+            hasUnsavedChanges
+              ? 'bg-yellow-500 text-yellow-950 font-semibold hover:bg-yellow-400 shadow-sm shadow-yellow-500/30 animate-[pulse_2s_ease-in-out_1]'
+              : 'bg-zinc-800 text-zinc-500'
+          }`}
+          title="저장 (Ctrl+S)"
+          data-testid="save-btn"
         >
           <Save className="h-3.5 w-3.5" />
-          저장
+          {hasUnsavedChanges ? '저장 (Ctrl+S)' : '저장됨'}
         </button>
+        <div className="flex-1" />
+
+        {/* === Group: View === */}
+        <button onClick={store.toggleLeftPanel} className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="키사운드 패널 토글" data-testid="toggle-left-panel">
+          {showLeftPanel ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+        </button>
+        <button onClick={store.toggleRightPanel} className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="정보 패널 토글" data-testid="toggle-right-panel">
+          {showRightPanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+        </button>
+        <button
+          onClick={() => activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff')}
+          className={`p-1 rounded hover:bg-zinc-800 transition-colors ${activeOverlay === 'diff' ? 'text-orange-400' : 'text-zinc-400'}`}
+          title="변경사항 비교 (Ctrl+D)"
+          data-testid="diff-btn"
+        >
+          <GitCompare className="h-4 w-4" />
+        </button>
+
+        <div className="w-px h-4 bg-zinc-700" />
+
+        {/* === Group: Playback === */}
+        <button
+          onClick={() => openModal('bpmTap')}
+          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400"
+          title="BPM 탭"
+          data-testid="bpm-btn"
+        >
+          <Timer className="h-4 w-4" />
+        </button>
+        <button
+          onClick={handlePlayTest}
+          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400"
+          title="플레이 테스트 (F5)"
+          data-testid="play-test-btn"
+        >
+          <PlayCircle className="h-4 w-4" />
+        </button>
+
+        <div className="w-px h-4 bg-zinc-700" />
+
+        {/* === Group: Tools (dropdown) === */}
+        <div className="relative" ref={toolMenuRef}>
+          <button
+            onClick={() => setShowToolMenu(!showToolMenu)}
+            className={`flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-800 transition-colors text-xs ${showToolMenu ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-400'}`}
+            title="도구 메뉴"
+          >
+            <Wrench className="h-3.5 w-3.5" />
+            <span>도구</span>
+            <ChevronDown className="h-3 w-3" />
+          </button>
+          {showToolMenu && (
+            <div className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl py-1 min-w-[180px] z-50">
+              <button
+                onClick={() => { openModal('autoChart'); setShowToolMenu(false); }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+                data-testid="ai-btn"
+              >
+                <Wand2 className="h-3.5 w-3.5 text-purple-400" />
+                AI 차트 생성
+              </button>
+              <button
+                onClick={() => { openOverlay('audioSlicer'); setShowToolMenu(false); }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+                data-testid="slicer-btn"
+              >
+                <Scissors className="h-3.5 w-3.5 text-blue-400" />
+                오디오 슬라이서
+              </button>
+              <button
+                onClick={() => { openModal('midi'); setShowToolMenu(false); }}
+                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-zinc-800 transition-colors ${midiRecordingMode !== 'off' ? 'text-green-400' : 'text-zinc-300'}`}
+                data-testid="midi-btn"
+              >
+                <Piano className="h-3.5 w-3.5 text-green-400" />
+                MIDI 설정
+                {midiRecordingMode !== 'off' && <span className="ml-auto text-[9px] bg-green-900/50 px-1 rounded">ON</span>}
+              </button>
+              <div className="h-px bg-zinc-800 my-1" />
+              <button
+                onClick={() => { openModal('keyBindings'); setShowToolMenu(false); }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+                data-testid="keybindings-btn"
+              >
+                <Keyboard className="h-3.5 w-3.5 text-zinc-400" />
+                키 바인딩 설정
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ===== MAIN 3-COLUMN LAYOUT ===== */}
       <div className="flex flex-1 min-h-0">
         {/* --- LEFT: Keysound / Pattern Panel --- */}
         {showLeftPanel && (
-          <div className="w-52 border-r border-zinc-800 flex flex-col bg-zinc-900 shrink-0">
+          <>
+          <div style={{ width: leftPanelWidth }} className="border-r border-zinc-800 flex flex-col bg-zinc-900 shrink-0" data-testid="left-panel">
             <div className="flex border-b border-zinc-800 shrink-0">
               <button
                 onClick={() => setLeftPanelTab('keysound')}
@@ -1153,6 +1099,28 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
               />
             )}
           </div>
+          <div
+            className="w-1.5 bg-zinc-800 hover:bg-blue-600 transition-colors cursor-col-resize flex items-center justify-center shrink-0"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const startX = e.clientX;
+              const startW = leftPanelWidth;
+              const onMove = (ev: MouseEvent) => {
+                const w = Math.max(150, Math.min(400, startW + ev.clientX - startX));
+                setLeftPanelWidth(w);
+              };
+              const onUp = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                localStorage.setItem('editor-left-w', String(leftPanelWidth));
+              };
+              document.addEventListener('mousemove', onMove);
+              document.addEventListener('mouseup', onUp);
+            }}
+          >
+            <GripVertical className="h-4 w-2.5 text-zinc-600" />
+          </div>
+          </>
         )}
 
         {/* --- CENTER: Toolbar + Playback + Canvas --- */}
@@ -1164,17 +1132,20 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
             onGridSnapChange={store.setGridSnap}
             selectedNoteType={selectedNoteType}
             onNoteTypeChange={store.setSelectedNoteType}
-            keyMode={chart?.keyMode || '7K'}
+            keyMode={keyMode}
+            onKeyModeChange={store.setKeyMode}
             canUndo={undoStack.length > 0}
             canRedo={redoStack.length > 0}
             onUndo={store.undo}
             onRedo={store.redo}
             onCopy={store.copy}
             onPaste={store.paste}
+            noteHeight={noteHeight}
+            onNoteHeightChange={store.setNoteHeight}
           />
 
           {/* Playback Controls */}
-          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-zinc-800 bg-muted/30 shrink-0 text-xs">
+          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-zinc-800 bg-muted/30 shrink-0 text-xs" data-testid="playback-controls">
             {audioPhase === 'idle' ? (
               <button onClick={loadAudio} className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors text-zinc-300">
                 <Volume2 className="h-3.5 w-3.5" />
@@ -1202,20 +1173,36 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
                   {formatTime(playbackTime)} / {formatTime(playbackDuration)}
                 </span>
                 <div
-                  className="flex-1 min-w-[60px] max-w-[200px] h-3 group cursor-pointer flex items-center"
-                  onClick={(e) => {
+                  className="flex-1 min-w-[100px] h-5 group cursor-pointer flex items-center relative select-none"
+                  onMouseDown={(e) => {
                     if (playbackDuration <= 0) return;
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                    handleSeek(ratio * playbackDuration);
+                    const bar = e.currentTarget;
+                    const seek = (clientX: number) => {
+                      const rect = bar.getBoundingClientRect();
+                      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+                      handleSeek(ratio * playbackDuration);
+                    };
+                    seek(e.clientX);
+                    const onMove = (ev: MouseEvent) => seek(ev.clientX);
+                    const onUp = () => {
+                      document.removeEventListener('mousemove', onMove);
+                      document.removeEventListener('mouseup', onUp);
+                    };
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
                   }}
                 >
-                  <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden group-hover:h-1.5 transition-all relative">
+                  <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-visible group-hover:h-2 transition-all relative">
                     <div className="h-full bg-orange-500 rounded-full transition-[width] duration-75" style={{ width: playbackDuration > 0 ? `${(playbackTime / playbackDuration) * 100}%` : '0%' }} />
+                    {/* Thumb */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-orange-400 rounded-full border-2 border-zinc-900 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                      style={{ left: playbackDuration > 0 ? `calc(${(playbackTime / playbackDuration) * 100}% - 6px)` : '0' }}
+                    />
                   </div>
                 </div>
                 <div className="w-px h-4 bg-zinc-700" />
-                {[0.5, 0.75, 1, 1.5, 2].map((spd) => (
+                {[0.25, 0.5, 0.75, 1, 1.5, 2].map((spd) => (
                   <button
                     key={spd}
                     onClick={() => store.setPlaybackSpeed(spd)}
@@ -1226,6 +1213,12 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
                     {spd}x
                   </button>
                 ))}
+                <input
+                  type="range" min={0.1} max={3} step={0.05} value={playbackSpeed}
+                  onChange={(e) => store.setPlaybackSpeed(parseFloat(e.target.value))}
+                  className="w-14 h-1 accent-blue-500"
+                  title={`속도: ${playbackSpeed.toFixed(2)}x`}
+                />
                 {/* A-B Loop indicator */}
                 {(store.loopA !== null || store.loopB !== null) && (
                   <button
@@ -1269,7 +1262,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
               {chart && (
                 <NoteChartEditor
                   notes={notes}
-                  keyMode={chart.keyMode}
+                  keyMode={keyMode}
                   totalBeats={totalBeats}
                   height="100%"
                   activeTool={activeTool}
@@ -1293,6 +1286,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
                   onKeysoundAssign={handleKeysoundAssign}
                   onDropKeysound={handleDropKeysound}
                   onNoteHover={handleNoteHover}
+                  noteHeight={noteHeight}
                   hasUnsavedChanges={hasUnsavedChanges}
                   scrollToBeat={currentBeat}
                   onScrollChange={store.setCurrentBeat}
@@ -1304,7 +1298,30 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
         </div>
 
         {/* --- RIGHT: Header Editor + Note Info + Minimap --- */}
-        {showRightPanel && <div className="w-56 border-l border-zinc-800 flex flex-col bg-zinc-900 shrink-0 min-h-0 overflow-hidden">
+        {showRightPanel && (
+          <>
+          <div
+            className="w-1.5 bg-zinc-800 hover:bg-blue-600 transition-colors cursor-col-resize flex items-center justify-center shrink-0"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const startX = e.clientX;
+              const startW = rightPanelWidth;
+              const onMove = (ev: MouseEvent) => {
+                const w = Math.max(180, Math.min(400, startW - (ev.clientX - startX)));
+                setRightPanelWidth(w);
+              };
+              const onUp = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                localStorage.setItem('editor-right-w', String(rightPanelWidth));
+              };
+              document.addEventListener('mousemove', onMove);
+              document.addEventListener('mouseup', onUp);
+            }}
+          >
+            <GripVertical className="h-4 w-2.5 text-zinc-600" />
+          </div>
+          <div style={{ width: rightPanelWidth }} className="border-l border-zinc-800 flex flex-col bg-zinc-900 shrink-0 min-h-0 overflow-hidden" data-testid="right-panel">
           {selectedNotesList.length > 0 && (
             <div className="border-b border-zinc-800 shrink-0">
               <NoteInfoPanel
@@ -1372,12 +1389,14 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
               />
             )}
           </div>
-        </div>}
+        </div>
+          </>
+        )}
       </div>
 
       {/* ===== STATUS BAR ===== */}
       {/* ===== STATUS BAR + DIFFICULTY ===== */}
-      <div className="flex items-center border-t border-zinc-800 bg-zinc-900">
+      <div className="flex items-center border-t border-zinc-800 bg-zinc-900" data-testid="status-bar">
         <div className="flex-1">
           <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} zoom={1} />
         </div>
@@ -1386,182 +1405,191 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
             MIDI: {midiRecordingMode === 'step' ? '스텝' : '실시간'}
           </div>
         )}
+        {(undoStack.length > 0 || redoStack.length > 0) && (
+          <div className="px-2 text-[10px] text-zinc-600 shrink-0">
+            Undo:{undoStack.length} Redo:{redoStack.length}
+          </div>
+        )}
         <div className="px-3 text-[10px] text-zinc-500 shrink-0">
           추정 난이도: <span className="text-zinc-300 font-semibold">{estimateDifficulty(notes, editedBaseBpm, totalBeats) || '-'}</span>/12
         </div>
       </div>
 
-      {/* ===== INPUT DIALOG (BPM/STOP) ===== */}
-      {inputDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => store.setInputDialog(null)}>
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-72 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      {/* ===== INPUT DIALOG (BPM/STOP/TIMESIG) ===== */}
+      <AccessibleDialog
+        open={!!inputDialog}
+        onClose={() => store.setInputDialog(null)}
+        title={inputDialog?.type === 'bpm-add' ? 'BPM 추가' : inputDialog?.type === 'bpm-edit' ? 'BPM 수정' : inputDialog?.type === 'stop-add' ? 'STOP 추가' : inputDialog?.type === 'stop-edit' ? 'STOP 수정' : `마디 ${inputDialog?.measure ?? 0} 박자표`}
+        className="border border-zinc-700 p-4 w-72"
+      >
+        {inputDialog && (
+          <>
             <h3 className="text-sm font-semibold text-zinc-200 mb-1">
               {inputDialog.type === 'bpm-add' && 'BPM 추가'}
               {inputDialog.type === 'bpm-edit' && 'BPM 수정'}
               {inputDialog.type === 'stop-add' && 'STOP 추가'}
               {inputDialog.type === 'stop-edit' && 'STOP 수정'}
+              {inputDialog.type === 'timesig-edit' && `마디 ${inputDialog.measure ?? 0} 박자표`}
             </h3>
             {(inputDialog.type === 'stop-add' || inputDialog.type === 'stop-edit') && (
               <p className="text-[10px] text-zinc-500 mb-2">192 = 1비트, 0 입력 시 삭제</p>
+            )}
+            {inputDialog.type === 'timesig-edit' && (
+              <p className="text-[10px] text-zinc-500 mb-2">1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8</p>
             )}
             <form onSubmit={(e) => { e.preventDefault(); store.submitInputDialog(inputDialogRef.current?.value || ''); }}>
               <input
                 ref={inputDialogRef} type="number" step="any" defaultValue={inputDialog.defaultValue} autoFocus
                 className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
-                onKeyDown={(e) => { if (e.key === 'Escape') store.setInputDialog(null); }}
               />
               <div className="flex justify-end gap-2 mt-3">
                 <button type="button" onClick={() => store.setInputDialog(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
                 <button type="submit" className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">확인</button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </AccessibleDialog>
 
       {/* ===== BACK CONFIRMATION ===== */}
-      {showBackConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => store.setShowBackConfirm(false)}>
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-80 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-sm font-semibold text-zinc-200 mb-2">저장하지 않은 변경사항</h3>
-            <p className="text-xs text-zinc-400 mb-4">저장하지 않은 변경사항이 있습니다. 저장하지 않고 나가시겠습니까?</p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => store.setShowBackConfirm(false)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
-              <button
-                onClick={async () => { await handleSaveWithCleanup(); store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
-                className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-              >저장 후 나가기</button>
-              <button
-                onClick={() => { store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
-                className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
-              >저장 안 함</button>
-            </div>
-          </div>
+      <AccessibleDialog open={showBackConfirm} onClose={() => store.setShowBackConfirm(false)} title="저장하지 않은 변경사항" className="border border-zinc-700 p-4 w-80">
+        <h3 className="text-sm font-semibold text-zinc-200 mb-2">저장하지 않은 변경사항</h3>
+        <p className="text-xs text-zinc-400 mb-4">저장하지 않은 변경사항이 있습니다. 저장하지 않고 나가시겠습니까?</p>
+        <div className="flex justify-end gap-2">
+          <button onClick={() => store.setShowBackConfirm(false)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
+          <button
+            onClick={async () => { const ok = await handleSaveWithCleanup(); if (!ok) return; store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
+            className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+          >저장 후 나가기</button>
+          <button
+            onClick={() => { store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
+            className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
+          >저장 안 함</button>
         </div>
-      )}
+      </AccessibleDialog>
 
       {/* ===== BPM TAP DIALOG ===== */}
-      {showBpmTap && (
+      {activeModal === 'bpmTap' && (
         <BpmTapDialog
-          onClose={() => setShowBpmTap(false)}
-          onApply={(bpm) => { store.changeHeader('bpm', bpm); setShowBpmTap(false); }}
+          onClose={() => setActiveModal(null)}
+          onApply={(bpm) => { store.changeHeader('bpm', bpm); setActiveModal(null); }}
         />
       )}
 
       {/* ===== MEASURE INSERT/DELETE DIALOG ===== */}
-      {measureDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setMeasureDialog(null)}>
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-72 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-sm font-semibold text-zinc-200 mb-2">
-              {measureDialog.type === 'insert' ? '마디 삽입' : '마디 삭제'}
-            </h3>
-            <p className="text-[10px] text-zinc-500 mb-2">
-              {measureDialog.type === 'insert' ? '지정 마디 앞에 빈 마디를 삽입합니다.' : '지정 마디의 노트를 삭제하고 이후 내용을 당깁니다.'}
-            </p>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const val = parseInt(measureInputRef.current?.value || '');
-              if (isNaN(val) || val < 0) return;
-              if (measureDialog.type === 'insert') store.insertMeasure(val);
-              else store.deleteMeasure(val);
-              setMeasureDialog(null);
-            }}>
-              <input
-                ref={measureInputRef}
-                type="number" min={0} step={1}
-                defaultValue={Math.floor(currentBeat / 4)}
-                autoFocus
-                className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
-                placeholder="마디 번호"
-                onKeyDown={(e) => { if (e.key === 'Escape') setMeasureDialog(null); }}
-              />
-              <div className="flex justify-end gap-2 mt-3">
-                <button type="button" onClick={() => setMeasureDialog(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">취소</button>
-                <button type="submit" className={`px-3 py-1 text-xs text-white rounded ${measureDialog.type === 'insert' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'}`}>
-                  {measureDialog.type === 'insert' ? '삽입' : '삭제'}
-                </button>
-              </div>
-            </form>
+      <AccessibleDialog
+        open={activeModal === 'measureInsert' || activeModal === 'measureDelete'}
+        onClose={() => setActiveModal(null)}
+        title={activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
+        className="border border-zinc-700 p-4 w-72"
+      >
+        <h3 className="text-sm font-semibold text-zinc-200 mb-2">
+          {activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
+        </h3>
+        <p className="text-[10px] text-zinc-500 mb-2">
+          {activeModal === 'measureInsert' ? '지정 마디 앞에 빈 마디를 삽입합니다.' : '지정 마디의 노트를 삭제하고 이후 내용을 당깁니다.'}
+        </p>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const val = parseInt(measureInputRef.current?.value || '');
+          if (isNaN(val) || val < 0) return;
+          if (activeModal === 'measureInsert') store.insertMeasure(val);
+          else store.deleteMeasure(val);
+          setActiveModal(null);
+        }}>
+          <input
+            ref={measureInputRef}
+            type="number" min={0} step={1}
+            defaultValue={Math.floor(currentBeat / 4)}
+            autoFocus
+            className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
+            placeholder="마디 번호"
+          />
+          <div className="flex justify-end gap-2 mt-3">
+            <button type="button" onClick={() => setActiveModal(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">취소</button>
+            <button type="submit" className={`px-3 py-1 text-xs text-white rounded ${activeModal === 'measureInsert' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'}`}>
+              {activeModal === 'measureInsert' ? '삽입' : '삭제'}
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </AccessibleDialog>
 
       {/* ===== AUTO-SAVE RECOVERY ===== */}
-      {showAutoSaveRecovery && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-80 shadow-xl">
-            <h3 className="text-sm font-semibold text-zinc-200 mb-2">자동 저장 복구</h3>
-            <p className="text-xs text-zinc-400 mb-4">이전 세션의 자동 저장 데이터가 발견되었습니다. 복구하시겠습니까?</p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowAutoSaveRecovery(false);
-                  autoSaveContentRef.current = null;
-                  window.api.file.deleteAutoSave(file.path).catch(() => {});
-                }}
-                className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
-              >무시</button>
-              <button
-                onClick={async () => {
-                  if (autoSaveContentRef.current) {
-                    await window.api.file.saveBms(file.path, autoSaveContentRef.current);
-                    await window.api.file.deleteAutoSave(file.path).catch(() => {});
-                    autoSaveContentRef.current = null;
-                    load(file.path); // Reload the recovered file
-                  }
-                  setShowAutoSaveRecovery(false);
-                }}
-                className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-              >복구</button>
-            </div>
-          </div>
+      <AccessibleDialog open={activeModal === 'autoSaveRecovery'} onClose={() => setActiveModal(null)} title="자동 저장 복구" className="border border-zinc-700 p-4 w-80">
+        <h3 className="text-sm font-semibold text-zinc-200 mb-2">자동 저장 복구</h3>
+        <p className="text-xs text-zinc-400 mb-4">이전 세션의 자동 저장 데이터가 발견되었습니다. 복구하시겠습니까?</p>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => {
+              setActiveModal(null);
+              autoSaveContentRef.current = null;
+              window.api.file.deleteAutoSave(file.path).catch(() => {});
+            }}
+            className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
+          >무시</button>
+          <button
+            onClick={async () => {
+              if (autoSaveContentRef.current) {
+                await window.api.file.saveBms(file.path, autoSaveContentRef.current);
+                await window.api.file.deleteAutoSave(file.path).catch(() => {});
+                autoSaveContentRef.current = null;
+                load(file.path);
+              }
+              setActiveModal(null);
+            }}
+            className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+          >복구</button>
         </div>
-      )}
+      </AccessibleDialog>
 
       {/* ===== PLAY TEST OVERLAY ===== */}
-      {playTestMode && (
+      {activeOverlay === 'playTest' && (
         <div className="fixed inset-0 z-[60] bg-zinc-950">
           <Player
             file={file}
-            onBack={() => setPlayTestMode(false)}
+            onBack={() => setActiveOverlay(null)}
             onRegisterGuard={() => {}}
           />
         </div>
       )}
 
       {/* ===== CHART DIFF ===== */}
-      {showDiff && chart && originalChartInfoRef.current && (
-        <div className="fixed inset-0 z-[55] bg-zinc-950/95 overflow-auto p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-zinc-200">변경사항 비교</h2>
-            <button onClick={() => setShowDiff(false)} className="px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-700 rounded">닫기 (Esc)</button>
+      {activeOverlay === 'diff' && chart && originalChartInfoRef.current && (
+        <div className="fixed inset-0 z-[55] bg-zinc-950/95 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 flex-shrink-0">
+            <h2 className="text-sm font-bold text-zinc-200">변경사항 비교</h2>
+            <button onClick={() => setActiveOverlay(null)} className="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded transition-colors">닫기 (Esc)</button>
           </div>
-          <BmsChartDiff
-            oldChart={originalChartInfoRef.current}
-            newChart={{
-              notes: notes.map((n) => ({ beat: n.beat, column: n.column, keysound: n.keysound, noteType: n.noteType, endBeat: n.endBeat })),
-              keyMode: chart.keyMode,
-              totalBeats: totalBeats,
-              bpm: { initial: editedBaseBpm, min: editedBaseBpm, max: editedBaseBpm },
-              stats: {
-                total: notes.filter((n) => n.noteType === 'playable').length,
-                scratch: 0,
-                longNotes: notes.filter((n) => n.endBeat !== undefined).length,
-                landmines: notes.filter((n) => n.noteType === 'landmine').length,
-              },
-            }}
-            filePath={file.path}
-          />
+          <div className="flex-1 min-h-0 p-2">
+            <BmsChartDiff
+              oldChart={originalChartInfoRef.current}
+              newChart={{
+                notes: notes.map((n) => ({ beat: n.beat, column: n.column, keysound: n.keysound, noteType: n.noteType, endBeat: n.endBeat })),
+                keyMode: keyMode,
+                totalBeats: totalBeats,
+                bpm: { initial: editedBaseBpm, min: editedBaseBpm, max: editedBaseBpm },
+                stats: {
+                  total: notes.filter((n) => n.noteType === 'playable').length,
+                  scratch: 0,
+                  longNotes: notes.filter((n) => n.endBeat !== undefined).length,
+                  landmines: notes.filter((n) => n.noteType === 'landmine').length,
+                },
+              }}
+              filePath={file.path}
+              className="h-full"
+              viewerHeight={Math.max(400, window.innerHeight - 140)}
+            />
+          </div>
         </div>
       )}
 
       {/* ===== NOTE SEARCH ===== */}
       {chart && (
         <NoteSearchDialog
-          open={showNoteSearch}
-          onClose={() => setShowNoteSearch(false)}
+          open={activeModal === 'noteSearch'}
+          onClose={() => setActiveModal(null)}
           notes={notes}
-          keyMode={chart.keyMode}
+          keyMode={keyMode}
           wavDefinitions={wavDefinitions}
           onSelectNotes={(ids) => store.selectNotes(ids)}
           onNavigate={store.setCurrentBeat}
@@ -1569,10 +1597,10 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       )}
 
       {/* ===== AUTO CHART DIALOG ===== */}
-      {showAutoChart && (
+      {activeModal === 'autoChart' && (
         <AutoChartDialog
-          open={showAutoChart}
-          onClose={() => setShowAutoChart(false)}
+          open={activeModal === 'autoChart'}
+          onClose={() => setActiveModal(null)}
           existingNotes={notes.filter((n) => n.noteType === 'playable').map((n) => ({
             beat: n.beat,
             column: n.column,
@@ -1588,7 +1616,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
             let nextId = s.nextNoteId;
             const newNotes = generatedNotes.map((gn) => {
               const col = laneIds[gn.columnIndex] || laneIds[0] || '';
-              const { measure, fraction } = beatToMF(gn.beat);
+              const { measure, fraction } = store.beatToMF(gn.beat);
               return {
                 id: `note-${nextId++}`,
                 beat: gn.beat,
@@ -1612,24 +1640,24 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       )}
 
       {/* ===== AUDIO SLICER ===== */}
-      {showAudioSlicer && (
+      {activeOverlay === 'audioSlicer' && (
         <AudioSlicer
-          open={showAudioSlicer}
-          onClose={() => setShowAudioSlicer(false)}
+          open={activeOverlay === 'audioSlicer'}
+          onClose={() => setActiveOverlay(null)}
           bmsFilePath={file.path}
           usedWavIds={new Set(Object.keys(keysoundRecord).map((k) => k.toUpperCase()))}
           onSlicesCreated={(wavDefs) => {
             store.updateHeadersWithWavDefs(wavDefs);
             showToast(`${Object.keys(wavDefs).length}개 슬라이스 저장 완료`, 'success');
-            setShowAudioSlicer(false);
+            setActiveOverlay(null);
           }}
         />
       )}
 
       {/* ===== MIDI MAPPING DIALOG ===== */}
       <MidiMappingDialog
-        open={showMidiDialog}
-        onClose={() => setShowMidiDialog(false)}
+        open={activeModal === 'midi'}
+        onClose={() => setActiveModal(null)}
         laneIds={laneIds}
         mapping={midiMapping}
         onMappingChange={setMidiMapping}
@@ -1640,22 +1668,14 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
 
       {/* ===== KEY BINDINGS DIALOG ===== */}
       <KeyBindingsDialog
-        open={showKeyBindings}
-        onClose={() => setShowKeyBindings(false)}
+        open={activeModal === 'keyBindings'}
+        onClose={() => setActiveModal(null)}
         bindings={keyBindings}
         onBindingsChange={setKeyBindings}
       />
 
-      {/* ===== TOAST ===== */}
-      {toast && (
-        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 animate-[fadeIn_0.2s_ease-out]">
-          <div className={`px-4 py-2 rounded-lg text-xs font-medium shadow-lg ${
-            toast.type === 'success' ? 'bg-green-900/90 text-green-200 border border-green-700/50' : 'bg-red-900/90 text-red-200 border border-red-700/50'
-          }`}>
-            {toast.message}
-          </div>
-        </div>
-      )}
+      {/* ===== TOAST STACK ===== */}
+      <ToastStack toasts={toastStack} onDismiss={dismissToast} />
     </div>
   );
 }

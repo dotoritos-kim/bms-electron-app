@@ -12,6 +12,7 @@ export interface KeyBinding {
 export type KeyAction =
   // File
   | 'save'
+  | 'saveAs'
   // Edit
   | 'undo'
   | 'redo'
@@ -51,10 +52,17 @@ export type KeyAction =
   | 'setLoopB'
   | 'clearLoop'
   // Panel
-  | 'togglePatternPanel';
+  | 'togglePatternPanel'
+  // Diff
+  | 'toggleDiff'
+  // Bookmark / Group / Snap
+  | 'addBookmark'
+  | 'createGroup'
+  | 'toggleSnap';
 
 export const ACTION_LABELS: Record<KeyAction, string> = {
   save: '저장',
+  saveAs: '다른 이름으로 저장',
   undo: '실행 취소',
   redo: '다시 실행',
   copy: '복사',
@@ -86,10 +94,14 @@ export const ACTION_LABELS: Record<KeyAction, string> = {
   setLoopB: '루프 끝점',
   clearLoop: '루프 해제',
   togglePatternPanel: '패턴 패널 전환',
+  toggleDiff: '변경사항 비교',
+  addBookmark: '북마크 추가',
+  createGroup: '그룹 생성',
+  toggleSnap: '스냅 토글',
 };
 
 export const ACTION_CATEGORIES: { label: string; actions: KeyAction[] }[] = [
-  { label: '파일', actions: ['save'] },
+  { label: '파일', actions: ['save', 'saveAs'] },
   { label: '편집', actions: ['undo', 'redo', 'copy', 'cut', 'paste', 'selectAll', 'delete', 'escape'] },
   { label: '검색', actions: ['noteSearch'] },
   { label: '재생', actions: ['playTest', 'playToggle'] },
@@ -98,7 +110,8 @@ export const ACTION_CATEGORIES: { label: string; actions: KeyAction[] }[] = [
   { label: '이동', actions: ['moveUp', 'moveDown', 'moveLeft', 'moveRight'] },
   { label: '도구', actions: ['toolSelect', 'toolAddNote', 'toolDelete', 'toolMove', 'toolKeysound', 'toolBpm', 'toolStop'] },
   { label: '루프', actions: ['setLoopA', 'setLoopB', 'clearLoop'] },
-  { label: '패널', actions: ['togglePatternPanel'] },
+  { label: '패널', actions: ['togglePatternPanel', 'toggleDiff'] },
+  { label: '북마크/그룹', actions: ['addBookmark', 'createGroup', 'toggleSnap'] },
 ];
 
 export const TOOL_ACTION_MAP: Partial<Record<KeyAction, EditorTool>> = {
@@ -113,6 +126,7 @@ export const TOOL_ACTION_MAP: Partial<Record<KeyAction, EditorTool>> = {
 
 export const DEFAULT_BINDINGS: KeyBinding[] = [
   { label: '저장', action: 'save', key: 'ctrl+s' },
+  { label: '다른 이름으로 저장', action: 'saveAs', key: 'ctrl+shift+s' },
   { label: '실행 취소', action: 'undo', key: 'ctrl+z' },
   { label: '다시 실행', action: 'redo', key: 'ctrl+y' },
   { label: '복사', action: 'copy', key: 'ctrl+c' },
@@ -144,6 +158,10 @@ export const DEFAULT_BINDINGS: KeyBinding[] = [
   { label: '루프 끝점', action: 'setLoopB', key: ']' },
   { label: '루프 해제', action: 'clearLoop', key: '\\' },
   { label: '패턴 패널', action: 'togglePatternPanel', key: 'p' },
+  { label: '변경사항 비교', action: 'toggleDiff', key: 'ctrl+d' },
+  { label: '북마크 추가', action: 'addBookmark', key: 'ctrl+b' },
+  { label: '그룹 생성', action: 'createGroup', key: 'ctrl+g' },
+  { label: '스냅 토글', action: 'toggleSnap', key: 'g' },
 ];
 
 // --- Storage ---

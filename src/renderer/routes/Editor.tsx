@@ -26,6 +26,7 @@ import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
 import { Player } from './Player';
 import { useEditorStore } from '../stores/editorStore';
 import type { AudioPhase, PasteAnalysis } from '../stores/editorStore';
+import { deserializeMeta, serializeMeta, buildMetaFromState, applyMetaToState } from '../lib/bmsMeta';
 import { PatternLibraryPanel } from '../components/PatternLibraryPanel';
 import { KeyBindingsDialog } from '../components/KeyBindingsDialog';
 import type { PatternTemplate } from '../lib/patternTemplates';
@@ -70,7 +71,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const store = useEditorStore();
   const {
     notes, bpmChanges, stopEvents, headers, timeSignatures, editableChart, keyMode,
-    hasUnsavedChanges, activeTool, gridSnap, selectedNotes, selectedNoteType,
+    hasUnsavedChanges, activeTool, gridSnap, gridSnapOverrides, snapEnabled, layerConfig, selectedNotes, selectedNoteType,
     currentKeysound, currentBeat, clipboard, undoStack, redoStack,
     audioPhase, audioLoadProgress, playbackSpeed, volume, playbackTime, playbackDuration,
     noteHeight, inputDialog, showLeftPanel, showRightPanel, headerCollapsed, showBackConfirm,
@@ -140,19 +141,31 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       const initConverter = createBeatConverter(ec.timeSignatures);
       const editableNotes: EditableBMSNote[] = chart.notes.map((n, i) => {
         const { measure, fraction } = initConverter.beatToMF(n.beat);
+        const tick = Math.round(n.beat * 960);
+        const endTick = n.endBeat !== undefined ? Math.round(n.endBeat * 960) : undefined;
         return {
           id: `note-${i}`,
           beat: n.beat,
+          tick,
           column: n.column || '',
           noteType: (n.noteType as EditableBMSNote['noteType']) || 'playable',
           keysound: n.keysound || '00',
           endBeat: n.endBeat,
+          endTick,
           measure,
           fraction,
           channel: n.channel || '',
         };
       });
       store.initFromChart(ec, editableNotes, editableNotes.length + 1, chart.keyMode);
+      // Load .bms.meta sidecar
+      window.api.file.readMeta(file.path).then((metaJson) => {
+        if (metaJson) {
+          const meta = deserializeMeta(metaJson);
+          const stateUpdate = applyMetaToState(meta);
+          useEditorStore.setState(stateUpdate);
+        }
+      }).catch(() => {});
       // Save original chart info for diff
       originalChartInfoRef.current = {
         notes: chart.notes,
@@ -379,7 +392,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     if (!chartToSave) return false;
     savingRef.current = true;
     try {
-      const writer = new BMSWriter();
+      // Detect LN mode from original chart headers: preserve LNOBJ if present
+      const origLnObj = chartToSave.headers.lnobj;
+      const lnMode = origLnObj ? 'lnobj' as const : 'channel' as const;
+      const writer = new BMSWriter({ lnMode, lnObjValue: origLnObj || undefined });
       const wavKeys = new Set(chartToSave.headers.wav.keys());
       const undefinedKeys = new Set<string>();
       for (const note of chartToSave.notes) {
@@ -391,8 +407,29 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         console.warn('[Editor] Notes reference undefined WAV keys:', [...undefinedKeys]);
         showToast(`경고: ${undefinedKeys.size}개 미정의 WAV 참조 (${[...undefinedKeys].slice(0, 3).join(', ')}${undefinedKeys.size > 3 ? '...' : ''})`, 'warning');
       }
+      // Check for notes at positions finer than standard BMS resolution (192)
+      const highResNotes = chartToSave.notes.filter((n) => {
+        if (n.tick === undefined) return false;
+        const tickInMeasure = n.tick % 3840; // ticks per 4/4 measure
+        return tickInMeasure % 20 !== 0; // 20 ticks = 1/192 of measure
+      });
+      if (highResNotes.length > 0) {
+        showToast(`${highResNotes.length}개 노트가 표준 해상도(192) 범위 밖 — 일부 플레이어에서 호환 문제 가능`, 'warning');
+      }
       const bmsContent = writer.write(chartToSave);
       await window.api.file.saveBms(file.path, bmsContent);
+      // Save .bms.meta sidecar alongside BMS file
+      const s = useEditorStore.getState();
+      const meta = buildMetaFromState({
+        gridSnapOverrides: s.gridSnapOverrides,
+        minLnLength: s.minLnLength,
+        bookmarks: s.bookmarks,
+        noteGroups: s.noteGroups,
+      });
+      const metaJson = serializeMeta(meta);
+      if (metaJson !== '{\n  "version": 1\n}') {
+        await window.api.file.saveMeta(file.path, metaJson).catch(() => {});
+      }
       store.setHasUnsavedChanges(false);
       showToast('저장 완료', 'success');
       return true;
@@ -515,6 +552,20 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         case 'clearLoop': store.setLoopA(null); store.setLoopB(null); break;
         case 'togglePatternPanel': setLeftPanelTab((t) => t === 'pattern' ? 'keysound' : 'pattern'); break;
         case 'toggleDiff': activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff'); break;
+        case 'addBookmark': {
+          const measure = Math.floor(s.currentBeat / 4);
+          const name = prompt(`마디 #${measure} 북마크 이름:`, `Bookmark ${measure}`);
+          if (name) store.addBookmark(measure, name);
+          break;
+        }
+        case 'createGroup': {
+          if (ids.length > 0) {
+            const name = prompt('그룹 이름:', `Group ${store.noteGroups.length + 1}`);
+            if (name) store.createGroup(name, ids);
+          }
+          break;
+        }
+        case 'toggleSnap': store.toggleSnap(); break;
       }
     };
     window.addEventListener('keydown', handler);
@@ -1142,6 +1193,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             onPaste={store.paste}
             noteHeight={noteHeight}
             onNoteHeightChange={store.setNoteHeight}
+            snapEnabled={snapEnabled}
+            onSnapToggle={store.toggleSnap}
+            layerConfig={layerConfig}
+            onLayerVisibleToggle={(layer) => store.setLayerVisible(layer as any, !layerConfig[layer as keyof typeof layerConfig].visible)}
+            onLayerLockToggle={(layer) => store.setLayerLocked(layer as any, !layerConfig[layer as keyof typeof layerConfig].locked)}
           />
 
           {/* Playback Controls */}
@@ -1267,6 +1323,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   height="100%"
                   activeTool={activeTool}
                   gridSnap={gridSnap}
+                  snapEnabled={snapEnabled}
+                  gridSnapOverrides={gridSnapOverrides}
+                  layerConfig={layerConfig}
                   selectedNotes={selectedNotes}
                   selectedNoteType={selectedNoteType}
                   currentKeysound={currentKeysound}
@@ -1278,6 +1337,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   bpmChanges={bpmChanges}
                   stopEvents={stopEvents}
                   baseBpm={editedBaseBpm}
+                  timeSignatures={timeSignatures}
                   onBpmChange={store.changeBpm}
                   onBpmRequest={store.requestBpmAdd}
                   onBpmEditRequest={store.requestBpmEdit}

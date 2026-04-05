@@ -22,39 +22,54 @@ function refocusWindow(win: BrowserWindow): void {
   }
 }
 
+// Guard against concurrent dialog calls (Windows queues multiple native dialogs)
+let dialogOpen = false;
+
 export function registerFileIpc(): void {
   // Open BMS file dialog
   ipcMain.handle('dialog:openBmsFile', async (event) => {
+    if (dialogOpen) return null;
+    dialogOpen = true;
     const win = getWindowFromEvent(event);
-    if (!win) return null;
+    if (!win) { dialogOpen = false; return null; }
 
-    const result = await dialog.showOpenDialog(win, {
-      title: 'Open BMS File',
-      filters: [
-        { name: 'BMS Files', extensions: ['bms', 'bme', 'bml', 'pms', 'bmson'] },
-        { name: 'All Files', extensions: ['*'] },
-      ],
-      properties: ['openFile'],
-    });
+    try {
+      const result = await dialog.showOpenDialog(win, {
+        title: 'Open BMS File',
+        filters: [
+          { name: 'BMS Files', extensions: ['bms', 'bme', 'bml', 'pms', 'bmson'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+        properties: ['openFile'],
+      });
 
-    refocusWindow(win);
-    if (result.canceled || result.filePaths.length === 0) return null;
-    return result.filePaths[0];
+      refocusWindow(win);
+      if (result.canceled || result.filePaths.length === 0) return null;
+      return result.filePaths[0];
+    } finally {
+      dialogOpen = false;
+    }
   });
 
   // Open BMS folder dialog
   ipcMain.handle('dialog:openBmsFolder', async (event) => {
+    if (dialogOpen) return null;
+    dialogOpen = true;
     const win = getWindowFromEvent(event);
-    if (!win) return null;
+    if (!win) { dialogOpen = false; return null; }
 
-    const result = await dialog.showOpenDialog(win, {
-      title: 'Open BMS Folder',
-      properties: ['openDirectory'],
-    });
+    try {
+      const result = await dialog.showOpenDialog(win, {
+        title: 'Open BMS Folder',
+        properties: ['openDirectory'],
+      });
 
-    refocusWindow(win);
-    if (result.canceled || result.filePaths.length === 0) return null;
-    return result.filePaths[0];
+      refocusWindow(win);
+      if (result.canceled || result.filePaths.length === 0) return null;
+      return result.filePaths[0];
+    } finally {
+      dialogOpen = false;
+    }
   });
 
   // Read BMS file as buffer
@@ -77,64 +92,93 @@ export function registerFileIpc(): void {
     return true;
   });
 
+  // Read .bms.meta sidecar file
+  ipcMain.handle('file:readMeta', async (_event, bmsFilePath: string) => {
+    try {
+      const metaPath = bmsFilePath + '.meta';
+      const content = await readFile(metaPath, 'utf-8');
+      return content;
+    } catch {
+      return null; // File doesn't exist or unreadable
+    }
+  });
+
+  // Write .bms.meta sidecar file
+  ipcMain.handle('file:saveMeta', async (_event, bmsFilePath: string, content: string) => {
+    const metaPath = bmsFilePath + '.meta';
+    await writeFile(metaPath, content, 'utf-8');
+    return true;
+  });
+
   // Save As dialog + write
   ipcMain.handle('file:saveAs', async (event, content: string, defaultName?: string) => {
+    if (dialogOpen) return null;
+    dialogOpen = true;
     const win = getWindowFromEvent(event);
-    if (!win) return null;
+    if (!win) { dialogOpen = false; return null; }
 
-    const result = await dialog.showSaveDialog(win, {
-      title: 'Save BMS File',
-      defaultPath: defaultName,
-      filters: [
-        { name: 'BMS Files', extensions: ['bms', 'bme', 'bml'] },
-        { name: 'All Files', extensions: ['*'] },
-      ],
-    });
-
-    refocusWindow(win);
-    if (result.canceled || !result.filePath) return null;
-    const tmpPath = result.filePath + '.tmp';
-    await writeFile(tmpPath, content, 'utf-8');
     try {
-      await rename(tmpPath, result.filePath);
-    } catch {
-      await writeFile(result.filePath, content, 'utf-8');
-      await unlink(tmpPath).catch(() => {});
+      const result = await dialog.showSaveDialog(win, {
+        title: 'Save BMS File',
+        defaultPath: defaultName,
+        filters: [
+          { name: 'BMS Files', extensions: ['bms', 'bme', 'bml'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+      });
+
+      refocusWindow(win);
+      if (result.canceled || !result.filePath) return null;
+      const tmpPath = result.filePath + '.tmp';
+      await writeFile(tmpPath, content, 'utf-8');
+      try {
+        await rename(tmpPath, result.filePath);
+      } catch {
+        await writeFile(result.filePath, content, 'utf-8');
+        await unlink(tmpPath).catch(() => {});
+      }
+      return result.filePath;
+    } finally {
+      dialogOpen = false;
     }
-    return result.filePath;
   });
 
   // Import keysound files: open dialog to pick audio files, copy them to BMS directory
   ipcMain.handle('file:importKeysounds', async (event, bmsFilePath: string) => {
+    if (dialogOpen) return [];
+    dialogOpen = true;
     const win = getWindowFromEvent(event);
-    if (!win) return [];
+    if (!win) { dialogOpen = false; return []; }
 
-    const result = await dialog.showOpenDialog(win, {
-      title: '키음 파일 가져오기',
-      filters: [
-        { name: 'Audio Files', extensions: ['wav', 'ogg', 'mp3', 'flac'] },
-        { name: 'All Files', extensions: ['*'] },
-      ],
-      properties: ['openFile', 'multiSelections'],
-    });
+    try {
+      const result = await dialog.showOpenDialog(win, {
+        title: '키음 파일 가져오기',
+        filters: [
+          { name: 'Audio Files', extensions: ['wav', 'ogg', 'mp3', 'flac'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+        properties: ['openFile', 'multiSelections'],
+      });
 
-    refocusWindow(win);
-    if (result.canceled || result.filePaths.length === 0) return [];
+      refocusWindow(win);
+      if (result.canceled || result.filePaths.length === 0) return [];
 
-    const bmsDir = dirname(bmsFilePath);
-    const imported: Array<{ filename: string; destPath: string }> = [];
+      const bmsDir = dirname(bmsFilePath);
+      const imported: Array<{ filename: string; destPath: string }> = [];
 
-    for (const srcPath of result.filePaths) {
-      const filename = basename(srcPath);
-      const destPath = join(bmsDir, filename);
-      // Don't overwrite if src === dest
-      if (srcPath !== destPath) {
-        await copyFile(srcPath, destPath);
+      for (const srcPath of result.filePaths) {
+        const filename = basename(srcPath);
+        const destPath = join(bmsDir, filename);
+        if (srcPath !== destPath) {
+          await copyFile(srcPath, destPath);
+        }
+        imported.push({ filename, destPath });
       }
-      imported.push({ filename, destPath });
-    }
 
-    return imported;
+      return imported;
+    } finally {
+      dialogOpen = false;
+    }
   });
 
   // Write autosave file
@@ -177,74 +221,84 @@ export function registerFileIpc(): void {
       event,
       opts: { title: string; artist: string; bpm: number; keyMode: string },
     ) => {
+      if (dialogOpen) return null;
+      dialogOpen = true;
       const win = getWindowFromEvent(event);
-      if (!win) return null;
+      if (!win) { dialogOpen = false; return null; }
 
-      const result = await dialog.showSaveDialog(win, {
-        title: '새 BMS 파일 만들기',
-        defaultPath: `${opts.title || 'untitled'}.bms`,
-        filters: [
-          { name: 'BMS Files', extensions: ['bms', 'bme', 'bml'] },
-        ],
-      });
-
-      refocusWindow(win);
-      if (result.canceled || !result.filePath) return null;
-
-      // Determine player mode from keyMode
-      const player = opts.keyMode === '10K' || opts.keyMode === '14K' ? 2 : 1;
-
-      // Generate minimal BMS content
-      const lines: string[] = [
-        `#PLAYER ${player}`,
-        `#GENRE `,
-        `#TITLE ${opts.title || 'Untitled'}`,
-        `#ARTIST ${opts.artist || ''}`,
-        `#BPM ${opts.bpm || 130}`,
-        `#PLAYLEVEL 1`,
-        `#RANK 3`,
-        '',
-        '*---------------------- HEADER FIELD',
-        '',
-        '*---------------------- MAIN DATA FIELD',
-        '',
-      ];
-      const content = lines.join('\n');
-
-      const tmpPath = result.filePath + '.tmp';
-      await writeFile(tmpPath, content, 'utf-8');
       try {
-        await rename(tmpPath, result.filePath);
-      } catch {
-        await writeFile(result.filePath, content, 'utf-8');
-        await unlink(tmpPath).catch(() => {});
-      }
+        const result = await dialog.showSaveDialog(win, {
+          title: '새 BMS 파일 만들기',
+          defaultPath: `${opts.title || 'untitled'}.bms`,
+          filters: [
+            { name: 'BMS Files', extensions: ['bms', 'bme', 'bml'] },
+          ],
+        });
 
-      return {
-        path: result.filePath,
-        name: basename(result.filePath),
-        folderPath: dirname(result.filePath),
-      };
+        refocusWindow(win);
+        if (result.canceled || !result.filePath) return null;
+
+        const player = opts.keyMode === '10K' || opts.keyMode === '14K' ? 2 : 1;
+
+        const lines: string[] = [
+          `#PLAYER ${player}`,
+          `#GENRE `,
+          `#TITLE ${opts.title || 'Untitled'}`,
+          `#ARTIST ${opts.artist || ''}`,
+          `#BPM ${opts.bpm || 130}`,
+          `#PLAYLEVEL 1`,
+          `#RANK 3`,
+          '',
+          '*---------------------- HEADER FIELD',
+          '',
+          '*---------------------- MAIN DATA FIELD',
+          '',
+        ];
+        const content = lines.join('\n');
+
+        const tmpPath = result.filePath + '.tmp';
+        await writeFile(tmpPath, content, 'utf-8');
+        try {
+          await rename(tmpPath, result.filePath);
+        } catch {
+          await writeFile(result.filePath, content, 'utf-8');
+          await unlink(tmpPath).catch(() => {});
+        }
+
+        return {
+          path: result.filePath,
+          name: basename(result.filePath),
+          folderPath: dirname(result.filePath),
+        };
+      } finally {
+        dialogOpen = false;
+      }
     },
   );
 
   // Open audio file for slicer
   ipcMain.handle('dialog:openAudioFile', async (event) => {
+    if (dialogOpen) return null;
+    dialogOpen = true;
     const win = getWindowFromEvent(event);
-    if (!win) return null;
+    if (!win) { dialogOpen = false; return null; }
 
-    const result = await dialog.showOpenDialog(win, {
-      title: '오디오 파일 열기',
-      filters: [
-        { name: 'Audio Files', extensions: ['wav', 'mp3', 'ogg', 'flac', 'm4a'] },
-        { name: 'All Files', extensions: ['*'] },
-      ],
-      properties: ['openFile'],
-    });
+    try {
+      const result = await dialog.showOpenDialog(win, {
+        title: '오디오 파일 열기',
+        filters: [
+          { name: 'Audio Files', extensions: ['wav', 'mp3', 'ogg', 'flac', 'm4a'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+        properties: ['openFile'],
+      });
 
-    refocusWindow(win);
-    if (result.canceled || result.filePaths.length === 0) return null;
-    return result.filePaths[0];
+      refocusWindow(win);
+      if (result.canceled || result.filePaths.length === 0) return null;
+      return result.filePaths[0];
+    } finally {
+      dialogOpen = false;
+    }
   });
 
   // Save WAV slice: receives PCM float32 data and writes as WAV file

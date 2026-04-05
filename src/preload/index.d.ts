@@ -12,6 +12,8 @@ export interface ElectronAPI {
     readBms: (filePath: string) => Promise<Uint8Array>;
     saveBms: (filePath: string, content: string) => Promise<boolean>;
     saveAs: (content: string, defaultName?: string) => Promise<string | null>;
+    readMeta: (bmsFilePath: string) => Promise<string | null>;
+    saveMeta: (bmsFilePath: string, content: string) => Promise<boolean>;
     listBmsFolder: (folderPath: string) => Promise<BmsFileInfo[]>;
     importKeysounds: (bmsFilePath: string) => Promise<Array<{ filename: string; destPath: string }>>;
     writeAutoSave: (filePath: string, content: string) => Promise<boolean>;

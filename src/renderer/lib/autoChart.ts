@@ -37,13 +37,20 @@ export function generateChartFromOnsets(
   const notes: GeneratedNote[] = [];
   const { columnCount, difficulty, lnRatio, quantize, gridSnap } = options;
   const gridStep = 4 / gridSnap;
+  // Tick-based snap helper (960 ticks/beat, no floating point drift)
+  const TICKS_PER_BEAT = 960;
+  const gridTicks = Math.round(TICKS_PER_BEAT * 4 / gridSnap);
+  const snapBeat = (b: number) => {
+    const tick = Math.round(b * TICKS_PER_BEAT);
+    return Math.round(tick / gridTicks) * gridTicks / TICKS_PER_BEAT;
+  };
 
   // Convert times to beats
   let onsetBeats = onsetTimes.map((t) => (t * bpm) / 60);
 
   // Quantize if requested
   if (quantize) {
-    onsetBeats = onsetBeats.map((b) => Math.round(b / gridStep) * gridStep);
+    onsetBeats = onsetBeats.map(snapBeat);
     // Remove duplicates
     onsetBeats = [...new Set(onsetBeats)].sort((a, b) => a - b);
   }

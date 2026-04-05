@@ -9,6 +9,10 @@ const api = {
       ipcRenderer.invoke('file:saveBms', filePath, content),
     saveAs: (content: string, defaultName?: string): Promise<string | null> =>
       ipcRenderer.invoke('file:saveAs', content, defaultName),
+    readMeta: (bmsFilePath: string): Promise<string | null> =>
+      ipcRenderer.invoke('file:readMeta', bmsFilePath),
+    saveMeta: (bmsFilePath: string, content: string): Promise<boolean> =>
+      ipcRenderer.invoke('file:saveMeta', bmsFilePath, content),
     listBmsFolder: (
       folderPath: string,
     ): Promise<Array<{ name: string; path: string; size: number; ext: string }>> =>

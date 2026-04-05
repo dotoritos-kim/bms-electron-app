@@ -11,6 +11,7 @@ import type { EditorTool, SelectedNoteType, GridSnap, KeyMode } from '@rhythm-ar
 import type { PatternTemplate, PatternNote } from '../lib/patternTemplates';
 import { createBeatConverter, beatToMF44 } from '../lib/beatConverter';
 import type { BeatConverter, MeasureFraction } from '../lib/beatConverter';
+import { beatToTick, tickToBeat, TICKS_PER_BEAT } from '../lib/tickUtils';
 
 // --- Types ---
 
@@ -33,6 +34,42 @@ export interface InputDialog {
   measure?: number;
   bpmChange?: BMSBpmChange;
   stopEvent?: BMSStopEvent;
+}
+
+/** 레이어별 설정 (가시성, 잠금, 불투명도) */
+export interface LayerSettings {
+  visible: boolean;
+  locked: boolean;
+  opacity: number; // 0.0 ~ 1.0
+}
+
+/** 전체 레이어 설정 */
+export interface LayerConfig {
+  playable: LayerSettings;
+  invisible: LayerSettings;
+  landmine: LayerSettings;
+  bgm: LayerSettings;
+}
+
+export const DEFAULT_LAYER_CONFIG: LayerConfig = {
+  playable: { visible: true, locked: false, opacity: 1.0 },
+  invisible: { visible: true, locked: false, opacity: 0.4 },
+  landmine: { visible: true, locked: false, opacity: 1.0 },
+  bgm: { visible: true, locked: false, opacity: 0.6 },
+};
+
+/** 고급 선택 필터 조건 */
+export interface NoteSelectionFilter {
+  /** 레이어 필터 (null = 모든 레이어) */
+  noteTypes?: Array<'playable' | 'invisible' | 'landmine' | 'bgm'>;
+  /** 마디 범위 (inclusive) */
+  measureRange?: { from: number; to: number };
+  /** 컬럼 필터 (null = 모든 컬럼) */
+  columns?: string[];
+  /** 키음 필터 (null = 모든 키음) */
+  keysounds?: string[];
+  /** 기존 선택에 추가 (true) 또는 교체 (false) */
+  additive?: boolean;
 }
 
 export interface PasteAnalysis {
@@ -65,6 +102,21 @@ function getConverter(getState: () => EditorState): BeatConverter {
   return getState()._beatConverter ?? createBeatConverter(new Map());
 }
 
+/** tick → { tick, beat, measure, fraction } 동기화 헬퍼. tick이 primary. */
+function syncFromTick(tick: number, converter: BeatConverter): { tick: number; beat: number; measure: number; fraction: number } {
+  const beat = tickToBeat(tick);
+  const { measure, fraction } = converter.beatToMF(beat);
+  return { tick, beat, measure, fraction };
+}
+
+/** beat → { tick, beat, measure, fraction } 동기화 헬퍼. beat에서 tick 파생 (레거시 호환). */
+function syncFromBeat(beat: number, converter: BeatConverter): { tick: number; beat: number; measure: number; fraction: number } {
+  const tick = beatToTick(beat);
+  const resolvedBeat = tickToBeat(tick); // tick 기준으로 정규화
+  const { measure, fraction } = converter.beatToMF(resolvedBeat);
+  return { tick, beat: resolvedBeat, measure, fraction };
+}
+
 /** 공통: timeSignatures 변경 시 notes/bpmChanges/stopEvents의 measure/fraction 재계산 */
 function recalcMeasureFractions(
   getState: () => EditorState,
@@ -83,8 +135,10 @@ function recalcMeasureFractions(
     timeSignatures: newTS,
     _beatConverter: newConverter,
     notes: s.notes.map((n) => {
-      const { measure, fraction } = newConverter.beatToMF(n.beat);
-      return { ...n, measure, fraction };
+      const tick = n.tick ?? beatToTick(n.beat);
+      const beat = tickToBeat(tick);
+      const { measure, fraction } = newConverter.beatToMF(beat);
+      return { ...n, tick, beat, measure, fraction };
     }),
     bpmChanges: s.bpmChanges.map((b) => {
       const beat = oldConverter.mfToBeat(b.measure, b.fraction);
@@ -137,13 +191,43 @@ interface EditorState {
   // Tool / Selection
   activeTool: EditorTool;
   gridSnap: GridSnap;
+  /** 마디별 gridSnap 오버라이드 (마디 번호 → gridSnap 값) */
+  gridSnapOverrides: Map<number, number>;
+  snapEnabled: boolean;
+  /** 레이어별 가시성/잠금/불투명도 설정 */
+  layerConfig: LayerConfig;
+  /** 최소 롱노트 길이 (beat 단위, 기본 0.25 = 1/16 beat) */
+  minLnLength: number;
+  /** 타임라인 북마크 */
+  bookmarks: Array<{ measure: number; name: string; color?: string }>;
+  /** 노트 그룹 */
+  noteGroups: Array<{ id: string; name: string; noteIds: string[]; color?: string }>;
   selectedNotes: Set<string>;
   selectedNoteType: SelectedNoteType;
   currentKeysound: string;
   currentBeat: number;
 
+  // Custom Colors / Skin
+  /** 커스텀 노트 색상 (null = 기본 테마) */
+  customColors: {
+    playable?: string;
+    invisible?: string;
+    landmine?: string;
+    bgm?: string;
+    selection?: string;
+    background?: string;
+  };
+
+  // A/B Comparison
+  /** 비교용 스냅샷 (현재 상태와 교대 재생) */
+  comparisonSnapshot: { notes: EditableBMSNote[]; bpmChanges: BMSBpmChange[] } | null;
+  /** 비교 모드 활성화 여부 */
+  comparisonActive: boolean;
+
   // Clipboard
   clipboard: EditableBMSNote[];
+  /** 클립보드 히스토리 (최대 10개) */
+  clipboardHistory: EditableBMSNote[][];
 
   // Undo / Redo
   undoStack: UndoEntry[];
@@ -205,6 +289,8 @@ interface EditorState {
   selectNotes: (noteIds: string[], additive?: boolean) => void;
   updateNote: (noteId: string, updates: Partial<EditableBMSNote>) => void;
   selectAll: () => void;
+  /** 조건 기반 노트 선택 (레이어/마디범위/컬럼/키음 필터) */
+  selectByFilter: (filter: NoteSelectionFilter) => void;
   clearSelection: () => void;
   changeNoteType: (newType: NoteType) => void;
 
@@ -230,6 +316,8 @@ interface EditorState {
   preparePaste: (laneIds: string[]) => PasteAnalysis | null;
   /** Execute paste with user choice for conflicts */
   executePaste: (analysis: PasteAnalysis, choice: 'replace' | 'stack' | 'cancel') => void;
+  /** 클립보드 히스토리에서 특정 항목을 현재 클립보드로 설정 */
+  selectClipboardHistory: (index: number) => void;
 
   // BPM / STOP
   changeBpm: (beat: number, bpm: number) => void;
@@ -257,6 +345,11 @@ interface EditorState {
   // UI
   setActiveTool: (tool: EditorTool) => void;
   setGridSnap: (snap: GridSnap) => void;
+  setSnapEnabled: (enabled: boolean) => void;
+  toggleSnap: () => void;
+  setGridSnapOverride: (measure: number, gridSnap: number | null) => void;
+  /** 특정 마디에서의 유효 gridSnap (override 있으면 override, 없으면 default) */
+  getGridSnapForMeasure: (measure: number) => number;
   setSelectedNoteType: (type: SelectedNoteType) => void;
   setCurrentKeysound: (keysound: string) => void;
   setCurrentBeat: (beat: number) => void;
@@ -269,6 +362,33 @@ interface EditorState {
   setToast: (toast: { message: string; type: 'success' | 'error' } | null) => void;
   setShowBackConfirm: (show: boolean) => void;
   setNoteHeight: (height: number) => void;
+
+  // Layer
+  setLayerVisible: (layer: keyof LayerConfig, visible: boolean) => void;
+  setLayerLocked: (layer: keyof LayerConfig, locked: boolean) => void;
+  setLayerOpacity: (layer: keyof LayerConfig, opacity: number) => void;
+  resetLayerConfig: () => void;
+  setMinLnLength: (length: number) => void;
+
+  // Custom Colors
+  setCustomColor: (key: string, color: string | null) => void;
+  resetCustomColors: () => void;
+
+  // A/B Comparison
+  saveComparisonSnapshot: () => void;
+  clearComparisonSnapshot: () => void;
+  toggleComparison: () => void;
+
+  // Bookmarks
+  addBookmark: (measure: number, name: string, color?: string) => void;
+  removeBookmark: (measure: number) => void;
+  renameBookmark: (measure: number, name: string) => void;
+
+  // Note Groups
+  createGroup: (name: string, noteIds: string[], color?: string) => void;
+  deleteGroup: (groupId: string) => void;
+  selectGroup: (groupId: string) => void;
+  ungroupSelected: () => void;
 
   // A-B Loop
   setLoopA: (beat: number | null) => void;
@@ -292,11 +412,21 @@ const initialState = {
   keyMode: '7K' as KeyMode,
   activeTool: 'select' as EditorTool,
   gridSnap: 16 as GridSnap,
+  gridSnapOverrides: new Map<number, number>(),
+  snapEnabled: true,
+  layerConfig: { ...DEFAULT_LAYER_CONFIG },
+  minLnLength: 0.25,
+  bookmarks: [] as Array<{ measure: number; name: string; color?: string }>,
+  noteGroups: [] as Array<{ id: string; name: string; noteIds: string[]; color?: string }>,
+  customColors: {} as { playable?: string; invisible?: string; landmine?: string; bgm?: string; selection?: string; background?: string },
+  comparisonSnapshot: null as { notes: EditableBMSNote[]; bpmChanges: BMSBpmChange[] } | null,
+  comparisonActive: false,
   selectedNotes: new Set<string>(),
   selectedNoteType: 'playable' as SelectedNoteType,
   currentKeysound: '01',
   currentBeat: 0,
   clipboard: [] as EditableBMSNote[],
+  clipboardHistory: [] as EditableBMSNote[][],
   undoStack: [] as UndoEntry[],
   redoStack: [] as UndoEntry[],
   audioPhase: 'idle' as AudioPhase,
@@ -344,6 +474,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     ...initialState,
     timeSignatures: new Map<number, number>(),
     selectedNotes: new Set<string>(),
+    gridSnapOverrides: new Map<number, number>(),
+    layerConfig: { ...DEFAULT_LAYER_CONFIG },
     _beatConverter: null,
     _noteIndex: new Map<string, string>(),
   }),
@@ -453,8 +585,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     const id = `note-${s.nextNoteId}`;
     const converter = getConverter(get);
-    const { measure, fraction } = converter.beatToMF(note.beat);
-    const newNote = { ...note, id, measure, fraction } as EditableBMSNote;
+    const synced = syncFromBeat(note.beat, converter);
+    const endTick = note.endBeat !== undefined ? beatToTick(note.endBeat) : undefined;
+    const endBeat = endTick !== undefined ? tickToBeat(endTick) : undefined;
+    const newNote = { ...note, id, ...synced, endTick, endBeat } as EditableBMSNote;
     const isPlayable = newNote.noteType === 'playable' && newNote.column;
 
     // Duplicate check for playable notes: auto-replace existing note at same beat+column
@@ -523,11 +657,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         if (newIndex.get(key) === n.id) newIndex.delete(key);
       }
     }
+    const gridTicks = Math.round(TICKS_PER_BEAT * 4 / s.gridSnap);
+    const deltaTicks = delta.beat ? beatToTick(delta.beat) : 0;
     const movedNotes = s.notes.map((n) => {
       if (!idsSet.has(n.id)) return n;
-      const rawBeat = Math.max(0, n.beat + (delta.beat || 0));
-      const newBeat = Math.round(rawBeat / gridStep) * gridStep;
-      const newEndBeat = n.endBeat !== undefined ? newBeat + (n.endBeat - n.beat) : undefined;
+      const curTick = n.tick ?? beatToTick(n.beat);
+      const rawTick = Math.max(0, curTick + deltaTicks);
+      const newTick = Math.round(rawTick / gridTicks) * gridTicks;
+      const curEndTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
+      const lnLength = curEndTick !== undefined ? curEndTick - curTick : undefined;
+      const newEndTick = lnLength !== undefined ? newTick + lnLength : undefined;
       let newColumn = n.column;
       if (delta.columnDelta && laneIds.length > 0) {
         const currentIndex = laneIds.indexOf(n.column);
@@ -536,8 +675,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           newColumn = laneIds[idx];
         }
       }
-      const { measure, fraction } = converter.beatToMF(newBeat);
-      return { ...n, beat: newBeat, endBeat: newEndBeat, column: newColumn, measure, fraction };
+      const synced = syncFromTick(newTick, converter);
+      const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
+      return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat, column: newColumn };
     });
     // Add new positions
     for (const n of movedNotes) {
@@ -571,9 +711,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         if (n.id !== noteId) return n;
         const updated = { ...n, ...updates };
         if (updates.beat !== undefined) {
-          const { measure, fraction } = converter.beatToMF(updated.beat);
-          updated.measure = measure;
-          updated.fraction = fraction;
+          const synced = syncFromBeat(updated.beat, converter);
+          updated.tick = synced.tick;
+          updated.beat = synced.beat;
+          updated.measure = synced.measure;
+          updated.fraction = synced.fraction;
+        }
+        if (updates.endBeat !== undefined) {
+          updated.endTick = beatToTick(updates.endBeat);
+          updated.endBeat = tickToBeat(updated.endTick);
         }
         return updated;
       }),
@@ -583,6 +729,41 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   selectAll: () => set((s) => ({ selectedNotes: new Set(s.notes.map((n) => n.id)) })),
   clearSelection: () => set({ selectedNotes: new Set() }),
+
+  selectByFilter: (filter) => {
+    const s = get();
+    const converter = getConverter(get);
+    const matching = s.notes.filter((n) => {
+      // Layer filter
+      if (filter.noteTypes && filter.noteTypes.length > 0) {
+        const nt = (n.noteType || 'playable') as typeof filter.noteTypes[number];
+        if (!filter.noteTypes.includes(nt)) return false;
+      }
+      // Measure range filter
+      if (filter.measureRange) {
+        if (n.measure < filter.measureRange.from || n.measure > filter.measureRange.to) return false;
+      }
+      // Column filter
+      if (filter.columns && filter.columns.length > 0) {
+        if (!n.column || !filter.columns.includes(n.column)) return false;
+      }
+      // Keysound filter
+      if (filter.keysounds && filter.keysounds.length > 0) {
+        if (!filter.keysounds.includes(n.keysound)) return false;
+      }
+      return true;
+    });
+    const ids = matching.map((n) => n.id);
+    if (filter.additive) {
+      set((prev) => {
+        const next = new Set(prev.selectedNotes);
+        for (const id of ids) next.add(id);
+        return { selectedNotes: next };
+      });
+    } else {
+      set({ selectedNotes: new Set(ids) });
+    }
+  },
 
   changeNoteType: (newType) => {
     const s = get();
@@ -613,16 +794,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     set({
       notes: s.notes.map((n) => {
+        const shiftTicks = beatToTick(shiftAmount);
         if (n.beat < shiftBeat) {
           if (n.endBeat !== undefined && n.endBeat >= shiftBeat) {
-            return { ...n, endBeat: n.endBeat + shiftAmount };
+            const newEndTick = (n.endTick ?? beatToTick(n.endBeat)) + shiftTicks;
+            return { ...n, endBeat: tickToBeat(newEndTick), endTick: newEndTick };
           }
           return n;
         }
-        const newBeat = n.beat + shiftAmount;
-        const { measure, fraction } = newConverter.beatToMF(newBeat);
-        const newEndBeat = n.endBeat !== undefined ? n.endBeat + shiftAmount : undefined;
-        return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
+        const newTick = (n.tick ?? beatToTick(n.beat)) + shiftTicks;
+        const synced = syncFromTick(newTick, newConverter);
+        const newEndTick = n.endBeat !== undefined ? (n.endTick ?? beatToTick(n.endBeat)) + shiftTicks : undefined;
+        const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
+        return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat };
       }),
       bpmChanges: s.bpmChanges.map((b) => {
         const beat = storeMfToBeat(get, b.measure, b.fraction);
@@ -666,19 +850,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       notes: s.notes
         .filter((n) => n.beat < startBeat || n.beat >= endBeat)
         .map((n) => {
+          const shiftTicks = beatToTick(measureBeats);
+          const startTick = beatToTick(startBeat);
           if (n.beat < startBeat) {
-            if (n.endBeat !== undefined && n.endBeat >= endBeat) {
-              return { ...n, endBeat: n.endBeat - measureBeats };
+            const curEndTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
+            if (curEndTick !== undefined && n.endBeat !== undefined && n.endBeat >= endBeat) {
+              const newEndTick = curEndTick - shiftTicks;
+              return { ...n, endBeat: tickToBeat(newEndTick), endTick: newEndTick };
             }
-            if (n.endBeat !== undefined && n.endBeat > startBeat) {
-              return { ...n, endBeat: startBeat };
+            if (curEndTick !== undefined && n.endBeat !== undefined && n.endBeat > startBeat) {
+              return { ...n, endBeat: startBeat, endTick: startTick };
             }
             return n;
           }
-          const newBeat = n.beat - measureBeats;
-          const { measure, fraction } = newConverter.beatToMF(newBeat);
-          const newEndBeat = n.endBeat !== undefined ? n.endBeat - measureBeats : undefined;
-          return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
+          const curTick = n.tick ?? beatToTick(n.beat);
+          const newTick = curTick - shiftTicks;
+          const synced = syncFromTick(newTick, newConverter);
+          const curEndTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
+          const newEndTick = curEndTick !== undefined ? curEndTick - shiftTicks : undefined;
+          const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
+          return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat };
         }),
       bpmChanges: s.bpmChanges
         .filter((b) => {
@@ -745,8 +936,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         const flippedEnd = n.endBeat !== undefined ? maxBeat - (n.endBeat - minBeat) : undefined;
         const newBeat = flippedEnd !== undefined ? Math.min(flippedBeat, flippedEnd) : flippedBeat;
         const newEndBeat = flippedEnd !== undefined ? Math.max(flippedBeat, flippedEnd) : undefined;
-        const { measure, fraction } = converter.beatToMF(newBeat);
-        return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
+        const synced = syncFromBeat(newBeat, converter);
+        const newEndTick = newEndBeat !== undefined ? beatToTick(newEndBeat) : undefined;
+        return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat !== undefined ? tickToBeat(newEndTick!) : undefined };
       }),
       hasUnsavedChanges: true,
     });
@@ -780,21 +972,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     if (s.selectedNotes.size === 0) return;
     s.pushUndo('Quantize notes');
-    const gridStep = 4 / s.gridSnap;
+    const gridTicks = Math.round(TICKS_PER_BEAT * 4 / s.gridSnap);
     const converter = getConverter(get);
     set({
       notes: s.notes.map((n) => {
         if (!s.selectedNotes.has(n.id)) return n;
-        const newBeat = Math.round(n.beat / gridStep) * gridStep;
-        const { measure, fraction } = converter.beatToMF(newBeat);
-        let newEndBeat = n.endBeat !== undefined
-          ? Math.round(n.endBeat / gridStep) * gridStep
-          : undefined;
-        // Prevent LN collapse: ensure endBeat > beat by at least one grid step
-        if (newEndBeat !== undefined && newEndBeat <= newBeat) {
-          newEndBeat = newBeat + gridStep;
+        const curTick = n.tick ?? beatToTick(n.beat);
+        const newTick = Math.round(curTick / gridTicks) * gridTicks;
+        let newEndTick = n.endTick !== undefined
+          ? Math.round(n.endTick / gridTicks) * gridTicks
+          : (n.endBeat !== undefined ? Math.round(beatToTick(n.endBeat) / gridTicks) * gridTicks : undefined);
+        // Prevent LN collapse: ensure endTick > tick by at least minLnLength
+        const minLnTicks = Math.max(gridTicks, beatToTick(s.minLnLength));
+        if (newEndTick !== undefined && newEndTick - newTick < minLnTicks) {
+          newEndTick = newTick + minLnTicks;
         }
-        return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
+        const synced = syncFromTick(newTick, converter);
+        const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
+        return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat };
       }),
       hasUnsavedChanges: true,
     });
@@ -835,7 +1030,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     const selected = s.notes.filter((n) => s.selectedNotes.has(n.id));
     if (selected.length === 0) return;
-    set({ clipboard: selected.map((n) => ({ ...n })) });
+    const copied = selected.map((n) => ({ ...n }));
+    set({
+      clipboard: copied,
+      clipboardHistory: [copied, ...s.clipboardHistory].slice(0, 10),
+    });
   },
 
   cut: () => {
@@ -869,16 +1068,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const converter = getConverter(get);
     const newIndex = new Map(s._noteIndex);
     let nextId = s.nextNoteId;
+    const offsetTicks = beatToTick(offset);
     const pasted = s.clipboard.map((n) => {
-      const newBeat = n.beat + offset;
-      const { measure, fraction } = converter.beatToMF(newBeat);
+      const curTick = n.tick ?? beatToTick(n.beat);
+      const newTick = curTick + offsetTicks;
+      const synced = syncFromTick(newTick, converter);
+      const lnLength = n.endTick !== undefined ? n.endTick - curTick : (n.endBeat !== undefined ? beatToTick(n.endBeat) - curTick : undefined);
+      const newEndTick = lnLength !== undefined ? newTick + lnLength : undefined;
+      const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
       return {
         ...n,
         id: `note-${nextId++}`,
-        beat: newBeat,
-        endBeat: n.endBeat !== undefined ? n.endBeat + offset : undefined,
-        measure,
-        fraction,
+        ...synced,
+        endTick: newEndTick,
+        endBeat: newEndBeat,
       };
     });
     // Update index for pasted playable notes
@@ -906,16 +1109,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     let droppedCount = 0;
 
     const pasted: EditableBMSNote[] = [];
+    const offsetTicks = beatToTick(offset);
     for (const n of s.clipboard) {
-      const newBeat = n.beat + offset;
-      const { measure, fraction } = converter.beatToMF(newBeat);
+      const curTick = n.tick ?? beatToTick(n.beat);
+      const newTick = curTick + offsetTicks;
+      const synced = syncFromTick(newTick, converter);
+      const curEndTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
+      const lnLength = curEndTick !== undefined ? curEndTick - curTick : undefined;
+      const newEndTick = lnLength !== undefined ? newTick + lnLength : undefined;
       const newNote = {
         ...n,
         id: `note-${nextId++}`,
-        beat: newBeat,
-        endBeat: n.endBeat !== undefined ? n.endBeat + offset : undefined,
-        measure,
-        fraction,
+        ...synced,
+        endBeat: newEndTick !== undefined ? tickToBeat(newEndTick) : undefined,
+        endTick: newEndTick,
       };
       // Drop notes with columns outside current key mode (BGM/invisible OK)
       if (newNote.noteType === 'playable' && newNote.column && !laneSet.has(newNote.column)) {
@@ -995,6 +1202,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         _noteIndex: newIndex,
         hasUnsavedChanges: true,
       });
+    }
+  },
+
+  selectClipboardHistory: (index) => {
+    const s = get();
+    if (index >= 0 && index < s.clipboardHistory.length) {
+      set({ clipboard: s.clipboardHistory[index] });
     }
   },
 
@@ -1138,6 +1352,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   // --- UI setters ---
   setActiveTool: (tool) => set({ activeTool: tool }),
   setGridSnap: (snap) => set({ gridSnap: snap }),
+  setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
+  toggleSnap: () => set((s) => ({ snapEnabled: !s.snapEnabled })),
+  setGridSnapOverride: (measure, gridSnap) => set((s) => {
+    const overrides = new Map(s.gridSnapOverrides);
+    if (gridSnap === null) overrides.delete(measure);
+    else overrides.set(measure, gridSnap);
+    return { gridSnapOverrides: overrides };
+  }),
+  getGridSnapForMeasure: (measure) => {
+    const s = get();
+    return s.gridSnapOverrides.get(measure) ?? s.gridSnap;
+  },
   setSelectedNoteType: (type) => set({ selectedNoteType: type }),
   setCurrentKeysound: (keysound) => set({ currentKeysound: keysound }),
   setCurrentBeat: (beat) => set({ currentBeat: beat }),
@@ -1150,6 +1376,77 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setToast: (toast) => set({ toast }),
   setShowBackConfirm: (show) => set({ showBackConfirm: show }),
   setNoteHeight: (height) => set({ noteHeight: Math.max(1, Math.min(8, height)) }),
+
+  // Layer
+  setLayerVisible: (layer, visible) => set((s) => ({
+    layerConfig: { ...s.layerConfig, [layer]: { ...s.layerConfig[layer], visible } },
+  })),
+  setLayerLocked: (layer, locked) => set((s) => ({
+    layerConfig: { ...s.layerConfig, [layer]: { ...s.layerConfig[layer], locked } },
+  })),
+  setLayerOpacity: (layer, opacity) => set((s) => ({
+    layerConfig: { ...s.layerConfig, [layer]: { ...s.layerConfig[layer], opacity: Math.max(0, Math.min(1, opacity)) } },
+  })),
+  resetLayerConfig: () => set({ layerConfig: { ...DEFAULT_LAYER_CONFIG } }),
+  setMinLnLength: (length) => set({ minLnLength: Math.max(0.0625, Math.min(4, length)) }),
+
+  // Custom Colors
+  setCustomColor: (key, color) => set((s) => {
+    const next = { ...s.customColors };
+    if (color === null) delete (next as Record<string, string | undefined>)[key];
+    else (next as Record<string, string | undefined>)[key] = color;
+    return { customColors: next };
+  }),
+  resetCustomColors: () => set({ customColors: {} }),
+
+  // A/B Comparison
+  saveComparisonSnapshot: () => {
+    const s = get();
+    set({
+      comparisonSnapshot: {
+        notes: structuredClone(s.notes),
+        bpmChanges: structuredClone(s.bpmChanges),
+      },
+    });
+  },
+  clearComparisonSnapshot: () => set({ comparisonSnapshot: null, comparisonActive: false }),
+  toggleComparison: () => set((s) => {
+    if (!s.comparisonSnapshot) return {};
+    return { comparisonActive: !s.comparisonActive };
+  }),
+
+  // Bookmarks
+  addBookmark: (measure, name, color) => set((s) => ({
+    bookmarks: [...s.bookmarks.filter((b) => b.measure !== measure), { measure, name, color }]
+      .sort((a, b) => a.measure - b.measure),
+  })),
+  removeBookmark: (measure) => set((s) => ({
+    bookmarks: s.bookmarks.filter((b) => b.measure !== measure),
+  })),
+  renameBookmark: (measure, name) => set((s) => ({
+    bookmarks: s.bookmarks.map((b) => b.measure === measure ? { ...b, name } : b),
+  })),
+
+  // Note Groups
+  createGroup: (name, noteIds, color) => set((s) => ({
+    noteGroups: [...s.noteGroups, { id: `group-${Date.now()}`, name, noteIds, color }],
+  })),
+  deleteGroup: (groupId) => set((s) => ({
+    noteGroups: s.noteGroups.filter((g) => g.id !== groupId),
+  })),
+  selectGroup: (groupId) => set((s) => {
+    const group = s.noteGroups.find((g) => g.id === groupId);
+    if (!group) return {};
+    return { selectedNotes: new Set(group.noteIds) };
+  }),
+  ungroupSelected: () => set((s) => {
+    const selected = s.selectedNotes;
+    return {
+      noteGroups: s.noteGroups.filter((g) =>
+        !g.noteIds.every((id) => selected.has(id))
+      ),
+    };
+  }),
 
   // A-B Loop
   setLoopA: (beat) => set({ loopA: beat }),
@@ -1171,18 +1468,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (colIdx < 0 || colIdx >= laneIds.length) continue;
       const beat = startBeat + pn.beatOffset;
       if (beat < 0) continue;
-      const { measure, fraction } = converter.beatToMF(beat);
+      const synced = syncFromBeat(beat, converter);
       const endBeat = pn.endBeatOffset !== undefined ? startBeat + pn.endBeatOffset : undefined;
+      const endTick = endBeat !== undefined ? beatToTick(endBeat) : undefined;
       newNotes.push({
         id: `note-${nextId++}`,
-        beat,
+        ...synced,
         column: laneIds[colIdx],
         noteType: pn.noteType || 'playable',
         keysound,
-        measure,
-        fraction,
         channel: '',
-        endBeat,
+        endBeat: endTick !== undefined ? tickToBeat(endTick) : undefined,
+        endTick,
       } as EditableBMSNote);
     }
     const newIndex = new Map(s._noteIndex);

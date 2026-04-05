@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { X } from 'lucide-react';
 import type { KeyBinding, KeyAction } from '../lib/keyBindings';
 import {
@@ -26,7 +26,19 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
     setLocalBindings(bindings);
   }, [bindings]);
 
-  const bindingMap = new Map(localBindings.map((b) => [b.action, b]));
+  const bindingMap = useMemo(() => new Map(localBindings.map((b) => [b.action, b])), [localBindings]);
+
+  // Detect key conflicts: key → list of actions using that key
+  const conflictMap = new Map<string, KeyAction[]>();
+  for (const b of localBindings) {
+    const key = b.key.toLowerCase();
+    if (!conflictMap.has(key)) conflictMap.set(key, []);
+    conflictMap.get(key)!.push(b.action);
+  }
+  const conflictActions = new Set<KeyAction>();
+  for (const [, actions] of conflictMap) {
+    if (actions.length > 1) actions.forEach((a) => conflictActions.add(a));
+  }
 
   const handleStartEdit = useCallback((action: KeyAction) => {
     setEditingAction(action);
@@ -38,7 +50,7 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
 
     const handler = (e: KeyboardEvent) => {
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation();
 
       // Ignore lone modifier keys
       if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
@@ -65,6 +77,8 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
   }, [localBindings, onBindingsChange, onClose]);
 
   const handleReset = useCallback(() => {
+    setEditingAction(null);
+    listeningRef.current = false;
     setLocalBindings(DEFAULT_BINDINGS);
   }, []);
 
@@ -93,23 +107,27 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
                   const isEditing = editingAction === action;
                   const defaultBinding = DEFAULT_BINDINGS.find((b) => b.action === action);
                   const isModified = binding?.key !== defaultBinding?.key;
+                  const hasConflict = conflictActions.has(action);
 
                   return (
                     <div
                       key={action}
                       className={`flex items-center justify-between px-2 py-1.5 rounded ${
-                        isEditing ? 'bg-blue-900/30 border border-blue-700/50' : 'hover:bg-zinc-800/50'
+                        isEditing ? 'bg-blue-900/30 border border-blue-700/50' : hasConflict ? 'bg-red-900/20' : 'hover:bg-zinc-800/50'
                       }`}
                     >
-                      <span className={`text-xs ${isModified ? 'text-yellow-300' : 'text-zinc-300'}`}>
+                      <span className={`text-xs ${hasConflict ? 'text-red-400' : isModified ? 'text-yellow-300' : 'text-zinc-300'}`}>
                         {ACTION_LABELS[action]}
+                        {hasConflict && <span className="ml-1 text-[9px] text-red-500">충돌</span>}
                       </span>
                       <button
                         onClick={() => handleStartEdit(action)}
                         className={`min-w-[100px] px-2 py-0.5 text-[10px] font-mono rounded text-center transition-colors ${
                           isEditing
                             ? 'bg-blue-600 text-white animate-pulse'
-                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700'
+                            : hasConflict
+                              ? 'bg-red-900/50 text-red-300 hover:bg-red-800/50 border border-red-700/50'
+                              : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700'
                         }`}
                       >
                         {isEditing ? '키 입력 대기...' : keyComboToDisplay(binding?.key || '')}
@@ -123,12 +141,17 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
         </div>
 
         <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800 shrink-0">
-          <button
-            onClick={handleReset}
-            className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
-          >
-            기본값 복원
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleReset}
+              className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
+            >
+              기본값 복원
+            </button>
+            {conflictActions.size > 0 && (
+              <span className="text-[10px] text-red-400">{conflictActions.size}개 항목 키 충돌</span>
+            )}
+          </div>
           <div className="flex gap-2">
             <button
               onClick={onClose}

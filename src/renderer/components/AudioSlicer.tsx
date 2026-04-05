@@ -87,6 +87,46 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const isDraggingRef = useRef(false);
   const waveformRef = useRef<{ min: Float32Array; max: Float32Array } | null>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 300 });
+
+  // Keep canvas resolution in sync with display size
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      const dpr = window.devicePixelRatio || 1;
+      const w = Math.round(width * dpr);
+      const h = Math.round(height * dpr);
+      if (w > 0 && h > 0) setCanvasSize({ width: w, height: h });
+    });
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [audioBuffer]);
+
+  // Attach non-passive wheel listener to allow preventDefault (React onWheel is passive)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !audioBuffer) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.ctrlKey) {
+        const rect = canvas.getBoundingClientRect();
+        const factor = e.deltaY > 0 ? 1.2 : 0.8;
+        const newDuration = Math.max(0.5, Math.min(audioBuffer.duration, viewDuration * factor));
+        const mouseRatio = (e.clientX - rect.left) / rect.width;
+        const mouseTime = viewStart + mouseRatio * viewDuration;
+        const newStart = Math.max(0, mouseTime - mouseRatio * newDuration);
+        setViewStart(Math.min(newStart, audioBuffer.duration - newDuration));
+        setViewDuration(newDuration);
+      } else {
+        const scrollAmount = viewDuration * 0.1 * Math.sign(e.deltaY);
+        setViewStart((prev) => Math.max(0, Math.min(audioBuffer.duration - viewDuration, prev + scrollAmount)));
+      }
+    };
+    canvas.addEventListener('wheel', handler, { passive: false });
+    return () => canvas.removeEventListener('wheel', handler);
+  }, [audioBuffer, viewDuration, viewStart]);
 
   // Load audio file
   const handleOpenFile = useCallback(async () => {
@@ -168,7 +208,6 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     }
 
     // Waveform
-    const pointsPerPixel = min.length / (duration / viewDuration * w);
     const startIdx = Math.floor((viewStart / duration) * min.length);
     const endIdx = Math.ceil(((viewStart + viewDuration) / duration) * min.length);
 
@@ -208,7 +247,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     ctx.moveTo(0, midY);
     ctx.lineTo(w, midY);
     ctx.stroke();
-  }, [audioBuffer, viewStart, viewDuration, markers, selStart, selEnd]);
+  }, [audioBuffer, viewStart, viewDuration, markers, selStart, selEnd, canvasSize]);
 
   // Mouse handlers for selection
   const getTimeFromX = useCallback((clientX: number) => {
@@ -235,27 +274,6 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     isDraggingRef.current = false;
   }, []);
 
-  // Scroll/zoom
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    if (!audioBuffer) return;
-
-    if (e.ctrlKey) {
-      // Zoom
-      const factor = e.deltaY > 0 ? 1.2 : 0.8;
-      const newDuration = Math.max(0.5, Math.min(audioBuffer.duration, viewDuration * factor));
-      const mouseRatio = (e.clientX - canvasRef.current!.getBoundingClientRect().left) / canvasRef.current!.getBoundingClientRect().width;
-      const mouseTime = viewStart + mouseRatio * viewDuration;
-      const newStart = Math.max(0, mouseTime - mouseRatio * newDuration);
-      setViewStart(Math.min(newStart, audioBuffer.duration - newDuration));
-      setViewDuration(newDuration);
-    } else {
-      // Scroll
-      const scrollAmount = viewDuration * 0.1 * Math.sign(e.deltaY);
-      setViewStart((prev) => Math.max(0, Math.min(audioBuffer.duration - viewDuration, prev + scrollAmount)));
-    }
-  }, [audioBuffer, viewDuration, viewStart]);
-
   const handleZoomIn = useCallback(() => {
     if (!audioBuffer) return;
     setViewDuration((prev) => Math.max(0.5, prev * 0.7));
@@ -280,8 +298,9 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     source.buffer = audioBuffer;
     source.connect(ctx.destination);
 
-    const start = selStart !== null && selEnd !== null ? Math.min(selStart, selEnd) : 0;
-    const dur = selStart !== null && selEnd !== null ? Math.abs(selEnd - selStart) : audioBuffer.duration;
+    const hasSel = selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.001;
+    const start = hasSel ? Math.min(selStart!, selEnd!) : 0;
+    const dur = hasSel ? Math.abs(selEnd! - selStart!) : audioBuffer.duration;
 
     source.start(0, start, dur);
     source.onended = () => setIsPlaying(false);
@@ -364,11 +383,22 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     }
   }, [audioBuffer, markers, bmsFilePath, usedWavIds, onSlicesCreated]);
 
-  // Cleanup
+  // Reset playing state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      sourceRef.current?.stop();
+      sourceRef.current = null;
+      setIsPlaying(false);
+    }
+  }, [open]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       sourceRef.current?.stop();
       sourceRef.current = null;
+      audioCtxRef.current?.close().catch(() => {});
+      audioCtxRef.current = null;
     };
   }, []);
 
@@ -404,7 +434,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handlePlay} className="flex items-center gap-1 px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300">
               {isPlaying ? <Square className="h-3.5 w-3.5 text-red-400" /> : <Play className="h-3.5 w-3.5 text-green-400" />}
-              {isPlaying ? '정지' : selStart !== null && selEnd !== null ? '선택 구간 재생' : '재생'}
+              {isPlaying ? '정지' : selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.001 ? '선택 구간 재생' : '재생'}
             </button>
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handleZoomIn} className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300">
@@ -460,14 +490,13 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
         {audioBuffer ? (
           <canvas
             ref={canvasRef}
-            width={1200}
-            height={300}
+            width={canvasSize.width}
+            height={canvasSize.height}
             className="w-full h-full rounded border border-zinc-800 cursor-crosshair"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            onWheel={handleWheel}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-zinc-600">

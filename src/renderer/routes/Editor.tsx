@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Music, Headphones } from 'lucide-react';
 import {
   NoteChartEditor,
@@ -255,11 +255,12 @@ function BpmTapDialog({ onClose, onApply }: { onClose: () => void; onApply: (bpm
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.code === 'Space') { e.preventDefault(); handleTap(); }
-      if (e.key === 'Escape') onClose();
+      if (e.code === 'Space') { e.preventDefault(); e.stopImmediatePropagation(); handleTap(); }
+      if (e.key === 'Escape') { e.stopImmediatePropagation(); onClose(); }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    // Use capture phase so this fires before Editor's keydown handler
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
   }, [handleTap, onClose]);
 
   return (
@@ -322,6 +323,18 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   const originalChartInfoRef = useRef<BmsChartDiffInfo | null>(null);
   const measureInputRef = useRef<HTMLInputElement>(null);
 
+  // Close all modal dialogs (prevents overlap)
+  const closeAllDialogs = useCallback(() => {
+    setShowNoteSearch(false);
+    setShowBpmTap(false);
+    setMeasureDialog(null);
+    setShowKeyBindings(false);
+    setShowAudioSlicer(false);
+    setShowAutoChart(false);
+    setShowMidiDialog(false);
+    setShowDiff(false);
+  }, []);
+
   // Audio refs (imperative, not in store)
   const audioPreloaderRef = useRef<AudioPreloader | null>(null);
   const schedulerRef = useRef<number | null>(null);
@@ -345,6 +358,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   }, []);
 
   useEffect(() => {
+    store.reset();
     load(file.path);
   }, [file.path, load]);
 
@@ -484,13 +498,18 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     const mode = midiRecordingModeRef.current;
     if (mode === 'off') return;
 
+    // Realtime mode requires active playback
+    if (mode === 'realtime' && !isPlayingRef.current) return;
+
     const mapping = midiMappingRef.current;
     const lane = mapping.noteToLane.get(event.note);
     if (!lane) return;
 
     const s = useEditorStore.getState();
-    const beat = s.currentBeat;
     const gridStep = 4 / s.gridSnap;
+    // Snap to grid in both modes
+    const rawBeat = mode === 'realtime' ? playbackBeatRef.current : s.currentBeat;
+    const beat = Math.round(rawBeat / gridStep) * gridStep;
 
     const { measure, fraction } = beatToMF(beat);
     store.addNote({
@@ -638,6 +657,14 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
         case 'delete': store.deleteNotes(ids); break;
         case 'escape':
           if (s.inputDialog) store.setInputDialog(null);
+          else if (showDiff) setShowDiff(false);
+          else if (showBpmTap) setShowBpmTap(false);
+          else if (measureDialog) setMeasureDialog(null);
+          else if (showNoteSearch) setShowNoteSearch(false);
+          else if (showAutoChart) setShowAutoChart(false);
+          else if (showAudioSlicer) setShowAudioSlicer(false);
+          else if (showMidiDialog) setShowMidiDialog(false);
+          else if (showKeyBindings) setShowKeyBindings(false);
           else store.clearSelection();
           break;
         case 'noteSearch': setShowNoteSearch(true); break;
@@ -660,13 +687,14 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleSaveWithCleanup, handlePlayTest, handlePlaybackToggle, laneIds]);
+  }, [handleSaveWithCleanup, handlePlayTest, handlePlaybackToggle, laneIds, showDiff, showBpmTap, measureDialog, showNoteSearch, showAutoChart, showAudioSlicer, showMidiDialog, showKeyBindings]);
 
   // --- Audio playback ---
   const loadAudio = useCallback(async () => {
     if (!chart || audioPhase === 'loading') return;
     store.setAudioPhase('loading');
     store.setAudioLoadProgress({ loaded: 0, total: 0 });
+    let preloader: AudioPreloader | null = null;
     try {
       const fileMap: FileMap = {};
       for (const [id, filename] of Object.entries(chart.keysounds)) {
@@ -675,7 +703,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       const total = Object.keys(fileMap).length;
       if (total === 0) { store.setAudioPhase('ready'); return; }
       const worker = createLocalAudioWorker(file.path);
-      const preloader = new AudioPreloader('', fileMap, worker, (type, payload) => {
+      preloader = new AudioPreloader('', fileMap, worker, (type, payload) => {
         if (type === 'PROGRESS') {
           const p = payload as { loadedCount: number; total: number };
           store.setAudioLoadProgress({ loaded: p.loadedCount, total: p.total });
@@ -686,6 +714,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       await preloader.initAudioWorklet();
       audioPreloaderRef.current?.releaseAllResources();
       audioPreloaderRef.current = preloader;
+      preloader = null; // transferred ownership
       const timingForDuration = editedTiming || chart.timing;
       if (timingForDuration) {
         const s = useEditorStore.getState();
@@ -697,9 +726,13 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       store.setAudioPhase('ready');
     } catch (err) {
       console.error('[Editor] Audio load failed:', err);
+      preloader?.releaseAllResources();
       store.setAudioPhase('idle');
     }
   }, [chart, file.path, audioPhase, editedTiming]);
+
+  const handleSeekRef = useRef<(s: number) => void>(() => {});
+  const playbackLoopRef = useRef<() => void>(() => {});
 
   const playbackLoop = useCallback(() => {
     const timing = editedTimingRef.current;
@@ -720,41 +753,57 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       store.setCurrentBeat(lo);
     }
     const es = useEditorStore.getState();
-    // A-B loop: if loopB is set and we've passed it, seek back to loopA
-    if (es.loopA !== null && es.loopB !== null && lo >= es.loopB) {
-      handleSeek(timing.beatToSeconds(es.loopA));
-      return;
+    // A-B loop: if loopEnd is set and we've passed it, seek back to loopStart
+    if (es.loopA !== null && es.loopB !== null) {
+      const loopStart = Math.min(es.loopA, es.loopB);
+      const loopEnd = Math.max(es.loopA, es.loopB);
+      if (loopStart < loopEnd && lo >= loopEnd) {
+        handleSeekRef.current(timing.beatToSeconds(loopStart));
+        return;
+      }
     }
     if (currentSec >= es.playbackDuration) {
       handlePlaybackStop();
       return;
     }
-    schedulerRef.current = requestAnimationFrame(playbackLoop);
+    schedulerRef.current = requestAnimationFrame(playbackLoopRef.current);
   }, [totalBeats]);
 
-  const handlePlaybackPlay = useCallback(() => {
-    if (audioPhase !== 'ready' && audioPhase !== 'paused') return;
+  /** Schedule all keysound playback from startSec onward. Returns true if scheduling succeeded. */
+  const scheduleNotes = useCallback((startSec: number, speed: number): boolean => {
     const timing = editedTimingRef.current;
-    if (!timing || !audioPreloaderRef.current) return;
-    isPlayingRef.current = true;
-    speedRef.current = playbackSpeed;
-    playbackStartRef.current = performance.now();
     const preloader = audioPreloaderRef.current;
+    if (!timing || !preloader) return false;
     const ctx = preloader.context;
-    if (!ctx) return;
+    if (!ctx) return false;
     if (ctx.state === 'suspended') ctx.resume();
-    const startSec = playbackOffsetRef.current;
-    const allNotes = [...useEditorStore.getState().notes].sort((a, b) => a.beat - b.beat);
+
+    const es = useEditorStore.getState();
+    const loopEndSec = es.loopA !== null && es.loopB !== null
+      ? timing.beatToSeconds(Math.max(es.loopA, es.loopB))
+      : Infinity;
+    const allNotes = [...es.notes].filter((n) => n.noteType !== 'landmine').sort((a, b) => a.beat - b.beat);
     for (const note of allNotes) {
       if (!note.keysound || note.keysound === '00') continue;
       const noteSec = timing.beatToSeconds(note.beat);
       if (noteSec < startSec) continue;
-      const delay = (noteSec - startSec) / playbackSpeed;
+      if (noteSec >= loopEndSec) break;
+      const delay = (noteSec - startSec) / speed;
       preloader.playAudioSync(note.keysound.toLowerCase(), false, true, 0, ctx.currentTime + delay, volumeRef.current);
     }
+    return true;
+  }, []);
+
+  const handlePlaybackPlay = useCallback(() => {
+    if (audioPhase !== 'ready' && audioPhase !== 'paused') return;
+    if (!editedTimingRef.current || !audioPreloaderRef.current) return;
+    isPlayingRef.current = true;
+    speedRef.current = playbackSpeed;
+    playbackStartRef.current = performance.now();
+    if (!scheduleNotes(playbackOffsetRef.current, playbackSpeed)) return;
     store.setAudioPhase('playing');
-    schedulerRef.current = requestAnimationFrame(playbackLoop);
-  }, [audioPhase, playbackSpeed, playbackLoop]);
+    schedulerRef.current = requestAnimationFrame(playbackLoopRef.current);
+  }, [audioPhase, playbackSpeed, scheduleNotes]);
 
   const handlePlaybackPause = useCallback(() => {
     if (audioPhase !== 'playing') return;
@@ -771,9 +820,11 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   const handlePlaybackStop = useCallback(() => {
     isPlayingRef.current = false;
     playbackOffsetRef.current = 0;
+    playbackBeatRef.current = 0;
     if (schedulerRef.current) cancelAnimationFrame(schedulerRef.current);
     audioPreloaderRef.current?.stopAllAudio();
     store.setPlaybackTime(0);
+    store.setCurrentBeat(0);
     store.setAudioPhase(
       (['idle', 'loading'] as AudioPhase[]).includes(useEditorStore.getState().audioPhase)
         ? useEditorStore.getState().audioPhase
@@ -806,29 +857,17 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
     playbackBeatRef.current = lo;
     store.setCurrentBeat(lo);
     if (wasPlaying && audioPreloaderRef.current) {
-      const preloader = audioPreloaderRef.current;
-      const ctx = preloader.context;
-      if (ctx) {
-        if (ctx.state === 'suspended') ctx.resume();
-        isPlayingRef.current = true;
-        speedRef.current = playbackSpeed;
-        playbackStartRef.current = performance.now();
-        const allNotes = [...useEditorStore.getState().notes].sort((a, b) => a.beat - b.beat);
-        for (const note of allNotes) {
-          if (!note.keysound || note.keysound === '00') continue;
-          const noteSec = timing.beatToSeconds(note.beat);
-          if (noteSec < clampedSec) continue;
-          const delay = (noteSec - clampedSec) / playbackSpeed;
-          preloader.playAudioSync(note.keysound.toLowerCase(), false, true, 0, ctx.currentTime + delay, volumeRef.current);
-        }
+      isPlayingRef.current = true;
+      playbackStartRef.current = performance.now();
+      if (scheduleNotes(clampedSec, speedRef.current)) {
         store.setAudioPhase('playing');
-        schedulerRef.current = requestAnimationFrame(playbackLoop);
+        schedulerRef.current = requestAnimationFrame(playbackLoopRef.current);
       }
     } else if (!wasPlaying) {
       const phase = useEditorStore.getState().audioPhase;
       if (phase === 'playing') store.setAudioPhase('paused');
     }
-  }, [totalBeats, playbackSpeed, playbackLoop]);
+  }, [totalBeats, scheduleNotes]);
 
   const handleBack = useCallback(() => {
     if (useEditorStore.getState().hasUnsavedChanges) {
@@ -838,6 +877,12 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
       onBack();
     }
   }, [onBack, handlePlaybackStop]);
+
+  // Keep refs in sync (avoid stale closures in playbackLoop/handleSeek)
+  useLayoutEffect(() => {
+    handleSeekRef.current = handleSeek;
+    playbackLoopRef.current = playbackLoop;
+  });
 
   // Keep actionMap in sync
   useEffect(() => { actionMapRef.current = buildActionMap(keyBindings); }, [keyBindings]);
@@ -920,13 +965,15 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
   // Play test mode
   const [playTestMode, setPlayTestMode] = useState(false);
   const handlePlayTest = useCallback(async () => {
+    // Stop editor playback before entering play test
+    handlePlaybackStop();
     // Auto-save before play test
     const s = useEditorStore.getState();
     if (s.hasUnsavedChanges && s.editableChart) {
       await handleSaveWithCleanup();
     }
     setPlayTestMode(true);
-  }, [handleSaveWithCleanup]);
+  }, [handleSaveWithCleanup, handlePlaybackStop]);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -1012,7 +1059,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
           Diff
         </button>
         <button
-          onClick={() => setShowBpmTap(true)}
+          onClick={() => { closeAllDialogs(); setShowBpmTap(true); }}
           className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
           title="BPM 탭"
         >
@@ -1026,28 +1073,28 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
           F5
         </button>
         <button
-          onClick={() => setShowAutoChart(true)}
+          onClick={() => { closeAllDialogs(); setShowAutoChart(true); }}
           className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
           title="AI 차트 생성"
         >
           AI
         </button>
         <button
-          onClick={() => setShowAudioSlicer(true)}
+          onClick={() => { closeAllDialogs(); setShowAudioSlicer(true); }}
           className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
           title="오디오 슬라이서"
         >
           슬라이서
         </button>
         <button
-          onClick={() => setShowMidiDialog(true)}
+          onClick={() => { closeAllDialogs(); setShowMidiDialog(true); }}
           className={`p-1 rounded hover:bg-zinc-800 transition-colors text-xs ${midiRecordingMode !== 'off' ? 'text-green-400' : 'text-zinc-400'}`}
           title="MIDI 설정"
         >
           MIDI
         </button>
         <button
-          onClick={() => setShowKeyBindings(true)}
+          onClick={() => { closeAllDialogs(); setShowKeyBindings(true); }}
           className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400 text-xs"
           title="키 바인딩 설정"
         >
@@ -1586,6 +1633,7 @@ export function Editor({ file, onBack, onRegisterGuard }: EditorProps) {
         onMappingChange={setMidiMapping}
         recordingMode={midiRecordingMode}
         onRecordingModeChange={setMidiRecordingMode}
+        onMidiNote={handleMidiNote}
       />
 
       {/* ===== KEY BINDINGS DIALOG ===== */}

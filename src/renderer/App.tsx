@@ -1,11 +1,18 @@
-import { useState, useCallback, useEffect, Component } from 'react';
+import { useState, useCallback, useEffect, useRef, Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
 import { Home } from './routes/Home';
 import { Player } from './routes/Player';
 import { Editor } from './routes/Editor';
 import { Layout } from './components/Layout';
+import { basename, dirname } from './lib/pathUtils';
 
 export type AppRoute = 'home' | 'player' | 'editor';
+
+export type NavigationGuard = () => {
+  blocked: boolean;
+  message: string;
+  onSave?: () => Promise<void>;
+};
 
 // Error Boundary to catch rendering crashes
 class ErrorBoundary extends Component<
@@ -55,6 +62,12 @@ export interface CurrentFile {
 export function App() {
   const [route, setRoute] = useState<AppRoute>('home');
   const [currentFile, setCurrentFile] = useState<CurrentFile | null>(null);
+  const navigationGuardRef = useRef<NavigationGuard | null>(null);
+  const [navConfirm, setNavConfirm] = useState<{
+    targetRoute: AppRoute;
+    message: string;
+    onSave?: () => Promise<void>;
+  } | null>(null);
 
   const handleOpenFile = useCallback((file: CurrentFile) => {
     setCurrentFile(file);
@@ -72,6 +85,23 @@ export function App() {
     setRoute('home');
   }, []);
 
+  const registerNavigationGuard = useCallback((guard: NavigationGuard | null) => {
+    navigationGuardRef.current = guard;
+  }, []);
+
+  const handleNavigate = useCallback((targetRoute: AppRoute) => {
+    if (targetRoute === route) return;
+    const guard = navigationGuardRef.current;
+    if (guard) {
+      const result = guard();
+      if (result.blocked) {
+        setNavConfirm({ targetRoute, message: result.message, onSave: result.onSave });
+        return;
+      }
+    }
+    setRoute(targetRoute);
+  }, [route]);
+
   // Expose dev helpers for automated testing (Puppeteer)
   // Using refs to avoid stale closures — the functions always use current setters
   useEffect(() => {
@@ -83,8 +113,45 @@ export function App() {
     // Don't clean up — these should persist for the lifetime of the app
   }, []);
 
+  // Listen for Electron menu IPC events
+  useEffect(() => {
+    const cleanups: Array<() => void> = [];
+
+    cleanups.push(
+      window.api.on('menu:openFile', async () => {
+        const filePath = await window.api.file.openBmsFile();
+        if (filePath) {
+          setCurrentFile({ path: filePath, name: basename(filePath), folderPath: dirname(filePath) });
+        }
+      }),
+    );
+
+    cleanups.push(
+      window.api.on('menu:openFolder', () => {
+        // Navigate to home where folder browsing is available
+        setRoute('home');
+      }),
+    );
+
+    cleanups.push(
+      window.api.on('menu:save', () => {
+        // Dispatch a synthetic Ctrl+S keydown so the Editor's save handler fires
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }));
+      }),
+    );
+
+    cleanups.push(
+      window.api.on('menu:saveAs', () => {
+        // Dispatch a synthetic Ctrl+Shift+S keydown
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, shiftKey: true, bubbles: true }));
+      }),
+    );
+
+    return () => cleanups.forEach((fn) => fn());
+  }, []);
+
   return (
-    <Layout route={route} onNavigate={setRoute} currentFile={currentFile}>
+    <Layout route={route} onNavigate={handleNavigate} currentFile={currentFile}>
       <ErrorBoundary onReset={handleHome}>
         {route === 'home' && (
           <Home
@@ -95,12 +162,64 @@ export function App() {
           />
         )}
         {route === 'player' && currentFile && (
-          <Player file={currentFile} onBack={handleHome} />
+          <Player file={currentFile} onBack={handleHome} onRegisterGuard={registerNavigationGuard} />
         )}
         {route === 'editor' && currentFile && (
-          <Editor file={currentFile} onBack={handleHome} />
+          <Editor file={currentFile} onBack={handleHome} onRegisterGuard={registerNavigationGuard} />
         )}
       </ErrorBoundary>
+
+      {/* Navigation confirmation dialog */}
+      {navConfirm && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
+          onClick={() => setNavConfirm(null)}
+        >
+          <div
+            className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-80 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold text-zinc-200 mb-2">화면 이동</h3>
+            <p className="text-xs text-zinc-400 mb-4">{navConfirm.message}</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setNavConfirm(null)}
+                className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
+              >
+                취소
+              </button>
+              {navConfirm.onSave && (
+                <button
+                  onClick={async () => {
+                    try {
+                      await navConfirm.onSave!();
+                      const target = navConfirm.targetRoute;
+                      setNavConfirm(null);
+                      setRoute(target);
+                    } catch (err) {
+                      console.error('[Nav] Save failed:', err);
+                      setNavConfirm(null);
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                >
+                  저장 후 이동
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  const target = navConfirm.targetRoute;
+                  setNavConfirm(null);
+                  setRoute(target);
+                }}
+                className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
+              >
+                {navConfirm.onSave ? '저장 안 함' : '나가기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

@@ -119,17 +119,21 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
     }
   }, [newTitle, newArtist, newBpm, newKeyMode, onOpenFile, onEdit]);
 
-  // Ctrl+N shortcut
+  // Ctrl+N / Ctrl+O shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'n') {
         e.preventDefault();
         setShowNewDialog(true);
       }
+      if (e.ctrlKey && e.key === 'o') {
+        e.preventDefault();
+        handleOpenFile();
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [handleOpenFile]);
 
   // Auto-focus title input when dialog opens
   useEffect(() => {

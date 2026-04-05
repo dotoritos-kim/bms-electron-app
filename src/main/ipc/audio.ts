@@ -1,9 +1,8 @@
 import { ipcMain } from 'electron';
-import { readFile } from 'fs/promises';
-import { join, dirname } from 'path';
-import { existsSync } from 'fs';
+import { readFile, readdir } from 'fs/promises';
+import { join, dirname, parse } from 'path';
 
-const AUDIO_EXTENSIONS = ['.wav', '.ogg', '.mp3', '.flac'];
+const AUDIO_EXTENSIONS = new Set(['.wav', '.ogg', '.mp3', '.flac']);
 
 export function registerAudioIpc(): void {
   // Read a single audio file as ArrayBuffer
@@ -21,6 +20,21 @@ export function registerAudioIpc(): void {
       const results: Record<string, ArrayBuffer> = {};
       const errors: Record<string, string> = {};
 
+      // Build a baseName (lowercase, no ext) → actual file path lookup from directory listing
+      let dirFiles: string[];
+      try {
+        dirFiles = await readdir(dir);
+      } catch {
+        return { results, errors: Object.fromEntries(entries.map(([id, f]) => [id, `Directory not found: ${dir}`])) };
+      }
+      const baseNameToPath = new Map<string, string>();
+      for (const f of dirFiles) {
+        const parsed = parse(f);
+        if (AUDIO_EXTENSIONS.has(parsed.ext.toLowerCase())) {
+          baseNameToPath.set(parsed.name.toLowerCase(), join(dir, f));
+        }
+      }
+
       const entries = Object.entries(keysoundMap);
 
       // Process in parallel batches of 20
@@ -29,24 +43,8 @@ export function registerAudioIpc(): void {
         const batch = entries.slice(i, i + batchSize);
         await Promise.all(
           batch.map(async ([id, filename]) => {
-            const audioPath = join(dir, filename);
-
-            // Try original extension first, then fallback
-            let resolvedPath: string | null = null;
-
-            if (existsSync(audioPath)) {
-              resolvedPath = audioPath;
-            } else {
-              // Try alternate extensions
-              const baseName = filename.replace(/\.[^.]+$/, '');
-              for (const ext of AUDIO_EXTENSIONS) {
-                const altPath = join(dir, baseName + ext);
-                if (existsSync(altPath)) {
-                  resolvedPath = altPath;
-                  break;
-                }
-              }
-            }
+            const baseName = parse(filename).name.toLowerCase();
+            const resolvedPath = baseNameToPath.get(baseName);
 
             if (resolvedPath) {
               try {

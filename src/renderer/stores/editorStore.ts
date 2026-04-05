@@ -211,7 +211,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   ...initialState,
 
   // --- Initialization ---
-  reset: () => set(initialState),
+  reset: () => set({
+    ...initialState,
+    timeSignatures: new Map<number, number>(),
+    selectedNotes: new Set<string>(),
+  }),
 
   initFromChart: (chart, rawNotes, nextId) =>
     set({
@@ -296,8 +300,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({
       notes: s.notes.map((n) => {
         if (!idsSet.has(n.id)) return n;
-        const newBeat = n.beat + (delta.beat || 0);
-        const newEndBeat = n.endBeat !== undefined ? n.endBeat + (delta.beat || 0) : undefined;
+        const newBeat = Math.max(0, n.beat + (delta.beat || 0));
+        const newEndBeat = n.endBeat !== undefined ? newBeat + (n.endBeat - n.beat) : undefined;
         let newColumn = n.column;
         if (delta.columnDelta && laneIds.length > 0) {
           const currentIndex = laneIds.indexOf(n.column);
@@ -366,7 +370,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const shiftAmount = 4;
     set({
       notes: s.notes.map((n) => {
-        if (n.beat < shiftBeat) return n;
+        if (n.beat < shiftBeat) {
+          // Note starts before insertion — shift endBeat if it crosses the insertion point
+          if (n.endBeat !== undefined && n.endBeat >= shiftBeat) {
+            return { ...n, endBeat: n.endBeat + shiftAmount };
+          }
+          return n;
+        }
         const newBeat = n.beat + shiftAmount;
         const { measure, fraction } = beatToMF(newBeat);
         const newEndBeat = n.endBeat !== undefined ? n.endBeat + shiftAmount : undefined;
@@ -399,7 +409,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       notes: s.notes
         .filter((n) => n.beat < startBeat || n.beat >= endBeat)
         .map((n) => {
-          if (n.beat < endBeat) return n;
+          if (n.beat < startBeat) {
+            // Note is before deleted measure — only shift endBeat if it crosses into/past deleted region
+            if (n.endBeat !== undefined && n.endBeat >= endBeat) {
+              return { ...n, endBeat: n.endBeat - 4 };
+            }
+            if (n.endBeat !== undefined && n.endBeat > startBeat) {
+              // endBeat lands inside deleted measure — truncate to boundary
+              return { ...n, endBeat: startBeat };
+            }
+            return n;
+          }
           const newBeat = n.beat - 4;
           const { measure, fraction } = beatToMF(newBeat);
           const newEndBeat = n.endBeat !== undefined ? n.endBeat - 4 : undefined;
@@ -455,14 +475,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const selected = s.notes.filter((n) => s.selectedNotes.has(n.id));
     if (selected.length < 2) return;
     const minBeat = Math.min(...selected.map((n) => n.beat));
-    const maxBeat = Math.max(...selected.map((n) => n.beat));
+    const maxBeat = Math.max(...selected.map((n) => n.endBeat ?? n.beat));
     s.pushUndo('Flip notes');
     set({
       notes: s.notes.map((n) => {
         if (!s.selectedNotes.has(n.id)) return n;
-        const newBeat = maxBeat - (n.beat - minBeat);
+        const flippedBeat = maxBeat - (n.beat - minBeat);
+        const flippedEnd = n.endBeat !== undefined ? maxBeat - (n.endBeat - minBeat) : undefined;
+        // For LN: ensure beat < endBeat after flip
+        const newBeat = flippedEnd !== undefined ? Math.min(flippedBeat, flippedEnd) : flippedBeat;
+        const newEndBeat = flippedEnd !== undefined ? Math.max(flippedBeat, flippedEnd) : undefined;
         const { measure, fraction } = beatToMF(newBeat);
-        return { ...n, beat: newBeat, measure, fraction };
+        return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
       }),
       hasUnsavedChanges: true,
     });
@@ -500,9 +524,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         if (!s.selectedNotes.has(n.id)) return n;
         const newBeat = Math.round(n.beat / gridStep) * gridStep;
         const { measure, fraction } = beatToMF(newBeat);
-        const newEndBeat = n.endBeat !== undefined
+        let newEndBeat = n.endBeat !== undefined
           ? Math.round(n.endBeat / gridStep) * gridStep
           : undefined;
+        // Prevent LN collapse: ensure endBeat > beat by at least one grid step
+        if (newEndBeat !== undefined && newEndBeat <= newBeat) {
+          newEndBeat = newBeat + gridStep;
+        }
         return { ...n, beat: newBeat, endBeat: newEndBeat, measure, fraction };
       }),
       hasUnsavedChanges: true,
@@ -550,14 +578,21 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     s.copy();
     const ids = Array.from(s.selectedNotes);
-    if (ids.length > 0) s.deleteNotes(ids);
+    if (ids.length === 0) return;
+    s.pushUndo('Cut notes');
+    const idsSet = new Set(ids);
+    set({
+      notes: s.notes.filter((n) => !idsSet.has(n.id)),
+      selectedNotes: new Set(),
+      hasUnsavedChanges: true,
+    });
   },
 
   paste: () => {
     const s = get();
     if (s.clipboard.length === 0) return;
     const minBeat = Math.min(...s.clipboard.map((n) => n.beat));
-    const offset = s.currentBeat - minBeat;
+    const offset = Math.max(-minBeat, s.currentBeat - minBeat); // Clamp so no note goes negative
     s.pushUndo('Paste notes');
     let nextId = s.nextNoteId;
     const pasted = s.clipboard.map((n) => {

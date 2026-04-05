@@ -4,6 +4,7 @@ export function dirname(filePath: string): string {
   const normalized = filePath.replace(/\\/g, '/');
   const lastSlash = normalized.lastIndexOf('/');
   if (lastSlash === -1) return '.';
+  if (lastSlash === 0) return '/';
   return normalized.substring(0, lastSlash);
 }
 

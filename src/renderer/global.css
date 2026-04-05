@@ -1,5 +1,29 @@
 @import 'tailwindcss';
 
+/* shadcn-compatible design tokens for bms-editor components */
+@theme {
+  --color-background: oklch(0.145 0 0);
+  --color-foreground: oklch(0.922 0 0);
+  --color-card: oklch(0.17 0 0);
+  --color-card-foreground: oklch(0.922 0 0);
+  --color-popover: oklch(0.17 0 0);
+  --color-popover-foreground: oklch(0.922 0 0);
+  --color-primary: oklch(0.61 0.17 250);
+  --color-primary-foreground: oklch(0.98 0 0);
+  --color-secondary: oklch(0.25 0 0);
+  --color-secondary-foreground: oklch(0.922 0 0);
+  --color-muted: oklch(0.22 0 0);
+  --color-muted-foreground: oklch(0.556 0 0);
+  --color-accent: oklch(0.25 0 0);
+  --color-accent-foreground: oklch(0.922 0 0);
+  --color-destructive: oklch(0.55 0.2 27);
+  --color-destructive-foreground: oklch(0.98 0 0);
+  --color-border: oklch(0.3 0 0);
+  --color-input: oklch(0.3 0 0);
+  --color-ring: oklch(0.61 0.17 250);
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', ui-monospace, monospace;
+}
+
 html,
 body,
 #root {
@@ -33,4 +57,16 @@ body,
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Fix native <select> dropdown options in dark theme */
+select,
+select option {
+  background-color: #1a1a1a;
+  color: #eee;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }

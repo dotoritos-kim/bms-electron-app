@@ -22,6 +22,8 @@ interface MidiMappingDialogProps {
   onMappingChange: (mapping: MidiMapping) => void;
   recordingMode: MidiRecordingMode;
   onRecordingModeChange: (mode: MidiRecordingMode) => void;
+  /** Forwarded to Editor for step/realtime note input */
+  onMidiNote?: (event: MidiNoteEvent) => void;
 }
 
 function midiNoteName(note: number): string {
@@ -38,6 +40,7 @@ export function MidiMappingDialog({
   onMappingChange,
   recordingMode,
   onRecordingModeChange,
+  onMidiNote,
 }: MidiMappingDialogProps) {
   const [devices, setDevices] = useState<MidiDevice[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
@@ -45,11 +48,17 @@ export function MidiMappingDialog({
   const [learnLane, setLearnLane] = useState<string | null>(null);
   const [lastNote, setLastNote] = useState<number | null>(null);
   const learnCallbackRef = useRef<((event: MidiNoteEvent) => void) | null>(null);
+  const onMidiNoteRef = useRef(onMidiNote);
+  onMidiNoteRef.current = onMidiNote;
+  const mappingRef = useRef(mapping);
+  mappingRef.current = mapping;
 
   useEffect(() => {
     if (!open) return;
     requestMidiAccess().then(() => {
       setDevices(getMidiInputDevices());
+    }).catch(() => {
+      setDevices([]);
     });
   }, [open]);
 
@@ -58,6 +67,8 @@ export function MidiMappingDialog({
     const onNote = (event: MidiNoteEvent) => {
       setLastNote(event.note);
       learnCallbackRef.current?.(event);
+      // Forward to Editor for step/realtime recording
+      onMidiNoteRef.current?.(event);
     };
     const ok = connectMidiInput(selectedDevice, onNote);
     setConnected(ok);
@@ -71,19 +82,20 @@ export function MidiMappingDialog({
   const handleLearn = useCallback((lane: string) => {
     setLearnLane(lane);
     learnCallbackRef.current = (event: MidiNoteEvent) => {
-      const newMap = new Map(mapping.noteToLane);
+      const currentMapping = mappingRef.current;
+      const newMap = new Map(currentMapping.noteToLane);
       // Remove old mapping for this lane
       for (const [k, v] of newMap) {
         if (v === lane) newMap.delete(k);
       }
       newMap.set(event.note, lane);
-      const newMapping = { ...mapping, noteToLane: newMap, presetName: 'Custom' };
+      const newMapping = { ...currentMapping, noteToLane: newMap, presetName: 'Custom' };
       onMappingChange(newMapping);
       saveMidiMapping(newMapping);
       setLearnLane(null);
       learnCallbackRef.current = null;
     };
-  }, [mapping, onMappingChange]);
+  }, [onMappingChange]);
 
   const handlePreset = useCallback((preset: 'default' | 'iidx' | 'keyboard') => {
     let m: MidiMapping;

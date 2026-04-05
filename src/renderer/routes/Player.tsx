@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { useEffect, useState, useCallback, useRef, useLayoutEffect, useMemo } from 'react';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Notechart, AudioPreloader, GamePlayer } from '@rhythm-archive/bms-player';
 import type { FileMap, ScoreState, NotechartInput } from '@rhythm-archive/bms-player';
-import type { CurrentFile } from '../App';
+import type { CurrentFile, NavigationGuard } from '../App';
 import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
 import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
 import { createKeysoundPlayerAdapter } from '../lib/keysoundPlayerAdapter';
@@ -11,11 +11,12 @@ import type { KeysoundPlayer } from '../lib/keysoundPlayerAdapter';
 interface PlayerProps {
   file: CurrentFile;
   onBack: () => void;
+  onRegisterGuard: (guard: NavigationGuard | null) => void;
 }
 
 type PlayerPhase = 'loading-chart' | 'loading-audio' | 'ready' | 'playing' | 'result' | 'error';
 
-export function Player({ file, onBack }: PlayerProps) {
+export function Player({ file, onBack, onRegisterGuard }: PlayerProps) {
   const { chart, isLoading, error, load } = useLocalBmsFile();
   const [phase, setPhase] = useState<PlayerPhase>('loading-chart');
   const [audioProgress, setAudioProgress] = useState({ loaded: 0, total: 0 });
@@ -23,8 +24,25 @@ export function Player({ file, onBack }: PlayerProps) {
   const [notechart, setNotechart] = useState<Notechart | null>(null);
   const [keysoundPlayer, setKeysoundPlayer] = useState<KeysoundPlayer | null>(null);
   const [finalScore, setFinalScore] = useState<ScoreState | null>(null);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [autoplay, setAutoplay] = useState(false);
+  const [hiSpeed, setHiSpeed] = useState(1.0);
+  const [floatingHiSpeed, setFloatingHiSpeed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const audioPreloaderRef = useRef<AudioPreloader | null>(null);
+  const filePathRef = useRef(file.path);
+  const fileFolderRef = useRef(file.folderPath);
+  // Keep file path refs in sync with props
+  useLayoutEffect(() => {
+    filePathRef.current = file.path;
+    fileFolderRef.current = file.folderPath;
+  });
   const [containerSize, setContainerSize] = useState({ width: 500, height: 700 });
+
+  // Calculate green number from initial BPM
+  const initialBpm = chart?.bpm?.initial ?? 150;
+  const greenNumber = useMemo(() => Math.round((8 * 60 * 1000) / (initialBpm * hiSpeed)), [initialBpm, hiSpeed]);
 
   // Track container size with ResizeObserver
   useLayoutEffect(() => {
@@ -45,6 +63,8 @@ export function Player({ file, onBack }: PlayerProps) {
   }, [file.path, load]);
 
   // Build notechart and load audio when chart is ready
+  // Dependencies: chart/isLoading only. file path accessed via refs to prevent
+  // stale initAudio from running with old chart + new file path on file switch.
   useEffect(() => {
     if (!chart || isLoading) return;
 
@@ -84,12 +104,16 @@ export function Player({ file, onBack }: PlayerProps) {
           fileMap[id] = filename;
         }
 
+        // Use refs for file paths (avoids stale initAudio with old chart + new file)
+        const currentFilePath = filePathRef.current;
+        const currentFolderPath = fileFolderRef.current;
+
         // Create local audio worker shim
-        const worker = createLocalAudioWorker(file.path);
+        const worker = createLocalAudioWorker(currentFilePath);
 
         const total = Object.keys(fileMap).length;
         const audioPreloader = new AudioPreloader(
-          file.folderPath,
+          currentFolderPath,
           fileMap,
           worker,
           (type, payload) => {
@@ -113,6 +137,10 @@ export function Player({ file, onBack }: PlayerProps) {
         await audioPreloader.initAudioWorklet();
         if (cancelled) { audioPreloader.releaseAllResources(); return; }
 
+        // Dispose previous preloader before setting new one
+        audioPreloaderRef.current?.releaseAllResources();
+        audioPreloaderRef.current = audioPreloader;
+
         setKeysoundPlayer(createKeysoundPlayerAdapter(audioPreloader));
         setAudioProgress({ loaded: total, total });
         setPhase('ready');
@@ -129,15 +157,75 @@ export function Player({ file, onBack }: PlayerProps) {
 
     return () => {
       cancelled = true;
+      // Immediately release the old preloader (close AudioContext + stop AudioWorklet)
+      // to prevent previous song's keysounds from mixing with the new song
+      if (audioPreloaderRef.current) {
+        audioPreloaderRef.current.releaseAllResources();
+        audioPreloaderRef.current = null;
+      }
     };
-  }, [chart, isLoading, file.path, file.folderPath]);
+  }, [chart, isLoading]);
 
-  // Cleanup keysoundPlayer on unmount
+  // Cleanup audio preloader on unmount
   useEffect(() => {
     return () => {
-      keysoundPlayer?.dispose();
+      audioPreloaderRef.current?.releaseAllResources();
+      audioPreloaderRef.current = null;
     };
-  }, [keysoundPlayer]);
+  }, []);
+
+  // Navigation guard: block sidebar navigation while game is active
+  useEffect(() => {
+    if (gameStarted && phase !== 'result') {
+      onRegisterGuard(() => ({
+        blocked: true,
+        message: '게임 플레이 중입니다. 나가시겠습니까?',
+      }));
+    } else {
+      onRegisterGuard(null);
+    }
+  }, [gameStarted, phase, onRegisterGuard]);
+
+  // Clear guard on unmount
+  useEffect(() => {
+    return () => onRegisterGuard(null);
+  }, [onRegisterGuard]);
+
+  // Handle start: resume AudioContext and trigger game start
+  const handleStart = useCallback(() => {
+    const ctx = audioPreloaderRef.current?.context;
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume();
+    }
+    setGameStarted(true);
+  }, []);
+
+  // SPACE key to start, ↑↓ to adjust speed from ready screen
+  useEffect(() => {
+    if (phase !== 'ready' || gameStarted) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        handleStart();
+      }
+      // Hi-speed adjustment on ready screen
+      let delta = 0;
+      if (e.code === 'ArrowUp') delta = 0.25;
+      else if (e.code === 'ArrowDown') delta = -0.25;
+      else if (e.code === 'PageUp') delta = 1.0;
+      else if (e.code === 'PageDown') delta = -1.0;
+      if (delta !== 0) {
+        e.preventDefault();
+        setHiSpeed(prev => Math.max(0.5, Math.min(10, Math.round((prev + delta) * 100) / 100)));
+      }
+      if (e.code === 'Backquote') {
+        e.preventDefault();
+        setFloatingHiSpeed(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, gameStarted, handleStart]);
 
   const handleComplete = useCallback((score: ScoreState, _cleared: boolean) => {
     setFinalScore(score);
@@ -208,19 +296,21 @@ export function Player({ file, onBack }: PlayerProps) {
           <span className="text-zinc-500">Max Combo</span>
           <span className="font-mono">{finalScore.maxCombo}</span>
           <span className="text-zinc-500">PGREAT</span>
-          <span className="font-mono text-yellow-400">{finalScore.pgreat}</span>
+          <span className="font-mono text-yellow-400">{finalScore.pgreatCount}</span>
           <span className="text-zinc-500">GREAT</span>
-          <span className="font-mono text-yellow-300">{finalScore.great}</span>
+          <span className="font-mono text-yellow-300">{finalScore.greatCount}</span>
           <span className="text-zinc-500">GOOD</span>
-          <span className="font-mono text-green-400">{finalScore.good}</span>
+          <span className="font-mono text-green-400">{finalScore.goodCount}</span>
           <span className="text-zinc-500">BAD</span>
-          <span className="font-mono text-blue-400">{finalScore.bad}</span>
+          <span className="font-mono text-blue-400">{finalScore.badCount}</span>
           <span className="text-zinc-500">POOR</span>
-          <span className="font-mono text-red-400">{finalScore.poor}</span>
+          <span className="font-mono text-red-400">{finalScore.poorCount}</span>
+          <span className="text-zinc-500">MISS</span>
+          <span className="font-mono text-zinc-500">{finalScore.missCount}</span>
         </div>
         <div className="flex gap-3 mt-4">
           <button
-            onClick={() => setPhase('ready')}
+            onClick={() => { audioPreloaderRef.current?.stopAllAudio(); setPhase('ready'); setGameStarted(false); setRetryCount(c => c + 1); }}
             className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded text-sm font-medium transition-colors"
           >
             Retry
@@ -246,20 +336,72 @@ export function Player({ file, onBack }: PlayerProps) {
         </button>
         <div className="flex-1 min-w-0 text-xs text-zinc-400 truncate">
           {chart?.songInfo?.title || file.name} — {chart?.keyMode} | BPM {chart?.bpm.initial}
+          {autoplay && <span className="ml-2 text-orange-400 font-bold">AUTOPLAY</span>}
         </div>
       </div>
 
       {/* Game canvas */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 relative flex items-center justify-center">
         <GamePlayer
+          key={retryCount}
           notechart={notechart}
           keysoundPlayer={keysoundPlayer}
           width={containerSize.width}
           height={containerSize.height}
           onComplete={handleComplete}
           onExit={handleExit}
-          options={{ autoStart: false }}
+          options={{ autoStart: gameStarted, autoplay, hiSpeed }}
         />
+
+        {/* Custom ready overlay — renders above the R3F Canvas */}
+        {phase === 'ready' && !gameStarted && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80">
+            <div className="text-3xl text-white mb-5 font-sans">READY</div>
+
+            {/* Speed settings panel */}
+            <div className="rounded-lg mb-5 text-center font-mono bg-zinc-900/90 border border-zinc-700 px-7 py-3.5 min-w-60">
+              <div className="text-xs text-zinc-500 mb-1">HI-SPEED (↑↓ adjust)</div>
+              <div className="text-3xl font-bold text-yellow-400">
+                {hiSpeed.toFixed(2)}
+              </div>
+              <div className="text-xs text-zinc-400 mt-1">
+                BPM {Math.round(initialBpm)} × {hiSpeed.toFixed(2)} = {Math.round(initialBpm * hiSpeed)}
+              </div>
+              <div className="text-sm mt-1 text-emerald-400">
+                GREEN NUMBER: {greenNumber}
+              </div>
+              <div
+                className={`mt-2 text-xs cursor-pointer select-none ${floatingHiSpeed ? 'text-orange-500' : 'text-zinc-600'}`}
+                onClick={() => setFloatingHiSpeed(prev => !prev)}
+              >
+                {floatingHiSpeed ? '● FLOATING HI-SPEED ON' : '○ FLOATING HI-SPEED OFF'}
+                <span className="text-zinc-600 ml-1.5">(` key)</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleStart}
+              className="px-10 py-4 text-xl font-medium text-white border-none rounded-lg cursor-pointer bg-orange-600 hover:bg-orange-500 transition-colors"
+            >
+              START
+            </button>
+            <label className="mt-5 flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={autoplay}
+                onChange={(e) => setAutoplay(e.target.checked)}
+                className="w-4 h-4 accent-orange-500"
+              />
+              <span className="text-sm text-zinc-300">AUTOPLAY</span>
+            </label>
+            <div className="mt-3 text-sm text-zinc-500">
+              Press SPACE or click to start
+            </div>
+            <div className="mt-1 text-[10px] text-zinc-600">
+              ↑↓ Hi-Speed ±0.25 | PgUp/PgDn ±1.0 | ` Floating
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -341,7 +341,11 @@ export function loadUserPatterns(): PatternTemplate[] {
 }
 
 export function saveUserPatterns(patterns: PatternTemplate[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(patterns));
+  } catch {
+    console.warn('[PatternTemplates] Failed to save — localStorage may be full');
+  }
 }
 
 export function getAllPatterns(): PatternTemplate[] {

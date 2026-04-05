@@ -119,20 +119,20 @@ export const DEFAULT_BINDINGS: KeyBinding[] = [
   { label: '잘라내기', action: 'cut', key: 'ctrl+x' },
   { label: '붙여넣기', action: 'paste', key: 'ctrl+v' },
   { label: '전체 선택', action: 'selectAll', key: 'ctrl+a' },
-  { label: '삭제', action: 'delete', key: 'Delete' },
-  { label: '취소', action: 'escape', key: 'Escape' },
+  { label: '삭제', action: 'delete', key: 'delete' },
+  { label: '취소', action: 'escape', key: 'escape' },
   { label: '노트 검색', action: 'noteSearch', key: 'ctrl+f' },
-  { label: '플레이 테스트', action: 'playTest', key: 'F5' },
-  { label: '재생/일시정지', action: 'playToggle', key: 'Space' },
+  { label: '플레이 테스트', action: 'playTest', key: 'f5' },
+  { label: '재생/일시정지', action: 'playToggle', key: 'space' },
   { label: '미러', action: 'mirror', key: 'ctrl+m' },
   { label: '랜덤', action: 'random', key: 'ctrl+r' },
   { label: '퀀타이즈', action: 'quantize', key: 'q' },
   { label: '마디 삽입', action: 'insertMeasure', key: 'ctrl+shift+i' },
   { label: '마디 삭제', action: 'deleteMeasure', key: 'ctrl+shift+d' },
-  { label: '위로 이동', action: 'moveUp', key: 'ArrowUp' },
-  { label: '아래로 이동', action: 'moveDown', key: 'ArrowDown' },
-  { label: '왼쪽 이동', action: 'moveLeft', key: 'ArrowLeft' },
-  { label: '오른쪽 이동', action: 'moveRight', key: 'ArrowRight' },
+  { label: '위로 이동', action: 'moveUp', key: 'arrowup' },
+  { label: '아래로 이동', action: 'moveDown', key: 'arrowdown' },
+  { label: '왼쪽 이동', action: 'moveLeft', key: 'arrowleft' },
+  { label: '오른쪽 이동', action: 'moveRight', key: 'arrowright' },
   { label: '선택 도구', action: 'toolSelect', key: 'v' },
   { label: '노트 추가', action: 'toolAddNote', key: 'a' },
   { label: '삭제 도구', action: 'toolDelete', key: 'd' },
@@ -155,8 +155,8 @@ export function loadKeyBindings(): KeyBinding[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_BINDINGS;
     const saved = JSON.parse(raw) as KeyBinding[];
-    // Merge with defaults to pick up new actions
-    const savedMap = new Map(saved.map((b) => [b.action, b]));
+    // Normalize old saved keys to lowercase for consistency
+    const savedMap = new Map(saved.map((b) => [b.action, { ...b, key: b.key.toLowerCase() }]));
     return DEFAULT_BINDINGS.map((def) => savedMap.get(def.action) || def);
   } catch {
     return DEFAULT_BINDINGS;
@@ -180,8 +180,10 @@ export function normalizeKeyCombo(e: KeyboardEvent): string {
   if (e.altKey) parts.push('alt');
 
   let key = e.key;
-  // Normalize single-char keys to lowercase for matching
-  if (key.length === 1) key = key.toLowerCase();
+  // Normalize Space key (e.key returns ' ' for Space)
+  if (key === ' ') key = 'Space';
+  // Lowercase all keys for consistent matching with buildActionMap
+  key = key.toLowerCase();
 
   parts.push(key);
   return parts.join('+');
@@ -191,17 +193,20 @@ export function keyComboToDisplay(combo: string): string {
   return combo
     .split('+')
     .map((p) => {
-      switch (p) {
+      switch (p.toLowerCase()) {
         case 'ctrl': return 'Ctrl';
         case 'shift': return 'Shift';
         case 'alt': return 'Alt';
-        case 'ArrowUp': return '↑';
-        case 'ArrowDown': return '↓';
-        case 'ArrowLeft': return '←';
-        case 'ArrowRight': return '→';
-        case 'Space': return 'Space';
-        case 'Delete': return 'Del';
-        case 'Escape': return 'Esc';
+        case 'arrowup': return '↑';
+        case 'arrowdown': return '↓';
+        case 'arrowleft': return '←';
+        case 'arrowright': return '→';
+        case 'space': return 'Space';
+        case 'delete': return 'Del';
+        case 'escape': return 'Esc';
+        case 'backspace': return 'Backspace';
+        case 'enter': return 'Enter';
+        case 'tab': return 'Tab';
         default: return p.length === 1 ? p.toUpperCase() : p;
       }
     })

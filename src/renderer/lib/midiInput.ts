@@ -65,7 +65,8 @@ export function connectMidiInput(
   currentInput = input;
 
   input.onmidimessage = (msg) => {
-    const [status, note, velocity] = msg.data!;
+    if (!msg.data || msg.data.length < 3) return;
+    const [status, note, velocity] = msg.data;
     // Note On (0x90) with velocity > 0
     if ((status & 0xf0) === 0x90 && velocity > 0) {
       noteCallback?.({ note, velocity, timestamp: msg.timeStamp });

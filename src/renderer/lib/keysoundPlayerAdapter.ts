@@ -6,7 +6,7 @@ import type { AudioPreloader } from '@rhythm-archive/bms-player';
 
 export interface KeysoundPlayer {
   readonly isReady: boolean;
-  play(keysoundId: string, offset?: number): void;
+  play(keysoundId: string, offset?: number, scheduledTime?: number, volume?: number): void;
   stopAll(): void;
   dispose(): void;
   readonly preloader?: AudioPreloader;
@@ -18,8 +18,8 @@ export function createKeysoundPlayerAdapter(audioPreloader: AudioPreloader): Key
       return true; // We only create the adapter after loadAll + decodeAll + initAudioWorklet
     },
 
-    play(keysoundId: string, offset?: number) {
-      audioPreloader.playAudioSync(keysoundId, false, false, offset);
+    play(keysoundId: string, offset?: number, scheduledTime?: number, volume?: number) {
+      audioPreloader.playAudioSync(keysoundId.toLowerCase(), false, true, offset ?? 0, scheduledTime ?? 0, volume ?? 1);
     },
 
     stopAll() {

@@ -52,9 +52,10 @@ const api = {
       ipcRenderer.invoke('audio:readBatch', bmsFilePath, keysoundMap),
   },
   on: (channel: string, callback: (...args: unknown[]) => void) => {
-    ipcRenderer.on(channel, (_event, ...args) => callback(...args));
+    const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args);
+    ipcRenderer.on(channel, handler);
     return () => {
-      ipcRenderer.removeAllListeners(channel);
+      ipcRenderer.removeListener(channel, handler);
     };
   },
 };

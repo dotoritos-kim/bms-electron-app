@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { X, Wand2, Lightbulb } from 'lucide-react';
 import type { GeneratedNote, AutoChartOptions } from '../lib/autoChart';
 import {
@@ -44,10 +44,20 @@ export function AutoChartDialog({
   const [quantize, setQuantize] = useState(true);
   const [suggestCount, setSuggestCount] = useState(16);
   const [preview, setPreview] = useState<GeneratedNote[]>([]);
+  const [generateAttempted, setGenerateAttempted] = useState(false);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [loadingAudio, setLoadingAudio] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   const columnCount = laneIds.length;
+
+  // Cleanup AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      audioCtxRef.current?.close().catch(() => {});
+      audioCtxRef.current = null;
+    };
+  }, []);
 
   // Load audio for onset detection
   const handleLoadAudio = useCallback(async () => {
@@ -56,8 +66,10 @@ export function AutoChartDialog({
     setLoadingAudio(true);
     try {
       const arrayBuffer = await window.api.audio.readFile(path);
-      const ctx = new AudioContext();
-      const buffer = await ctx.decodeAudioData(arrayBuffer);
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      const buffer = await audioCtxRef.current.decodeAudioData(arrayBuffer);
       setAudioBuffer(buffer);
     } catch (err) {
       console.error('[AutoChart] Audio load failed:', err);
@@ -83,6 +95,7 @@ export function AutoChartDialog({
 
     const generated = generateChartFromOnsets(onsetTimes, bpm, options);
     setPreview(generated);
+    setGenerateAttempted(true);
   }, [audioBuffer, difficulty, columnCount, useScratch, lnRatio, quantize, gridSnap, bpm]);
 
   // Suggest pattern from existing notes
@@ -247,6 +260,11 @@ export function AutoChartDialog({
           )}
 
           {/* Preview */}
+          {generateAttempted && preview.length === 0 && (
+            <div className="text-[10px] text-yellow-500 bg-yellow-900/20 rounded p-2">
+              감지된 온셋이 없습니다. 오디오 볼륨이 너무 낮거나 무음일 수 있습니다. 난이도를 낮추면 감도가 올라갑니다.
+            </div>
+          )}
           {preview.length > 0 && (
             <div>
               <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">

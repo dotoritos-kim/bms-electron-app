@@ -39,9 +39,10 @@ Electron 기반 BMS 차트 에디터 앱. 리듬 게임용 .bms/.bme/.bml 파일
 
 - **Stack**: Electron + React 19 + Three.js + Zustand + Vite
 - **Local packages**: bms-core (파서/라이터), bms-player (게임 엔진), bms-editor (차트 에디터 UI)
-- **기존 Worker 패턴**: gameLoop.worker.ts, audioScheduler.worker.ts (동일 패턴 재사용)
-- **핵심 버그 원인**: useLocalBmsFile.load()의 6개 동기 블록이 렌더러 메인 스레드를 수십 초간 점령
-- **추가 버그**: Editor 언마운트 시 AudioPreloader.decodeAll() 고아 Promise가 백그라운드에서 실행 지속
+- **현재 상태 (v1.0 shipped 2026-04-06)**: 파일 로딩 프리징 버그 수정 완료. BMS 파싱 Worker 이전, AudioPreloader abort, Editor graceful shutdown, scanDir 병렬화 모두 완료
+- **Worker 패턴**: bmsParser.worker.ts (per-request), gameLoop.worker.ts, audioScheduler.worker.ts
+- **테스트**: 1118/1118 통과 (5개 신규 회귀 테스트 스위트 포함)
+- **다음 우선순위 후보**: 에디터 미니맵 수직 사이드바 UI 개선 (CEO 리뷰 완료, 구현 대기)
 
 ## Constraints
 
@@ -79,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after milestone v1.0 complete — all 5 phases done*
+*Last updated: 2026-04-06 after milestone v1.0 archived — /gsd:complete-milestone*

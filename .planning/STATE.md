@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Milestone v1.0 완료 (2026-04-06)
-last_updated: "2026-04-06T12:08:36.213Z"
+last_updated: "2026-04-06T12:15:41.602Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 5
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** 파일 탐색, 노트 편집, 오디오 미리듣기가 모두 끊김 없이 동작
-**Current focus:** Milestone v1.0 완료
+**Current focus:** v1.0 archived — planning next milestone
 
 ## Current Position
 

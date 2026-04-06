@@ -47,13 +47,13 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| MINI-01 | TBD | pending |
-| MINI-02 | TBD | pending |
-| MINI-03 | TBD | pending |
-| MINI-04 | TBD | pending |
-| BK-01 | TBD | pending |
-| BK-02 | TBD | pending |
-| BK-03 | TBD | pending |
-| LAYER-01 | TBD | pending |
-| LAYER-02 | TBD | pending |
-| LAYER-03 | TBD | pending |
+| MINI-01 | Phase 6 | Pending |
+| MINI-02 | Phase 6 | Pending |
+| MINI-03 | Phase 6 | Pending |
+| MINI-04 | Phase 6 | Pending |
+| BK-01 | Phase 6 | Pending |
+| BK-02 | Phase 6 | Pending |
+| BK-03 | Phase 7 | Pending |
+| LAYER-01 | Phase 7 | Pending |
+| LAYER-02 | Phase 7 | Pending |
+| LAYER-03 | Phase 7 | Pending |

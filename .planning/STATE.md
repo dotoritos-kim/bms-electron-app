@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: 에디터 UI 개선 — 미니맵 & 패널
-status: Defining requirements
+status: Ready to plan
 last_updated: "2026-04-06T00:00:00.000Z"
 last_activity: 2026-04-06
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,26 +19,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** 파일 탐색, 노트 편집, 오디오 미리듣기가 모두 끊김 없이 동작
-**Current focus:** v1.1 — 에디터 UI 개선 (미니맵, 북마크 UI, 레이어 패널)
+**Current focus:** v1.1 — Phase 6: 수직 미니맵 사이드바
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-04-06 — Milestone v1.1 started
+Phase: 6 of 7 (수직 미니맵 사이드바)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-04-06 — Roadmap created for v1.1 (Phases 6-7)
+
+Progress: [░░░░░░░░░░] 0%
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 0 (v1.1)
+- Average duration: — (v1.0 reference: ~1 plan/phase)
+- Total execution time: —
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| - | - | - | - |
+
+*Updated after each plan completion*
 
 ## Accumulated Context
-
-### From v1.0 (carried forward)
-
-- BMS 파싱 Worker: per-request (매번 생성/terminate로 취소) ✅
-- Worker Protocol: PARSE_PHASE1 -> PHASE1_DONE -> PHASE2_DONE (자동 연속) ✅
-- requestId guard: Phase2 메시지 레이스 컨디션 방지 ✅
-- useHomeBmsFile (신규) vs useLocalBmsFile (Editor 기존 유지) ✅
-- AudioPreloader.abort(): decodeAll/loadAll 내부 abort 플래그 체크 ✅
-- inProgressPreloaderRef: cleanup에서 in-progress preloader 즉시 abort ✅
-- App.tsx key={currentFile.path}: Editor 강제 리마운트 -> ref 초기화 ✅
 
 ### Existing Building Blocks (v1.1 활용 가능)
 
@@ -46,12 +53,14 @@ Last activity: 2026-04-06 — Milestone v1.1 started
 - addBookmark/removeBookmark/renameBookmark 액션 (Phase 6.2) — store에 있음
 - LayerConfig + setLayerVisible/Locked/Opacity 액션 (Phase 4) — store에 있음
 - react-resizable-panels v4 레이아웃 (Panel/Separator) — Editor.tsx에 적용 중
-- MiniMap (MinimapBridge) — currentBeat 구독 브릿지 컴포넌트 있음
+- MinimapBridge — currentBeat 구독 브릿지 컴포넌트 있음
 
-### Test Results
-
-- Total: 1118/1118 tests passing (v1.0 기준)
-
-## Blockers / Concerns
+### Blockers/Concerns
 
 None
+
+## Session Continuity
+
+Last session: 2026-04-06
+Stopped at: Roadmap written — ready to plan Phase 6
+Resume file: None

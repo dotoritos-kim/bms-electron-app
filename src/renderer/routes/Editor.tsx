@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap, Maximize2 } from 'lucide-react';
 // Removed react-resizable-panels — using custom resize handles instead
 import {
   NoteChartEditor,
@@ -286,6 +286,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   // showWaveform removed — WaveformOverlay needs NoteChartEditor coordinate integration
   const [leftPanelWidth, setLeftPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-left-w') || '208'));
   const [rightPanelWidth, setRightPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-right-w') || '224'));
+  const [minimapPopout, setMinimapPopout] = useState(false);
+  const [popoutPos, setPopoutPos] = useState({ x: typeof window !== 'undefined' ? window.innerWidth - 220 : 800, y: typeof window !== 'undefined' ? window.innerHeight - 300 : 400 });
+  const popoutDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
   const toolMenuRef = useRef<HTMLDivElement>(null);
 
   // Close tool menu on outside click
@@ -1678,6 +1681,32 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           </EditorContextMenu>
         </div>
 
+        {/* ===== MINIMAP SIDEBAR (togglable, between canvas and right panel) ===== */}
+        {chart && showMinimap && !minimapPopout && (
+          <div className="w-20 border-l border-zinc-800 flex flex-col bg-zinc-950 shrink-0 min-h-0" data-testid="minimap-sidebar">
+            <div className="px-1.5 py-1 flex items-center justify-between border-b border-zinc-800 shrink-0">
+              <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">Map</span>
+              <button
+                onClick={() => setMinimapPopout(true)}
+                className="p-0.5 rounded hover:bg-zinc-800 transition-colors text-zinc-600 hover:text-zinc-300"
+                title="미니맵 분리 (드래그 가능)"
+              >
+                <Maximize2 className="h-2.5 w-2.5" />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <MinimapBridge
+                notes={notes}
+                totalBeats={totalBeats}
+                viewportBeats={16}
+                onNavigate={store.setCurrentBeat}
+                densityData={minimapDensityData}
+                bookmarks={minimapBookmarks}
+              />
+            </div>
+          </div>
+        )}
+
         {/* --- RIGHT: Header Editor + Note Info + Minimap --- */}
         {showRightPanel && (
           <>
@@ -1786,9 +1815,41 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           </>
         )}
 
-        {/* ===== MINIMAP SIDEBAR (togglable) ===== */}
-        {chart && showMinimap && (
-          <div className="w-20 border-l border-zinc-800 flex flex-col bg-zinc-950 shrink-0 min-h-0" data-testid="minimap-sidebar">
+      </div>
+
+      {/* ===== MINIMAP FLOATING POPOUT ===== */}
+      {minimapPopout && chart && (
+        <div
+          style={{ position: 'fixed', left: popoutPos.x, top: popoutPos.y, zIndex: 50, width: 180, height: 260 }}
+          className="border border-zinc-700 rounded bg-zinc-900 shadow-xl flex flex-col"
+          data-testid="minimap-popout"
+        >
+          {/* Drag handle header */}
+          <div
+            className="px-2 py-1 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-700 shrink-0 flex items-center justify-between cursor-grab select-none"
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              popoutDragRef.current = { startX: e.clientX, startY: e.clientY, originX: popoutPos.x, originY: popoutPos.y };
+            }}
+            onPointerMove={(e) => {
+              if (!popoutDragRef.current) return;
+              setPopoutPos({
+                x: popoutDragRef.current.originX + (e.clientX - popoutDragRef.current.startX),
+                y: popoutDragRef.current.originY + (e.clientY - popoutDragRef.current.startY),
+              });
+            }}
+            onPointerUp={() => { popoutDragRef.current = null; }}
+          >
+            <span>Minimap</span>
+            <button
+              onClick={() => setMinimapPopout(false)}
+              className="text-zinc-500 hover:text-zinc-200 transition-colors leading-none"
+              title="미니맵 패널로 되돌리기"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-hidden">
             <MinimapBridge
               notes={notes}
               totalBeats={totalBeats}
@@ -1798,8 +1859,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               bookmarks={minimapBookmarks}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ===== STATUS BAR ===== */}
       <div className="flex items-center border-t border-zinc-800 bg-zinc-900" data-testid="status-bar">

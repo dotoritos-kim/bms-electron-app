@@ -62,7 +62,9 @@ export function useHomeBmsFile() {
 
     let buffer: ArrayBuffer;
     try {
-      buffer = await window.api.file.readBms(filePath);
+      const uint8 = await window.api.file.readBms(filePath);
+      // IPC returns Uint8Array; extract the underlying ArrayBuffer for transfer
+      buffer = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength);
     } catch (err) {
       // Guard: if a newer request already started, discard this error
       if (reqId !== requestIdRef.current) return;

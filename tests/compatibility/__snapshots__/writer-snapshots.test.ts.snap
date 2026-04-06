@@ -1,0 +1,218 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BMSWriter Snapshots > 1. empty chart 1`] = `
+"#PLAYER 1
+#BPM 120
+#PLAYLEVEL 1
+#RANK 3
+"
+`;
+
+exports[`BMSWriter Snapshots > 2. minimal 7K chart with 3 notes 1`] = `
+"#PLAYER 1
+#TITLE Minimal 7K
+#BPM 150
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+#WAV02 snare.wav
+#WAV03 hat.wav
+
+#00011:01
+#00013:00020000
+#00015:0003"
+`;
+
+exports[`BMSWriter Snapshots > 3. chart with inline BPM change (<=255) 1`] = `
+"#PLAYER 1
+#TITLE Inline BPM
+#BPM 120
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+
+#00003:00B4
+#00011:01"
+`;
+
+exports[`BMSWriter Snapshots > 4. chart with extended BPM change (>255) 1`] = `
+"#PLAYER 1
+#TITLE Extended BPM
+#BPM 130
+#PLAYLEVEL 1
+#RANK 3
+
+#BPM01 300.5
+
+#WAV01 kick.wav
+
+#00008:0001
+#00011:01"
+`;
+
+exports[`BMSWriter Snapshots > 5. chart with STOP event 1`] = `
+"#PLAYER 1
+#TITLE Stop Event
+#BPM 140
+#PLAYLEVEL 1
+#RANK 3
+
+#STOP01 48
+
+#WAV01 kick.wav
+
+#00009:0001
+#00011:01"
+`;
+
+exports[`BMSWriter Snapshots > 6. chart with LN (endBeat) 1`] = `
+"#PLAYER 1
+#TITLE Long Note
+#BPM 120
+#PLAYLEVEL 1
+#RANK 3
+#LNTYPE 1
+
+#WAV01 hold.wav
+
+#00051:0101"
+`;
+
+exports[`BMSWriter Snapshots > 7. chart with time signature change 1`] = `
+"#PLAYER 1
+#TITLE Time Sig
+#BPM 120
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+
+#00011:01
+#00102:0.75
+#00111:01"
+`;
+
+exports[`BMSWriter Snapshots > 8. chart with BGM notes 1`] = `
+"#PLAYER 1
+#TITLE BGM Notes
+#BPM 130
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 bgm.wav
+#WAV02 bgm2.wav
+
+#00001:0102"
+`;
+
+exports[`BMSWriter Snapshots > 9. chart with invisible notes 1`] = `
+"#PLAYER 1
+#TITLE Invisible
+#BPM 120
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+#WAV02 ghost.wav
+
+#00011:01
+#00031:00020000"
+`;
+
+exports[`BMSWriter Snapshots > 10. chart with multiple keysounds (#WAV01-#WAV05) 1`] = `
+"#PLAYER 1
+#TITLE Multi WAV
+#BPM 140
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+#WAV02 snare.wav
+#WAV03 hat.wav
+#WAV04 clap.wav
+#WAV05 ride.wav
+
+#00011:01
+#00012:00020000
+#00013:0003
+#00014:00000004
+#00115:05"
+`;
+
+exports[`BMSWriter Snapshots > 11. chart with notes in multiple measures 1`] = `
+"#PLAYER 1
+#TITLE Multi Measure
+#BPM 150
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+#WAV02 snare.wav
+
+#00011:01
+#00012:0002
+#00111:01
+#00113:0002
+#00215:01"
+`;
+
+exports[`BMSWriter Snapshots > 12. dense chart (16 notes in one measure) 1`] = `
+"#PLAYER 1
+#TITLE Dense Chart
+#BPM 160
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+#WAV02 snare.wav
+
+#00011:01020102010201020102010201020102"
+`;
+
+exports[`BMSWriter Snapshots > 13. chart with mixed note types (playable + bgm + invisible) 1`] = `
+"#PLAYER 1
+#TITLE Mixed Types
+#BPM 130
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+#WAV02 bgm.wav
+#WAV03 ghost.wav
+
+#00001:00020000
+#00011:01
+#00015:00000001
+#00033:0003"
+`;
+
+exports[`BMSWriter Snapshots > 14. 14K DP chart (PLAYER 2) 1`] = `
+"#PLAYER 2
+#TITLE DP Chart
+#BPM 150
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+#WAV02 snare.wav
+
+#00011:01
+#00013:00020000
+#00021:01
+#00023:0002"
+`;
+
+exports[`BMSWriter Snapshots > 15. chart with landmine notes 1`] = `
+"#PLAYER 1
+#TITLE Landmine
+#BPM 120
+#PLAYLEVEL 1
+#RANK 3
+
+#WAV01 kick.wav
+
+#00011:01
+#000D3:0001"
+`;

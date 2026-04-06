@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2 } from 'lucide-react';
 // Removed react-resizable-panels — using custom resize handles instead
 import {
   NoteChartEditor,
@@ -51,6 +51,8 @@ import { AccessibleDialog } from '../components/AccessibleDialog';
 import { ToastStack, useToastStack } from '../components/ToastStack';
 import type { GeneratedNote } from '../lib/autoChart';
 import { createBeatConverter } from '../lib/beatConverter';
+import { computeDensityMap, densityToColor } from '../lib/densityMap';
+import type { MinimapDensityEntry, MinimapBookmark } from '@rhythm-archive/bms-editor';
 // WaveformOverlay removed — requires NoteChartEditor internal coordinate sync to work correctly
 
 type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | null;
@@ -136,22 +138,24 @@ function NoteChartEditorBridge(props: Omit<NoteChartEditorProps, 'scrollToBeat'>
 }
 
 /** Minimap: currentBeat 구독 격리 */
-function MinimapBridge({ notes, totalBeats, viewportBeats, onNavigate }: {
+function MinimapBridge({ notes, totalBeats, viewportBeats, onNavigate, densityData, bookmarks }: {
   notes: import('@rhythm-archive/bms-core').EditableBMSNote[];
   totalBeats: number;
   viewportBeats: number;
   onNavigate: (beat: number) => void;
+  densityData?: MinimapDensityEntry[];
+  bookmarks?: MinimapBookmark[];
 }) {
   const currentBeat = useEditorStore(s => s.currentBeat);
-  return <Minimap notes={notes} totalBeats={totalBeats} currentBeat={currentBeat} viewportBeats={viewportBeats} onNavigate={onNavigate} />;
+  return <Minimap notes={notes} totalBeats={totalBeats} currentBeat={currentBeat} viewportBeats={viewportBeats} onNavigate={onNavigate} densityData={densityData} bookmarks={bookmarks} />;
 }
 
 /** StatusBar: currentBeat 구독 격리 */
-function StatusBarBridge({ gridSnap, selectedCount, totalNotes, bpm, zoom }: {
-  gridSnap: number; selectedCount: number; totalNotes: number; bpm: number; zoom: number;
+function StatusBarBridge({ gridSnap, selectedCount, totalNotes, bpm, noteHeight, audioReady }: {
+  gridSnap: number; selectedCount: number; totalNotes: number; bpm: number; noteHeight: number; audioReady: boolean;
 }) {
   const currentBeat = useEditorStore(s => s.currentBeat);
-  return <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedCount} totalNotes={totalNotes} bpm={bpm} zoom={zoom} />;
+  return <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedCount} totalNotes={totalNotes} bpm={bpm} noteHeight={noteHeight} audioReady={audioReady} />;
 }
 
 /** BeatKeysoundPanel: currentBeat 구독 격리 */
@@ -182,6 +186,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     audioPhase, playbackSpeed, volume,
     noteHeight, inputDialog, showLeftPanel, showRightPanel, headerCollapsed, showBackConfirm,
     loopA, loopB, highlightKeysound,
+    bookmarks,
   } = useEditorStore(useShallow((s) => ({
     notes: s.notes, bpmChanges: s.bpmChanges, stopEvents: s.stopEvents, headers: s.headers,
     timeSignatures: s.timeSignatures, editableChart: s.editableChart, keyMode: s.keyMode,
@@ -193,6 +198,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     noteHeight: s.noteHeight, inputDialog: s.inputDialog, showLeftPanel: s.showLeftPanel,
     showRightPanel: s.showRightPanel, headerCollapsed: s.headerCollapsed, showBackConfirm: s.showBackConfirm,
     loopA: s.loopA, loopB: s.loopB, highlightKeysound: s.highlightKeysound,
+    bookmarks: s.bookmarks,
   })));
   // Stable actions reference (Zustand actions are stable closures over set/get)
   const store = useMemo(() => useEditorStore.getState(), []);
@@ -274,10 +280,18 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
   // Initialize from chart
   useEffect(() => {
-    if (!chart) return;
-    if (chart.bmsChart) {
-      const ec = BMSWriter.fromBMSChart(chart.bmsChart);
-      // Create converter from chart's timeSignatures for initial note mapping
+    if (!chart || !chart.bmsChart) return;
+    let cancelled = false;
+
+    const run = async () => {
+      // Phase A: convert BMSChart → EditableBMSChart (heaviest sync op)
+      const ec = BMSWriter.fromBMSChart(chart.bmsChart!);
+
+      // Yield so the chart header info can paint before the note-mapping freeze
+      await new Promise<void>((r) => setTimeout(r, 0));
+      if (cancelled) return;
+
+      // Phase B: map notes with tick/beat calculations (O(N))
       const initConverter = createBeatConverter(ec.timeSignatures);
       const editableNotes: EditableBMSNote[] = chart.notes.map((n, i) => {
         const { measure, fraction } = initConverter.beatToMF(n.beat);
@@ -312,6 +326,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         }
       }
 
+      if (cancelled) return;
+
+      // Phase C: commit to store (triggers re-render with notes)
       store.initFromChart(ec, editableNotes, editableNotes.length + 1, chart.keyMode);
       // Load .bms.meta sidecar (only apply if no user changes yet)
       window.api.file.readMeta(file.path).then((metaJson) => {
@@ -341,7 +358,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         bpm: chart.bpm,
         stats: chart.stats,
       };
-    }
+    };
+
+    run();
+    return () => { cancelled = true; };
   }, [chart]);
 
   // Auto-load audio when chart is loaded (placed after loadAudio definition via ref)
@@ -361,6 +381,29 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   }, [chart]);
 
   const keysoundRecord = useMemo(() => chart?.keysounds || {}, [chart]);
+
+  // Minimap density data — precompute per-measure density + color for Minimap overlay
+  const minimapDensityData = useMemo((): MinimapDensityEntry[] | undefined => {
+    if (!chart?.barLines || chart.barLines.length < 2 || notes.length === 0) return undefined;
+    const totalMeasures = chart.barLines.length - 1;
+    const density = computeDensityMap(notes, totalMeasures);
+    return density.map((d) => ({
+      normalized: d.normalized,
+      color: densityToColor(d.normalized),
+      startBeat: chart.barLines![d.measure] ?? d.measure * 4,
+      endBeat: chart.barLines![d.measure + 1] ?? (d.measure + 1) * 4,
+    }));
+  }, [notes, chart]);
+
+  // Minimap bookmarks — convert measure → beat
+  const minimapBookmarks = useMemo((): MinimapBookmark[] => {
+    if (!chart || bookmarks.length === 0) return [];
+    return bookmarks.map((bm) => ({
+      beat: store.mfToBeat(bm.measure, 0),
+      name: bm.name,
+      color: bm.color,
+    }));
+  }, [bookmarks, chart]);
 
   // 키음별 사용 횟수 (메인 + additionalKeysounds 포함)
   const keysoundUsageCounts = useMemo(() => {
@@ -1356,7 +1399,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         {/* --- LEFT: Keysound / Pattern Panel --- */}
         {showLeftPanel && (
           <>
-          <div style={{ width: leftPanelWidth }} className="border-r border-zinc-800 flex flex-col bg-zinc-900 shrink-0" data-testid="left-panel">
+          <div style={{ width: leftPanelWidth }} className="border-r border-zinc-800 flex flex-col bg-zinc-900 shrink-0 overflow-hidden" data-testid="left-panel">
             <div className="flex border-b border-zinc-800 shrink-0">
               <button
                 onClick={() => setLeftPanelTab('keysound')}
@@ -1656,38 +1699,40 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               </div>
             )}
           </div>
-          <div className="border-t border-zinc-800 h-48 shrink-0">
-            {chart && (
-              <MinimapBridge
-                notes={notes}
-                totalBeats={totalBeats}
-                viewportBeats={16}
-                onNavigate={store.setCurrentBeat}
-              />
-            )}
-          </div>
         </div>
           </>
+        )}
+
+        {/* ===== MINIMAP SIDEBAR (always visible) ===== */}
+        {chart && (
+          <div className="w-16 border-l border-zinc-800 flex flex-col bg-zinc-950 shrink-0 min-h-0" data-testid="minimap-sidebar">
+            <MinimapBridge
+              notes={notes}
+              totalBeats={totalBeats}
+              viewportBeats={16}
+              onNavigate={store.setCurrentBeat}
+              densityData={minimapDensityData}
+              bookmarks={minimapBookmarks}
+            />
+          </div>
         )}
       </div>
 
       {/* ===== STATUS BAR ===== */}
-      {/* ===== STATUS BAR + DIFFICULTY ===== */}
       <div className="flex items-center border-t border-zinc-800 bg-zinc-900" data-testid="status-bar">
-        <div className="flex-1">
-          <StatusBarBridge gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} zoom={1} />
+        <div className="flex-1 min-w-0">
+          <StatusBarBridge gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} noteHeight={noteHeight} audioReady={isAudioReady} />
         </div>
-        {midiRecordingMode !== 'off' && (
-          <div className="px-2 text-[10px] text-green-400 shrink-0">
-            MIDI: {midiRecordingMode === 'step' ? '스텝' : '실시간'}
-          </div>
-        )}
-        {(undoStack.length > 0 || redoStack.length > 0) && (
-          <div className="px-2 text-[10px] text-zinc-600 shrink-0">
-            Undo:{undoStack.length} Redo:{redoStack.length}
-          </div>
-        )}
-        <div className="px-3 text-[10px] text-zinc-500 shrink-0">
+        <div className="flex items-center gap-2 px-3 py-1.5 shrink-0 text-[10px] text-zinc-500 border-l border-zinc-800">
+          {midiRecordingMode !== 'off' && (
+            <span className="text-green-400">MIDI: {midiRecordingMode === 'step' ? '스텝' : '실시간'}</span>
+          )}
+          {(undoStack.length > 0 || redoStack.length > 0) && (
+            <span className="flex items-center gap-1">
+              <Undo2 className="h-3 w-3" />{undoStack.length}
+              <Redo2 className="h-3 w-3 ml-1" />{redoStack.length}
+            </span>
+          )}
           추정 난이도: <span className="text-zinc-300 font-semibold">{estimateDifficulty(notes, editedBaseBpm, totalBeats) || '-'}</span>/12
         </div>
       </div>

@@ -51,6 +51,8 @@ export function useLocalBmsFile() {
       const bmsString = await parser.readBuffer(buffer);
       // compileString parses the BMS text into a BMSChart structure
       const chart = parser.compileString(bmsString);
+      // Yield one frame so the loading spinner can animate before sync work continues
+      await new Promise<void>((r) => setTimeout(r, 0));
       const songInfo = parser.getSongInfo();
       const notesObj = parser.getNotes();
 
@@ -66,11 +68,13 @@ export function useLocalBmsFile() {
       let minBpm = initialBpm;
       let maxBpm = initialBpm;
 
+      // Single-pass extraction: BPM changes, stops, and scroll speed changes
       const bpmChanges: BpmChange[] = [];
-      const objects = chart.objects.allSorted();
-
-      for (const obj of objects) {
-        if (obj.channel === '03') {
+      const stops: StopEvent[] = [];
+      const scrollChanges: ScrollSpeedChange[] = [];
+      for (const obj of chart.objects.allSorted()) {
+        const ch = obj.channel;
+        if (ch === '03') {
           const bpmValue = parseInt(obj.value, 16);
           if (!isNaN(bpmValue) && bpmValue > 0) {
             const beat = chart.measureToBeat(obj.measure, obj.fraction);
@@ -78,7 +82,7 @@ export function useLocalBmsFile() {
             if (bpmValue < minBpm) minBpm = bpmValue;
             if (bpmValue > maxBpm) maxBpm = bpmValue;
           }
-        } else if (obj.channel === '08') {
+        } else if (ch === '08') {
           const bpmValue = parseFloat(chart.headers.get('bpm' + obj.value) || '');
           if (!isNaN(bpmValue) && bpmValue > 0) {
             const beat = chart.measureToBeat(obj.measure, obj.fraction);
@@ -86,17 +90,7 @@ export function useLocalBmsFile() {
             if (bpmValue < minBpm) minBpm = bpmValue;
             if (bpmValue > maxBpm) maxBpm = bpmValue;
           }
-        }
-      }
-
-      // LN type
-      const lnTypeHeader = chart.headers.get('lntype');
-      const lnType = lnTypeHeader ? parseInt(lnTypeHeader) : 1;
-
-      // STOP events
-      const stops: StopEvent[] = [];
-      for (const obj of objects) {
-        if (obj.channel === '09') {
+        } else if (ch === '09') {
           const stopHeader = chart.headers.get('stop' + obj.value);
           if (stopHeader) {
             const stopValue = parseInt(stopHeader, 10) / 192;
@@ -107,13 +101,7 @@ export function useLocalBmsFile() {
               });
             }
           }
-        }
-      }
-
-      // Scroll speed changes
-      const scrollChanges: ScrollSpeedChange[] = [];
-      for (const obj of objects) {
-        if (obj.channel.toUpperCase() === 'SC') {
+        } else if (ch.toUpperCase() === 'SC') {
           const scrollHeader = chart.headers.get('scroll' + obj.value);
           if (scrollHeader) {
             const scrollValue = parseFloat(scrollHeader);
@@ -126,6 +114,10 @@ export function useLocalBmsFile() {
           }
         }
       }
+
+      // LN type
+      const lnTypeHeader = chart.headers.get('lntype');
+      const lnType = lnTypeHeader ? parseInt(lnTypeHeader) : 1;
 
       // Keysound map
       const keysounds: Record<string, string> = {};

@@ -2,14 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: 에디터 UI 개선 — 미니맵 & 패널
-status: Ready to plan
-last_updated: "2026-04-06T00:00:00.000Z"
-last_activity: 2026-04-06
+status: planning
+stopped_at: Phase 6 context gathered
+last_updated: "2026-04-06T12:35:26.320Z"
+last_activity: 2026-04-06 — Roadmap created for v1.1 (Phases 6-7)
 progress:
   total_phases: 2
   completed_phases: 0
-  total_plans: 0
+  total_plans: 1
   completed_plans: 0
+  percent: 0
 ---
 
 # State
@@ -33,6 +35,7 @@ Progress: [░░░░░░░░░░] 0%
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0 (v1.1)
 - Average duration: — (v1.0 reference: ~1 plan/phase)
 - Total execution time: —
@@ -61,6 +64,6 @@ None
 
 ## Session Continuity
 
-Last session: 2026-04-06
-Stopped at: Roadmap written — ready to plan Phase 6
-Resume file: None
+Last session: 2026-04-06T12:35:26.318Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-minimap-sidebar/06-CONTEXT.md

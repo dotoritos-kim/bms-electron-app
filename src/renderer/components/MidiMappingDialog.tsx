@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Plug, Unplug, Keyboard } from 'lucide-react';
+import { AccessibleDialog } from './AccessibleDialog';
 import type { MidiDevice, MidiMapping, MidiRecordingMode, MidiNoteEvent } from '../lib/midiInput';
 import {
   requestMidiAccess,
@@ -108,22 +109,16 @@ export function MidiMappingDialog({
     saveMidiMapping(m);
   }, [laneIds, onMappingChange]);
 
-  if (!open) return null;
-
-  const laneMappings = laneIds.map((lane) => {
+  const laneMappings = open ? laneIds.map((lane) => {
     let mappedNote: number | null = null;
     for (const [note, l] of mapping.noteToLane) {
       if (l === lane) { mappedNote = note; break; }
     }
     return { lane, mappedNote };
-  });
+  }) : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl w-[420px] max-h-[80vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AccessibleDialog open={open} onClose={onClose} title="MIDI 설정" className="border border-zinc-700 w-[420px] max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
           <h2 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
             <Keyboard className="h-4 w-4" />
@@ -252,7 +247,6 @@ export function MidiMappingDialog({
             닫기
           </button>
         </div>
-      </div>
-    </div>
+    </AccessibleDialog>
   );
 }

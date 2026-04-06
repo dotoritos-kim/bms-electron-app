@@ -5,13 +5,14 @@ import { Player } from './routes/Player';
 import { Editor } from './routes/Editor';
 import { Layout } from './components/Layout';
 import { basename, dirname } from './lib/pathUtils';
+import { loadSession, saveSession } from './lib/sessionStorage';
 
 export type AppRoute = 'home' | 'player' | 'editor';
 
 export type NavigationGuard = () => {
   blocked: boolean;
   message: string;
-  onSave?: () => Promise<void>;
+  onSave?: () => Promise<boolean | void>;
 };
 
 // Error Boundary to catch rendering crashes
@@ -60,13 +61,25 @@ export interface CurrentFile {
 }
 
 export function App() {
-  const [route, setRoute] = useState<AppRoute>('home');
-  const [currentFile, setCurrentFile] = useState<CurrentFile | null>(null);
+  // Restore last session
+  const [route, setRoute] = useState<AppRoute>(() => {
+    const session = loadSession();
+    return session?.lastRoute || 'home';
+  });
+  const [currentFile, setCurrentFile] = useState<CurrentFile | null>(() => {
+    const session = loadSession();
+    return session?.lastFile || null;
+  });
   const navigationGuardRef = useRef<NavigationGuard | null>(null);
+
+  // Save session on route/file changes
+  useEffect(() => {
+    saveSession({ lastRoute: route, lastFile: currentFile });
+  }, [route, currentFile]);
   const [navConfirm, setNavConfirm] = useState<{
     targetRoute: AppRoute;
     message: string;
-    onSave?: () => Promise<void>;
+    onSave?: () => Promise<boolean | void>;
   } | null>(null);
 
   const handleOpenFile = useCallback((file: CurrentFile) => {
@@ -83,6 +96,10 @@ export function App() {
 
   const handleHome = useCallback(() => {
     setRoute('home');
+  }, []);
+
+  const handleClearFile = useCallback(() => {
+    setCurrentFile(null);
   }, []);
 
   const registerNavigationGuard = useCallback((guard: NavigationGuard | null) => {
@@ -162,10 +179,10 @@ export function App() {
           />
         )}
         {route === 'player' && currentFile && (
-          <Player file={currentFile} onBack={handleHome} onRegisterGuard={registerNavigationGuard} />
+          <Player file={currentFile} onBack={handleHome} onClearFile={handleClearFile} onRegisterGuard={registerNavigationGuard} />
         )}
         {route === 'editor' && currentFile && (
-          <Editor file={currentFile} onBack={handleHome} onRegisterGuard={registerNavigationGuard} />
+          <Editor file={currentFile} onBack={handleHome} onClearFile={handleClearFile} onOpenFile={handleOpenFile} onRegisterGuard={registerNavigationGuard} />
         )}
       </ErrorBoundary>
 
@@ -192,13 +209,13 @@ export function App() {
                 <button
                   onClick={async () => {
                     try {
-                      await navConfirm.onSave!();
+                      const result = await navConfirm.onSave!();
+                      if (result === false) return; // Save failed — stay on page
                       const target = navConfirm.targetRoute;
                       setNavConfirm(null);
                       setRoute(target);
                     } catch (err) {
                       console.error('[Nav] Save failed:', err);
-                      setNavConfirm(null);
                     }
                   }}
                   className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"

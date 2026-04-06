@@ -207,6 +207,10 @@ interface EditorState {
   currentKeysound: string;
   currentBeat: number;
 
+  // Keysound highlight
+  /** 하이라이트 중인 키음 ID (null = 비활성) */
+  highlightKeysound: string | null;
+
   // Custom Colors / Skin
   /** 커스텀 노트 색상 (null = 기본 테마) */
   customColors: {
@@ -217,6 +221,12 @@ interface EditorState {
     selection?: string;
     background?: string;
   };
+
+  // BGM Channel Solo/Mute
+  /** 솔로 채널 번호 (null = 솔로 없음, 모든 채널 재생) */
+  bgmSoloChannel: number | null;
+  /** 뮤트된 BGM 채널 번호 집합 */
+  bgmMutedChannels: Set<number>;
 
   // A/B Comparison
   /** 비교용 스냅샷 (현재 상태와 교대 재생) */
@@ -374,6 +384,11 @@ interface EditorState {
   setCustomColor: (key: string, color: string | null) => void;
   resetCustomColors: () => void;
 
+  // BGM Channel Solo/Mute
+  toggleBgmSolo: (channel: number) => void;
+  toggleBgmMute: (channel: number) => void;
+  clearBgmSoloMute: () => void;
+
   // A/B Comparison
   saveComparisonSnapshot: () => void;
   clearComparisonSnapshot: () => void;
@@ -394,6 +409,14 @@ interface EditorState {
   setLoopA: (beat: number | null) => void;
   setLoopB: (beat: number | null) => void;
   toggleMetronome: () => void;
+
+  // Keysound management
+  /** 키음 하이라이트 설정/해제 */
+  setHighlightKeysound: (keysound: string | null) => void;
+  /** 키음 일괄 교체 (모든 노트의 fromId → toId, additionalKeysounds 포함) */
+  replaceKeysound: (fromId: string, toId: string) => void;
+  /** WAV 정의 삭제 (미사용 키음 정리) */
+  removeWavDefinitions: (keysoundIds: string[]) => void;
 
   // Patterns
   applyPattern: (pattern: PatternTemplate, laneIds: string[], startBeat: number, startColumn: string, keysound: string) => void;
@@ -418,7 +441,10 @@ const initialState = {
   minLnLength: 0.25,
   bookmarks: [] as Array<{ measure: number; name: string; color?: string }>,
   noteGroups: [] as Array<{ id: string; name: string; noteIds: string[]; color?: string }>,
+  highlightKeysound: null as string | null,
   customColors: {} as { playable?: string; invisible?: string; landmine?: string; bgm?: string; selection?: string; background?: string },
+  bgmSoloChannel: null as number | null,
+  bgmMutedChannels: new Set<number>(),
   comparisonSnapshot: null as { notes: EditableBMSNote[]; bpmChanges: BMSBpmChange[] } | null,
   comparisonActive: false,
   selectedNotes: new Set<string>(),
@@ -476,6 +502,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     selectedNotes: new Set<string>(),
     gridSnapOverrides: new Map<number, number>(),
     layerConfig: { ...DEFAULT_LAYER_CONFIG },
+    bgmSoloChannel: null,
+    bgmMutedChannels: new Set<number>(),
     _beatConverter: null,
     _noteIndex: new Map<string, string>(),
   }),
@@ -608,6 +636,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         });
         return;
       }
+    }
+
+    // Auto-assign bgmChannel for new BGM notes
+    if (newNote.noteType === 'bgm' && newNote.bgmChannel === undefined) {
+      const maxChannel = s.notes
+        .filter((n) => n.noteType === 'bgm' && n.tick === newNote.tick && n.bgmChannel !== undefined)
+        .reduce((max, n) => Math.max(max, n.bgmChannel!), -1);
+      newNote.bgmChannel = maxChannel + 1;
     }
 
     s.pushUndo('Add note');
@@ -747,9 +783,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (filter.columns && filter.columns.length > 0) {
         if (!n.column || !filter.columns.includes(n.column)) return false;
       }
-      // Keysound filter
+      // Keysound filter (includes additionalKeysounds)
       if (filter.keysounds && filter.keysounds.length > 0) {
-        if (!filter.keysounds.includes(n.keysound)) return false;
+        const hasMatch = filter.keysounds.includes(n.keysound) ||
+          n.additionalKeysounds?.some((ak) => filter.keysounds!.includes(ak.keysound));
+        if (!hasMatch) return false;
       }
       return true;
     });
@@ -769,8 +807,34 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     if (s.selectedNotes.size === 0) return;
     s.pushUndo('Change note type');
+
+    // Pre-compute max bgmChannel per tick for new BGM assignments
+    const tickMaxChannel = new Map<number, number>();
+    if (newType === 'bgm') {
+      for (const n of s.notes) {
+        if (n.noteType === 'bgm' && n.bgmChannel !== undefined) {
+          const cur = tickMaxChannel.get(n.tick) ?? -1;
+          if (n.bgmChannel > cur) tickMaxChannel.set(n.tick, n.bgmChannel);
+        }
+      }
+    }
+
     set({
-      notes: s.notes.map((n) => (s.selectedNotes.has(n.id) ? { ...n, noteType: newType } : n)),
+      notes: s.notes.map((n) => {
+        if (!s.selectedNotes.has(n.id)) return n;
+        const updated = { ...n, noteType: newType };
+        if (newType === 'bgm') {
+          updated.column = undefined;
+          // Assign bgmChannel
+          const cur = tickMaxChannel.get(n.tick) ?? -1;
+          updated.bgmChannel = cur + 1;
+          tickMaxChannel.set(n.tick, updated.bgmChannel);
+        } else {
+          // Leaving BGM → clear bgmChannel
+          updated.bgmChannel = undefined;
+        }
+        return updated;
+      }),
       hasUnsavedChanges: true,
     });
   },
@@ -1415,6 +1479,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return { comparisonActive: !s.comparisonActive };
   }),
 
+  // BGM Channel Solo/Mute
+  toggleBgmSolo: (channel) => set((s) => ({
+    bgmSoloChannel: s.bgmSoloChannel === channel ? null : channel,
+  })),
+  toggleBgmMute: (channel) => set((s) => {
+    const next = new Set(s.bgmMutedChannels);
+    if (next.has(channel)) next.delete(channel);
+    else next.add(channel);
+    return { bgmMutedChannels: next };
+  }),
+  clearBgmSoloMute: () => set({ bgmSoloChannel: null, bgmMutedChannels: new Set() }),
+
   // Bookmarks
   addBookmark: (measure, name, color) => set((s) => ({
     bookmarks: [...s.bookmarks.filter((b) => b.measure !== measure), { measure, name, color }]
@@ -1452,6 +1528,41 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setLoopA: (beat) => set({ loopA: beat }),
   setLoopB: (beat) => set({ loopB: beat }),
   toggleMetronome: () => set((s) => ({ metronomeEnabled: !s.metronomeEnabled })),
+
+  // --- Keysound management ---
+  setHighlightKeysound: (keysound) => set({ highlightKeysound: keysound }),
+
+  replaceKeysound: (fromId, toId) => {
+    if (fromId === toId) return;
+    const s = get();
+    s.pushUndo('키음 일괄 교체');
+    const updated = s.notes.map((n) => {
+      let changed = false;
+      let keysound = n.keysound;
+      let additionalKeysounds = n.additionalKeysounds;
+      if (n.keysound === fromId) {
+        keysound = toId;
+        changed = true;
+      }
+      if (n.additionalKeysounds?.some((ak) => ak.keysound === fromId)) {
+        additionalKeysounds = n.additionalKeysounds.map((ak) =>
+          ak.keysound === fromId ? { ...ak, keysound: toId } : ak
+        );
+        changed = true;
+      }
+      return changed ? { ...n, keysound, additionalKeysounds } : n;
+    });
+    set({ notes: updated, hasUnsavedChanges: true });
+  },
+
+  removeWavDefinitions: (keysoundIds) => {
+    const s = get();
+    if (!s.headers) return;
+    s.pushUndo('미사용 키음 삭제');
+    const newWav = new Map(s.headers.wav);
+    for (const id of keysoundIds) newWav.delete(id);
+    set({ headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true });
+  },
 
   // --- Patterns ---
   applyPattern: (pattern, laneIds, startBeat, startColumn, keysound) => {

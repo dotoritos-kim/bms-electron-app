@@ -7,16 +7,18 @@ import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
 import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
 import { createKeysoundPlayerAdapter } from '../lib/keysoundPlayerAdapter';
 import type { KeysoundPlayer } from '../lib/keysoundPlayerAdapter';
+import GameLoopWorkerConstructor from '../workers/gameLoop.worker?worker';
 
 interface PlayerProps {
   file: CurrentFile;
   onBack: () => void;
+  onClearFile?: () => void;
   onRegisterGuard: (guard: NavigationGuard | null) => void;
 }
 
 type PlayerPhase = 'loading-chart' | 'loading-audio' | 'ready' | 'error';
 
-export function Player({ file, onBack, onRegisterGuard }: PlayerProps) {
+export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerProps) {
   const { chart, isLoading, error, load } = useLocalBmsFile();
   const [phase, setPhase] = useState<PlayerPhase>('loading-chart');
   const [audioProgress, setAudioProgress] = useState({ loaded: 0, total: 0 });
@@ -26,6 +28,16 @@ export function Player({ file, onBack, onRegisterGuard }: PlayerProps) {
   const [autoplay, setAutoplay] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const audioPreloaderRef = useRef<AudioPreloader | null>(null);
+  const gameWorkerRef = useRef<Worker | null>(null);
+
+  // Create Worker once on mount
+  useEffect(() => {
+    gameWorkerRef.current = new GameLoopWorkerConstructor();
+    return () => {
+      gameWorkerRef.current?.terminate();
+      gameWorkerRef.current = null;
+    };
+  }, []);
   const filePathRef = useRef(file.path);
   const fileFolderRef = useRef(file.folderPath);
   // Keep file path refs in sync with props
@@ -188,9 +200,20 @@ export function Player({ file, onBack, onRegisterGuard }: PlayerProps) {
           <p className="text-lg mb-1">Error</p>
           <p className="text-sm">{error || audioError}</p>
         </div>
-        <button onClick={onBack} className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded transition-colors">
-          Back to Home
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => { setPhase('loading-chart'); load(file.path); }}
+            className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded transition-colors text-zinc-300"
+          >
+            다시 시도
+          </button>
+          <button
+            onClick={() => { onClearFile?.(); onBack(); }}
+            className="px-4 py-2 text-sm text-blue-400 hover:text-blue-300"
+          >
+            홈으로
+          </button>
+        </div>
       </div>
     );
   }
@@ -259,7 +282,7 @@ export function Player({ file, onBack, onRegisterGuard }: PlayerProps) {
           height={containerSize.height}
           onComplete={handleComplete}
           onExit={handleExit}
-          options={{ autoplay }}
+          options={{ autoplay, worker: gameWorkerRef.current ?? undefined }}
         />
       </div>
     </div>

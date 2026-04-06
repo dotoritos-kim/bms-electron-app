@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { X, Wand2, Lightbulb } from 'lucide-react';
+import { AccessibleDialog } from './AccessibleDialog';
 import type { GeneratedNote, AutoChartOptions } from '../lib/autoChart';
 import {
   generateChartFromOnsets,
@@ -124,14 +125,8 @@ export function AutoChartDialog({
     onClose();
   }, [preview, onApplyNotes, onClose]);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl w-[520px] max-h-[85vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AccessibleDialog open={open} onClose={onClose} title="AI 차트 생성" className="border border-zinc-700 w-[520px] max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
           <h2 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
@@ -312,7 +307,6 @@ export function AutoChartDialog({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </AccessibleDialog>
   );
 }

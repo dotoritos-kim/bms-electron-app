@@ -55,6 +55,8 @@ export type KeyAction =
   | 'togglePatternPanel'
   // Diff
   | 'toggleDiff'
+  // Layer
+  | 'moveToBgm'
   // Bookmark / Group / Snap
   | 'addBookmark'
   | 'createGroup'
@@ -95,6 +97,7 @@ export const ACTION_LABELS: Record<KeyAction, string> = {
   clearLoop: '루프 해제',
   togglePatternPanel: '패턴 패널 전환',
   toggleDiff: '변경사항 비교',
+  moveToBgm: '선택 노트 → BGM',
   addBookmark: '북마크 추가',
   createGroup: '그룹 생성',
   toggleSnap: '스냅 토글',
@@ -111,6 +114,7 @@ export const ACTION_CATEGORIES: { label: string; actions: KeyAction[] }[] = [
   { label: '도구', actions: ['toolSelect', 'toolAddNote', 'toolDelete', 'toolMove', 'toolKeysound', 'toolBpm', 'toolStop'] },
   { label: '루프', actions: ['setLoopA', 'setLoopB', 'clearLoop'] },
   { label: '패널', actions: ['togglePatternPanel', 'toggleDiff'] },
+  { label: '레이어', actions: ['moveToBgm'] },
   { label: '북마크/그룹', actions: ['addBookmark', 'createGroup', 'toggleSnap'] },
 ];
 
@@ -159,6 +163,7 @@ export const DEFAULT_BINDINGS: KeyBinding[] = [
   { label: '루프 해제', action: 'clearLoop', key: '\\' },
   { label: '패턴 패널', action: 'togglePatternPanel', key: 'p' },
   { label: '변경사항 비교', action: 'toggleDiff', key: 'ctrl+d' },
+  { label: 'BGM으로 이동', action: 'moveToBgm', key: 'ctrl+shift+b' },
   { label: '북마크 추가', action: 'addBookmark', key: 'ctrl+b' },
   { label: '그룹 생성', action: 'createGroup', key: 'ctrl+g' },
   { label: '스냅 토글', action: 'toggleSnap', key: 'g' },

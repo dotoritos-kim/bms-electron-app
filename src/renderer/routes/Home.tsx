@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { FolderOpen, File, FilePlus, Play, Edit, Music, RefreshCw } from 'lucide-react';
+import { FolderOpen, File, FilePlus, Play, Edit, Music, RefreshCw, Pin, PinOff, X, Clock } from 'lucide-react';
 import type { CurrentFile } from '../App';
 import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
 import { dirname, basename } from '../lib/pathUtils';
+import { loadRecentFiles, addRecentFile, removeRecentFile, togglePinRecentFile } from '../lib/sessionStorage';
+import type { RecentFileEntry } from '../lib/sessionStorage';
 
 interface HomeProps {
   currentFile: CurrentFile | null;
@@ -40,41 +42,56 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
   const [newBpm, setNewBpm] = useState('130');
   const [newKeyMode, setNewKeyMode] = useState<KeyModeOption>('7K');
   const [creating, setCreating] = useState(false);
+  const [dialogBusy, setDialogBusy] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const [recentFiles, setRecentFiles] = useState<RecentFileEntry[]>(() => loadRecentFiles());
 
   useEffect(() => {
     if (currentFile) {
+      setRecentFiles(addRecentFile(currentFile));
       load(currentFile.path);
     }
   }, [currentFile, load]);
 
   const handleOpenFile = useCallback(async () => {
-    const filePath = await window.api.file.openBmsFile();
-    if (filePath) {
-      onOpenFile({
-        path: filePath,
-        name: basename(filePath),
-        folderPath: dirname(filePath),
-      });
+    if (dialogBusy) return;
+    setDialogBusy(true);
+    try {
+      const filePath = await window.api.file.openBmsFile();
+      if (filePath) {
+        onOpenFile({
+          path: filePath,
+          name: basename(filePath),
+          folderPath: dirname(filePath),
+        });
+      }
+    } finally {
+      setDialogBusy(false);
     }
-  }, [onOpenFile]);
+  }, [onOpenFile, dialogBusy]);
 
   const handleOpenFolder = useCallback(async () => {
-    const path = await window.api.file.openBmsFolder();
-    if (path) {
-      setFolderPath(path);
-      setScanning(true);
-      try {
-        const bmsFiles = await window.api.file.listBmsFolder(path);
-        setFiles(bmsFiles);
-      } catch (err) {
-        console.error('[Home] Folder scan failed:', err);
-        setFiles([]);
-      } finally {
-        setScanning(false);
+    if (dialogBusy) return;
+    setDialogBusy(true);
+    try {
+      const path = await window.api.file.openBmsFolder();
+      if (path) {
+        setFolderPath(path);
+        setScanning(true);
+        try {
+          const bmsFiles = await window.api.file.listBmsFolder(path);
+          setFiles(bmsFiles);
+        } catch (err) {
+          console.error('[Home] Folder scan failed:', err);
+          setFiles([]);
+        } finally {
+          setScanning(false);
+        }
       }
+    } finally {
+      setDialogBusy(false);
     }
-  }, []);
+  }, [dialogBusy]);
 
   const handleSelectFile = useCallback(
     (file: BmsFileEntry) => {
@@ -150,21 +167,24 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
         <div className="p-3 border-b border-zinc-800 flex gap-2 flex-wrap">
           <button
             onClick={() => setShowNewDialog(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 rounded transition-colors"
+            disabled={dialogBusy}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
           >
             <FilePlus className="h-4 w-4" />
             New
           </button>
           <button
             onClick={handleOpenFile}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+            disabled={dialogBusy}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
           >
             <File className="h-4 w-4" />
             Open
           </button>
           <button
             onClick={handleOpenFolder}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 rounded transition-colors"
+            disabled={dialogBusy}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
           >
             <FolderOpen className="h-4 w-4" />
             Folder
@@ -180,10 +200,51 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
               {scanning && <RefreshCw className="h-3 w-3 animate-spin ml-auto" />}
             </div>
           )}
-          {files.length === 0 && !scanning && (
+          {files.length === 0 && !scanning && recentFiles.length === 0 && (
             <div className="p-6 text-center text-sm text-zinc-500">
               Open a file or folder to get started
             </div>
+          )}
+          {files.length === 0 && !scanning && !folderPath && recentFiles.length > 0 && (
+            <>
+              <div className="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-800 flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                최근 파일
+              </div>
+              {recentFiles.map((rf) => (
+                <div
+                  key={rf.path}
+                  className={`group w-full text-left px-3 py-2 text-sm hover:bg-zinc-800 transition-colors flex items-center gap-2 ${
+                    currentFile?.path === rf.path ? 'bg-zinc-800 text-blue-400' : 'text-zinc-300'
+                  }`}
+                >
+                  <button
+                    onClick={() => onOpenFile({ path: rf.path, name: rf.name, folderPath: rf.folderPath })}
+                    className="flex items-center gap-2 flex-1 min-w-0"
+                  >
+                    {rf.pinned && <Pin className="h-3 w-3 shrink-0 text-yellow-500" />}
+                    {!rf.pinned && <Music className="h-3.5 w-3.5 shrink-0 text-zinc-500" />}
+                    <span className="truncate">{rf.name}</span>
+                  </button>
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setRecentFiles(togglePinRecentFile(rf.path)); }}
+                      className="p-0.5 rounded hover:bg-zinc-700 text-zinc-500"
+                      title={rf.pinned ? '고정 해제' : '고정'}
+                    >
+                      {rf.pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setRecentFiles(removeRecentFile(rf.path)); }}
+                      className="p-0.5 rounded hover:bg-zinc-700 text-zinc-500"
+                      title="목록에서 제거"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </>
           )}
           {files.map((file) => (
             <button

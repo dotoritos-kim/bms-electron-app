@@ -56,6 +56,8 @@ export interface BmsMetaData {
   writerResolution?: number;
   /** Minimum long note length (beats) */
   minLnLength?: number;
+  /** BGM channel assignments (noteId → bgmChannel number) */
+  bgmChannels?: Record<string, number>;
 }
 
 /**
@@ -132,6 +134,7 @@ export function buildMetaFromState(state: {
   };
   bookmarks?: BmsMetaBookmark[];
   noteGroups?: BmsMetaNoteGroup[];
+  notes?: Array<{ id: string; noteType?: string; bgmChannel?: number }>;
 }): BmsMetaData {
   const meta: BmsMetaData = { version: META_VERSION };
 
@@ -142,6 +145,19 @@ export function buildMetaFromState(state: {
 
   if (state.bookmarks && state.bookmarks.length > 0) meta.bookmarks = state.bookmarks;
   if (state.noteGroups && state.noteGroups.length > 0) meta.noteGroups = state.noteGroups;
+
+  // BGM channel assignments
+  if (state.notes) {
+    const bgmChannels: Record<string, number> = {};
+    let hasBgmChannels = false;
+    for (const note of state.notes) {
+      if (note.noteType === 'bgm' && note.bgmChannel !== undefined) {
+        bgmChannels[note.id] = note.bgmChannel;
+        hasBgmChannels = true;
+      }
+    }
+    if (hasBgmChannels) meta.bgmChannels = bgmChannels;
+  }
 
   return meta;
 }

@@ -143,11 +143,11 @@ export function useLocalBmsFile() {
       const keysoundsObj = KeySounds.fromBMSChart(chart);
       const songInfoObj = SongInfo.fromBMSChart(chart);
 
-      // Build bar lines
+      // Build bar lines (BUG-P3: 변박 고려하여 마디 계산)
       let maxMeasure = 0;
       for (const n of notes) {
-        const m = Math.floor(n.beat / 4);
-        if (m > maxMeasure) maxMeasure = m;
+        const { measure } = chart.timeSignatures.beatToMeasure(n.endBeat ?? n.beat);
+        if (measure > maxMeasure) maxMeasure = measure;
       }
       maxMeasure += 2;
       const barLines: number[] = [];

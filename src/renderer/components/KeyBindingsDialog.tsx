@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { X } from 'lucide-react';
+import { AccessibleDialog } from './AccessibleDialog';
 import type { KeyBinding, KeyAction } from '../lib/keyBindings';
 import {
   ACTION_CATEGORIES,
@@ -82,14 +83,8 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
     setLocalBindings(DEFAULT_BINDINGS);
   }, []);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl w-[480px] max-h-[80vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AccessibleDialog open={open} onClose={onClose} title="키 바인딩 설정" className="border border-zinc-700 w-[480px] max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
           <h2 className="text-sm font-semibold text-zinc-200">키 바인딩 설정</h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-zinc-800 text-zinc-400">
@@ -167,7 +162,6 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </AccessibleDialog>
   );
 }

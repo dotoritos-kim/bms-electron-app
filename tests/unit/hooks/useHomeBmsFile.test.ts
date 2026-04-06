@@ -79,7 +79,7 @@ import { useHomeBmsFile } from '../../../src/renderer/hooks/useHomeBmsFile';
 describe('useHomeBmsFile — requestId race condition guard', () => {
   beforeEach(() => {
     mockWorkerInstance = null;
-    mockReadBms.mockResolvedValue(new ArrayBuffer(8));
+    mockReadBms.mockResolvedValue(new Uint8Array(8));
   });
 
   it('T4a: PHASE1_DONE transitions phase to phase1', async () => {

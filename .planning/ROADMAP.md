@@ -6,7 +6,7 @@
 
 | # | Phase | Goal | Requirements | Status |
 |---|-------|------|--------------|--------|
-| 1 | BMS Parser Worker | BMS 파싱을 Worker로 이전, 2단계 로딩 | PERF-01~04, CANCEL-01~02 | Not Started |
+| 1 | BMS Parser Worker | BMS 파싱을 Worker로 이전, 2단계 로딩 | PERF-01~04, CANCEL-01~02 | Complete (2c49ec1) |
 | 2 | AudioPreloader Abort | abort() 메서드로 decodeAll 즉시 중단 | AUDIO-01~03 (일부) | Not Started |
 | 3 | Editor Graceful Shutdown | loadAbortRef + inProgressPreloaderRef + App key | AUDIO-01~03 (완결) | Not Started |
 | 4 | scanDir 병렬화 | batchSize=20 병렬 stat | SCAN-01 | Not Started |

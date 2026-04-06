@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: 에디터 UI 개선 — 미니맵 & 패널
-status: archived
-stopped_at: Milestone v1.1 archived 2026-04-06
-last_updated: "2026-04-06T22:10:00.000Z"
+milestone: v1.2
+milestone_name: 캔버스 줌 컨트롤
+status: active
+stopped_at: 08-01 complete — all 4 tasks committed (4cd423b)
+last_updated: "2026-04-06T13:18:01Z"
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
   percent: 100
 ---
 
@@ -20,22 +20,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** 파일 탐색, 노트 편집, 오디오 미리듣기가 모두 끊김 없이 동작
-**Current focus:** v1.1 — COMPLETE (milestone audit next)
+**Current focus:** v1.2 — 08-01 canvas zoom complete
 
 ## Current Position
 
-Phase: 06-minimap-sidebar — Plan 01 COMPLETE (all 3 tasks done)
-Status: Complete — minimap repositioned + popout drag window added (a50dd8c)
+Phase: 08-canvas-zoom — Plan 01 COMPLETE (all 4 tasks done)
+Status: Complete — ZoomControl API + cursor-anchored zoom + toolbar buttons (4cd423b)
 
-Progress: [██████████] 100% (prior phases)
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 2 (v1.1)
-- Average duration: ~1 plan/phase
-- Total execution time: 1 day
+- Total plans completed: 3 (v1.1: 2, v1.2: 1)
+- Average duration: ~25 min/plan
+- Total execution time: ~25 min (08-01)
 
 **By Phase:**
 
@@ -43,6 +43,7 @@ Progress: [██████████] 100% (prior phases)
 |-------|-------|-------|----------|
 | 6 | 1 | 2026-04-06 | — |
 | 7 | 1 | 2026-04-06 | — |
+| 8 | 1 | 2026-04-06 | ~25min |
 
 *Updated after each plan completion*
 
@@ -54,20 +55,30 @@ Progress: [██████████] 100% (prior phases)
 - **Phase 7** (00ee25b): Bookmark add/remove modal (Ctrl+B toggle) + LayerPanel (Eye/Lock icons + opacity slider)
 - **QA fix** (same commit): useLocalBmsFile yield + async initFromChart to eliminate parsing freeze
 
+### What Was Shipped (v1.2)
+
+- **Phase 8** (4cd423b): Canvas zoom overhaul — ZoomControl imperative ref, cursor-anchored Ctrl+Wheel zoom (x1.15, bounds 2~200), keymode-based defaults, EditorToolbar zoom button group with preset dropdown
+
+### Key Decisions (08-01)
+
+- Multiplicative zoom factor (x1.15) for perceptually consistent feel across 2~200 range
+- pendingBeatScaleRef+useFrame pattern for zero-overhead rAF debounce of scale callbacks
+- sizeRef/totalBeatsZoomRef for stale-closure-safe fitToChart in useEffect
+
 ### Requirements Coverage
 
 | REQ-ID | Status |
 |--------|--------|
-| MINI-01 | DONE — w-16 sidebar always visible when chart loaded |
-| MINI-02 | DONE — click navigates to beat position |
-| MINI-03 | DONE — viewport indicator box with blue border |
-| MINI-04 | DONE — per-measure density heatmap |
-| BK-01 | DONE — bookmark markers in minimap |
-| BK-02 | DONE — bookmark click navigates to position |
-| BK-03 | DONE — Ctrl+B add/remove with AccessibleDialog |
-| LAYER-01 | DONE — Eye/EyeOff icon toggles per layer |
-| LAYER-02 | DONE — Lock/Unlock icon toggles per layer |
-| LAYER-03 | DONE — opacity range slider per layer |
+| MINI-01 | DONE |
+| MINI-02 | DONE |
+| MINI-03 | DONE |
+| MINI-04 | DONE |
+| BK-01 | DONE |
+| BK-02 | DONE |
+| BK-03 | DONE |
+| LAYER-01 | DONE |
+| LAYER-02 | DONE |
+| LAYER-03 | DONE |
 
 ### Blockers/Concerns
 
@@ -75,6 +86,6 @@ None — all requirements met
 
 ## Session Continuity
 
-Last session: 2026-04-06T22:30:00Z
-Stopped at: 06-01 complete — all 3 tasks committed (a50dd8c)
+Last session: 2026-04-06T13:18:01Z
+Stopped at: 08-01 complete — all 4 tasks committed (4cd423b)
 Next step: None — plan fully complete

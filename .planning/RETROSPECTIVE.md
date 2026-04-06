@@ -49,9 +49,55 @@
 
 ---
 
+## Milestone: v1.1 — 에디터 UI 개선 — 미니맵 & 패널
+
+**Shipped:** 2026-04-06
+**Phases:** 2 | **Plans:** 2
+
+### What Was Built
+
+- Canvas 2D 수직 미니맵 사이드바 — density heatmap, viewport indicator, bookmark markers
+- Ctrl+B 북마크 토글 — AccessibleDialog 이름 입력 (prompt() 대체)
+- LayerPanel — 4레이어 가시성·잠금·불투명도 슬라이더 (inline component)
+- QA 성능 수정 — async initFromChart + yield으로 파일 오픈 프리징 제거
+
+### What Worked
+
+- **Bridge component isolation**: MinimapBridge, StatusBarBridge 등 currentBeat 구독 격리로 불필요한 re-render 방지
+- **Pre-computed color in app layer**: densityToColor()를 bms-editor 안이 아닌 앱에서 호출하여 순환 의존 없이 색상 전달
+- **Toggle-to-remove pattern**: Ctrl+B 동일 위치 재호출 = 삭제 → 별도 삭제 단축키 불필요
+- **Inline component for single-use UI**: LayerPanel은 단일 위치에서만 사용 → 파일 분리 없이 Editor.tsx 내 inline 정의
+
+### What Was Inefficient
+
+- **GSD tool auto-modifying artifacts**: milestone complete CLI가 ROADMAP.md/STATE.md를 자동 수정하여 수동 수정분이 덮어씌워짐 → 아티팩트 update 후 재검증 필요
+- **SUMMARY.md frontmatter 없음**: SUMMARY.md에 YAML frontmatter 없어 `summary-extract` CLI가 "One-liner:"/"Status" 반환 → MILESTONES.md 수동 수정 필요
+- **Phase 6 was partially pre-executed**: 첫 번째 /gsd:autonomous 실행 중 Phase 6 커밋(6ede91e)이 이미 완료 상태 → duplicate execution 피하기 위해 상태 확인 필요
+
+### Patterns Established
+
+- **async useEffect + cancelled ref**: 비동기 초기화 useEffect에서 `let cancelled = false` + cleanup `return () => { cancelled = true }` — 파일 전환 시 stale state 방지
+- **setTimeout(r, 0) yield**: 무거운 sync 작업 전 macrotask yield로 loading spinner 애니메이션 허용
+- **data-testid on new UI**: LayerPanel 모든 인터랙티브 요소에 data-testid — E2E 테스트 대비
+
+### Key Lessons
+
+- GSD autonomous 모드에서 이미 커밋된 phase는 `roadmap_complete: true` 체크 후 건너뛰어야 함 — 현재는 plan/execute를 다시 시도함
+- SUMMARY.md 생성 시 `requirements-completed:` YAML frontmatter 포함 권장 — CLI 추출 정확도 향상
+- Canvas 2D minimap은 jsdom에서 테스트 불가 — RTL 컴포넌트 테스트 대신 E2E playwright로 커버 필요
+
+### Cost Observations
+
+- Sessions: 2 (autonomous + continuation)
+- Model: Sonnet 4.6 throughout
+- Notable: v1.1은 v1.0 mega-commit(6ede91e)에 이미 일부 포함 → retroactive separation 필요
+
+---
+
 ## Cross-Milestone Trends
 
 | Milestone | Phases | Tests Added | Pass Rate | Key Pattern |
 |-----------|--------|-------------|-----------|-------------|
 | v1.0 | 5 | 33 | 1118/1118 | Worker per-request |
+| v1.1 | 2 | 0 (UI-only) | 1118/1118 | Canvas 2D + bridge isolation |
 

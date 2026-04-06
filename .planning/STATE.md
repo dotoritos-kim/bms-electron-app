@@ -2,15 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: 에디터 UI 개선 — 미니맵 & 패널
-status: Both phases shipped — ready for milestone audit
-stopped_at: "06-01 checkpoint: human-verify (Task 3)"
-last_updated: "2026-04-06T12:48:28.499Z"
-last_activity: 2026-04-06 — Phase 7 complete (00ee25b)
+status: archived
+stopped_at: Milestone v1.1 archived 2026-04-06
+last_updated: "2026-04-06T22:10:00.000Z"
 progress:
   total_phases: 2
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 3
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
   percent: 100
 ---
 

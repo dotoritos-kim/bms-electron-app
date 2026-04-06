@@ -18,11 +18,11 @@ Electron 기반 BMS 차트 에디터 앱. 리듬 게임용 .bms/.bme/.bml 파일
 - 파일 IPC 인프라 (read/save/autosave/meta)
 - 홈 화면 파일 브라우저 (폴더 스캔 + 최근 파일)
 - AudioPreloader (IndexedDB 캐시, progressive decode, EQ/컴프레서)
+- **PERF-01**: Worker 기반 BMS 파싱 — Validated in Phase 1: BMS Parser Worker
+- **PERF-02**: requestId 취소 가드 — Validated in Phase 1: BMS Parser Worker
 
 ### Active
 
-- [ ] **PERF-01**: 곡 폴더/차분 파일 선택 시 UI 프리징 없음 (Worker 기반 BMS 파싱)
-- [ ] **PERF-02**: 빠른 연속 파일 선택 시 이전 로딩이 즉시 취소됨 (requestId 취소)
 - [ ] **PERF-03**: Editor 이탈 시 오디오 디코딩이 즉시 중단됨 (abort 지원)
 - [ ] **PERF-04**: 폴더 스캔이 대용량 폴더에서도 빠름 (병렬 stat)
 
@@ -51,10 +51,10 @@ Electron 기반 BMS 차트 에디터 앱. 리듬 게임용 .bms/.bme/.bml 파일
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Home/Editor hook 분리 (useHomeBmsFile vs useLocalBmsFile) | Editor는 bmsChart 인스턴스 필요 (직렬화 불가) | — Pending |
-| Worker per-request (매번 생성/종료) | 취소 = terminate(), 싱글턴보다 단순 | — Pending |
-| Worker Phase1/2 자동 연속 실행 | 메시지 왕복 줄이고 Worker 내부 상태 불필요 | — Pending |
-| requestId guard | PHASE2_DONE 레이스 컨디션 방지 | — Pending |
+| Home/Editor hook 분리 (useHomeBmsFile vs useLocalBmsFile) | Editor는 bmsChart 인스턴스 필요 (직렬화 불가) | ✓ Phase 1 |
+| Worker per-request (매번 생성/종료) | 취소 = terminate(), 싱글턴보다 단순 | ✓ Phase 1 |
+| Worker Phase1/2 자동 연속 실행 | 메시지 왕복 줄이고 Worker 내부 상태 불필요 | ✓ Phase 1 |
+| requestId guard | PHASE2_DONE 레이스 컨디션 방지 | ✓ Phase 1 |
 | inProgressPreloaderRef | cleanup 시 loadAll/decodeAll 중인 preloader 추적 | — Pending |
 | AudioPreloader.abort() | decodeAll 중 즉시 bail-out 가능 | — Pending |
 
@@ -76,4 +76,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after milestone v1.0 start*
+*Last updated: 2026-04-06 after Phase 1: BMS Parser Worker complete*

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: 에디터 UI 개선 — 미니맵 & 패널
-status: planning
-stopped_at: Phase 6 context gathered
-last_updated: "2026-04-06T12:35:26.320Z"
-last_activity: 2026-04-06 — Roadmap created for v1.1 (Phases 6-7)
+status: complete
+stopped_at: Phase 7 complete — milestone audit pending
+last_updated: "2026-04-06T21:45:00.000Z"
+last_activity: 2026-04-06 — Phase 7 shipped (00ee25b)
 progress:
   total_phases: 2
-  completed_phases: 0
-  total_plans: 1
-  completed_plans: 0
-  percent: 0
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
+  percent: 100
 ---
 
 # State
@@ -21,49 +21,62 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-06)
 
 **Core value:** 파일 탐색, 노트 편집, 오디오 미리듣기가 모두 끊김 없이 동작
-**Current focus:** v1.1 — Phase 6: 수직 미니맵 사이드바
+**Current focus:** v1.1 — COMPLETE (milestone audit next)
 
 ## Current Position
 
-Phase: 6 of 7 (수직 미니맵 사이드바)
-Plan: — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-04-06 — Roadmap created for v1.1 (Phases 6-7)
+Phase: 7 of 7 (COMPLETE)
+Status: Both phases shipped — ready for milestone audit
+Last activity: 2026-04-06 — Phase 7 complete (00ee25b)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0 (v1.1)
-- Average duration: — (v1.0 reference: ~1 plan/phase)
-- Total execution time: —
+- Total plans completed: 2 (v1.1)
+- Average duration: ~1 plan/phase
+- Total execution time: 1 day
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 6 | 1 | 2026-04-06 | — |
+| 7 | 1 | 2026-04-06 | — |
 
 *Updated after each plan completion*
 
 ## Accumulated Context
 
-### Existing Building Blocks (v1.1 활용 가능)
+### What Was Shipped (v1.1)
 
-- densityMap.ts (Phase 7.1) — computeDensityMap(), densityToColor() 구현 완료
-- addBookmark/removeBookmark/renameBookmark 액션 (Phase 6.2) — store에 있음
-- LayerConfig + setLayerVisible/Locked/Opacity 액션 (Phase 4) — store에 있음
-- react-resizable-panels v4 레이아웃 (Panel/Separator) — Editor.tsx에 적용 중
-- MinimapBridge — currentBeat 구독 브릿지 컴포넌트 있음
+- **Phase 6** (6ede91e): Minimap sidebar — Canvas 2D, density heatmap, bookmark markers, always-visible w-16 sidebar, click-to-navigate
+- **Phase 7** (00ee25b): Bookmark add/remove modal (Ctrl+B toggle) + LayerPanel (Eye/Lock icons + opacity slider)
+- **QA fix** (same commit): useLocalBmsFile yield + async initFromChart to eliminate parsing freeze
+
+### Requirements Coverage
+
+| REQ-ID | Status |
+|--------|--------|
+| MINI-01 | DONE — w-16 sidebar always visible when chart loaded |
+| MINI-02 | DONE — click navigates to beat position |
+| MINI-03 | DONE — viewport indicator box with blue border |
+| MINI-04 | DONE — per-measure density heatmap |
+| BK-01 | DONE — bookmark markers in minimap |
+| BK-02 | DONE — bookmark click navigates to position |
+| BK-03 | DONE — Ctrl+B add/remove with AccessibleDialog |
+| LAYER-01 | DONE — Eye/EyeOff icon toggles per layer |
+| LAYER-02 | DONE — Lock/Unlock icon toggles per layer |
+| LAYER-03 | DONE — opacity range slider per layer |
 
 ### Blockers/Concerns
 
-None
+None — all requirements met
 
 ## Session Continuity
 
-Last session: 2026-04-06T12:35:26.318Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-minimap-sidebar/06-CONTEXT.md
+Last session: 2026-04-06T21:45:00.000Z
+Stopped at: Phase 7 complete
+Next step: gsd:audit-milestone then gsd:complete-milestone

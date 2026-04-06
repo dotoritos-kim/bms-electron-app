@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 파일 로딩 프리징 버그 수정** — Phases 1-5 (shipped 2026-04-06)
-- 🚧 **v1.1 에디터 UI 개선 — 미니맵 & 패널** — Phases 6-7 (in progress)
+- ✅ **v1.1 에디터 UI 개선 — 미니맵 & 패널** — Phases 6-7 (shipped 2026-04-06)
 
 ## Phases
 
@@ -22,12 +22,12 @@ Archive: `.planning/milestones/v1.0-ROADMAP.md`
 
 ---
 
-### 🚧 v1.1 에디터 UI 개선 — 미니맵 & 패널 (In Progress)
+### ✅ v1.1 에디터 UI 개선 — 미니맵 & 패널 (SHIPPED 2026-04-06)
 
 **Milestone Goal:** 에디터 우측에 수직 미니맵 사이드바를 추가하고, 타임라인 북마크·레이어 패널 UI를 완성한다.
 
-- [ ] **Phase 6: 수직 미니맵 사이드바** — 클릭 이동·뷰포트 팟·밀도 히트맵·북마크 마커를 갖춘 Canvas 2D 미니맵 컴포넌트
-- [ ] **Phase 7: 북마크 추가/삭제 UI + 레이어 패널** — 북마크 생성·삭제 단축키 및 레이어별 가시성·잠금·opacity 조절 패널
+- [x] **Phase 6: 수직 미니맵 사이드바** — 클릭 이동·뷰포트 팟·밀도 히트맵·북마크 마커를 갖춘 Canvas 2D 미니맵 컴포넌트
+- [x] **Phase 7: 북마크 추가/삭제 UI + 레이어 패널** — 북마크 생성·삭제 단축키 및 레이어별 가시성·잠금·opacity 조절 패널
 
 ## Phase Details
 
@@ -69,5 +69,5 @@ Plans:
 | 3. Editor Graceful Shutdown | v1.0 | 1/1 | Complete | 2026-04-06 |
 | 4. scanDir 병렬화 | v1.0 | 1/1 | Complete | 2026-04-06 |
 | 5. 회귀 테스트 | v1.0 | 1/1 | Complete | 2026-04-06 |
-| 6. 수직 미니맵 사이드바 | v1.1 | 0/1 | Planned | - |
-| 7. 북마크 추가/삭제 UI + 레이어 패널 | v1.1 | 0/? | Not started | - |
+| 6. 수직 미니맵 사이드바 | v1.1 | 1/1 | Complete | 2026-04-06 |
+| 7. 북마크 추가/삭제 UI + 레이어 패널 | v1.1 | 1/1 | Complete | 2026-04-06 |

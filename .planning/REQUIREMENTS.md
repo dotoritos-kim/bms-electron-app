@@ -10,22 +10,22 @@
 
 ### 미니맵 (MINI)
 
-- [ ] **MINI-01**: 에디터 우측에 수직 사이드바 미니맵 컴포넌트가 표시된다
-- [ ] **MINI-02**: 미니맵을 클릭하면 해당 위치로 에디터 뷰포트가 이동한다
-- [ ] **MINI-03**: 현재 뷰포트 영역이 미니맵에 반투명 팟(박스)으로 표시된다
-- [ ] **MINI-04**: 마디별 노트 밀도가 densityMap.ts 색상으로 시각화된다
+- [x] **MINI-01**: 에디터 우측에 수직 사이드바 미니맵 컴포넌트가 표시된다
+- [x] **MINI-02**: 미니맵을 클릭하면 해당 위치로 에디터 뷰포트가 이동한다
+- [x] **MINI-03**: 현재 뷰포트 영역이 미니맵에 반투명 팟(박스)으로 표시된다
+- [x] **MINI-04**: 마디별 노트 밀도가 densityMap.ts 색상으로 시각화된다
 
 ### 타임라인 북마크 (BK)
 
-- [ ] **BK-01**: 북마크가 미니맵/타임라인에 마커로 표시된다
-- [ ] **BK-02**: 북마크 마커를 클릭하면 해당 위치로 이동한다
-- [ ] **BK-03**: 우클릭 또는 단축키로 북마크를 추가/삭제할 수 있다
+- [x] **BK-01**: 북마크가 미니맵/타임라인에 마커로 표시된다
+- [x] **BK-02**: 북마크 마커를 클릭하면 해당 위치로 이동한다
+- [x] **BK-03**: 우클릭 또는 단축키로 북마크를 추가/삭제할 수 있다
 
 ### 레이어 패널 (LAYER)
 
-- [ ] **LAYER-01**: 레이어 패널에서 각 레이어(playable/invisible/landmine/bgm)의 가시성을 토글할 수 있다
-- [ ] **LAYER-02**: 레이어별 잠금(locked) 상태를 토글할 수 있다
-- [ ] **LAYER-03**: 레이어별 불투명도(opacity)를 슬라이더로 조절할 수 있다
+- [x] **LAYER-01**: 레이어 패널에서 각 레이어(playable/invisible/landmine/bgm)의 가시성을 토글할 수 있다
+- [x] **LAYER-02**: 레이어별 잠금(locked) 상태를 토글할 수 있다
+- [x] **LAYER-03**: 레이어별 불투명도(opacity)를 슬라이더로 조절할 수 있다
 
 ---
 
@@ -47,13 +47,13 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| MINI-01 | Phase 6 | Pending |
-| MINI-02 | Phase 6 | Pending |
-| MINI-03 | Phase 6 | Pending |
-| MINI-04 | Phase 6 | Pending |
-| BK-01 | Phase 6 | Pending |
-| BK-02 | Phase 6 | Pending |
-| BK-03 | Phase 7 | Pending |
-| LAYER-01 | Phase 7 | Pending |
-| LAYER-02 | Phase 7 | Pending |
-| LAYER-03 | Phase 7 | Pending |
+| MINI-01 | Phase 6 | DONE — w-16 sidebar always visible |
+| MINI-02 | Phase 6 | DONE — click navigates to beat |
+| MINI-03 | Phase 6 | DONE — blue border viewport indicator |
+| MINI-04 | Phase 6 | DONE — densityMap heatmap overlay |
+| BK-01 | Phase 6 | DONE — horizontal line + triangle markers |
+| BK-02 | Phase 6 | DONE — click via navigateFromEvent |
+| BK-03 | Phase 7 | DONE — Ctrl+B toggle (AccessibleDialog) |
+| LAYER-01 | Phase 7 | DONE — Eye/EyeOff icon per layer |
+| LAYER-02 | Phase 7 | DONE — Lock/Unlock icon per layer |
+| LAYER-03 | Phase 7 | DONE — opacity range slider per layer |

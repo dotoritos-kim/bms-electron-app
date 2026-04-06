@@ -261,6 +261,7 @@ interface EditorState {
   inputDialog: InputDialog | null;
   showLeftPanel: boolean;
   showRightPanel: boolean;
+  showMinimap: boolean;
   headerCollapsed: boolean;
   toast: { message: string; type: 'success' | 'error' } | null;
   showBackConfirm: boolean;
@@ -368,6 +369,7 @@ interface EditorState {
   setInputDialog: (dialog: InputDialog | null) => void;
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
+  toggleMinimap: () => void;
   toggleHeaderCollapsed: () => void;
   setToast: (toast: { message: string; type: 'success' | 'error' } | null) => void;
   setShowBackConfirm: (show: boolean) => void;
@@ -468,6 +470,7 @@ const initialState = {
   inputDialog: null as InputDialog | null,
   showLeftPanel: true,
   showRightPanel: true,
+  showMinimap: true,
   headerCollapsed: false,
   toast: null as { message: string; type: 'success' | 'error' } | null,
   showBackConfirm: false,
@@ -1436,6 +1439,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setInputDialog: (dialog) => set({ inputDialog: dialog }),
   toggleLeftPanel: () => set((s) => ({ showLeftPanel: !s.showLeftPanel })),
   toggleRightPanel: () => set((s) => ({ showRightPanel: !s.showRightPanel })),
+  toggleMinimap: () => set((s) => ({ showMinimap: !s.showMinimap })),
   toggleHeaderCollapsed: () => set((s) => ({ headerCollapsed: !s.headerCollapsed })),
   setToast: (toast) => set({ toast }),
   setShowBackConfirm: (show) => set({ showBackConfirm: show }),

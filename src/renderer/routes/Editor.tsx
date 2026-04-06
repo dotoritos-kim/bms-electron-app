@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap } from 'lucide-react';
 // Removed react-resizable-panels — using custom resize handles instead
 import {
   NoteChartEditor,
@@ -240,7 +240,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     hasUnsavedChanges, activeTool, gridSnap, gridSnapOverrides, snapEnabled, layerConfig, selectedNotes, selectedNoteType,
     currentKeysound, clipboard, undoStack, redoStack,
     audioPhase, playbackSpeed, volume,
-    noteHeight, inputDialog, showLeftPanel, showRightPanel, headerCollapsed, showBackConfirm,
+    noteHeight, inputDialog, showLeftPanel, showRightPanel, showMinimap, headerCollapsed, showBackConfirm,
     loopA, loopB, highlightKeysound,
     bookmarks,
   } = useEditorStore(useShallow((s) => ({
@@ -252,7 +252,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     clipboard: s.clipboard, undoStack: s.undoStack, redoStack: s.redoStack,
     audioPhase: s.audioPhase, playbackSpeed: s.playbackSpeed, volume: s.volume,
     noteHeight: s.noteHeight, inputDialog: s.inputDialog, showLeftPanel: s.showLeftPanel,
-    showRightPanel: s.showRightPanel, headerCollapsed: s.headerCollapsed, showBackConfirm: s.showBackConfirm,
+    showRightPanel: s.showRightPanel, showMinimap: s.showMinimap, headerCollapsed: s.headerCollapsed, showBackConfirm: s.showBackConfirm,
     loopA: s.loopA, loopB: s.loopB, highlightKeysound: s.highlightKeysound,
     bookmarks: s.bookmarks,
   })));
@@ -1374,6 +1374,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <button onClick={store.toggleRightPanel} className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="정보 패널 토글" data-testid="toggle-right-panel">
           {showRightPanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
         </button>
+        <button onClick={store.toggleMinimap} className={`p-1 rounded hover:bg-zinc-800 transition-colors ${showMinimap ? 'text-zinc-200' : 'text-zinc-400'}`} title="미니맵 토글" data-testid="toggle-minimap">
+          <LucideMap className="h-4 w-4" />
+        </button>
         <button
           onClick={() => activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff')}
           className={`p-1 rounded hover:bg-zinc-800 transition-colors ${activeOverlay === 'diff' ? 'text-orange-400' : 'text-zinc-400'}`}
@@ -1783,9 +1786,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           </>
         )}
 
-        {/* ===== MINIMAP SIDEBAR (always visible) ===== */}
-        {chart && (
-          <div className="w-16 border-l border-zinc-800 flex flex-col bg-zinc-950 shrink-0 min-h-0" data-testid="minimap-sidebar">
+        {/* ===== MINIMAP SIDEBAR (togglable) ===== */}
+        {chart && showMinimap && (
+          <div className="w-20 border-l border-zinc-800 flex flex-col bg-zinc-950 shrink-0 min-h-0" data-testid="minimap-sidebar">
             <MinimapBridge
               notes={notes}
               totalBeats={totalBeats}

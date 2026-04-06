@@ -1,5 +1,14 @@
 # BMS Editor (bms-electron-app)
 
+## Current Milestone: v1.1 에디터 UI 개선 — 미니맵 & 패널
+
+**Goal:** 에디터 오른쪽에 수직 미니맵 사이드바를 추가하고, 타임라인 북마크·레이어 패널 UI를 완성한다.
+
+**Target features:**
+- 수직 사이드바 미니맵 (클릭 이동, 뷰포트 팟 표시, 노트 밀도 히트맵)
+- 타임라인 북마크 UI (마커 시각화 + 클릭 이동)
+- 레이어 패널 UI (visible/locked/opacity 토글)
+
 ## What This Is
 
 Electron 기반 BMS 차트 에디터 앱. 리듬 게임용 .bms/.bme/.bml 파일을 편집하고 플레이할 수 있는 데스크톱 애플리케이션. React 19 + Three.js 기반 에디터 UI와 Web Audio API 기반 키음 재생 엔진을 갖춘다.
@@ -27,7 +36,12 @@ Electron 기반 BMS 차트 에디터 앱. 리듬 게임용 .bms/.bme/.bml 파일
 
 ### Active
 
-(모든 v1.0 요구사항 완료)
+- **MINI-01**: 수직 사이드바 미니맵 컴포넌트
+- **MINI-02**: 미니맵 클릭 이동
+- **MINI-03**: 뷰포트 팟 표시
+- **MINI-04**: 노트 밀도 히트맵 (densityMap.ts 연동)
+- **BK-01**: 타임라인 북마크 UI (마커 + 클릭 이동)
+- **LAYER-01**: 레이어 패널 UI (visible/locked/opacity 토글)
 
 ### Out of Scope
 
@@ -42,7 +56,7 @@ Electron 기반 BMS 차트 에디터 앱. 리듬 게임용 .bms/.bme/.bml 파일
 - **현재 상태 (v1.0 shipped 2026-04-06)**: 파일 로딩 프리징 버그 수정 완료. BMS 파싱 Worker 이전, AudioPreloader abort, Editor graceful shutdown, scanDir 병렬화 모두 완료
 - **Worker 패턴**: bmsParser.worker.ts (per-request), gameLoop.worker.ts, audioScheduler.worker.ts
 - **테스트**: 1118/1118 통과 (5개 신규 회귀 테스트 스위트 포함)
-- **다음 우선순위 후보**: 에디터 미니맵 수직 사이드바 UI 개선 (CEO 리뷰 완료, 구현 대기)
+- **현재 마일스톤 (v1.1)**: 에디터 미니맵 수직 사이드바 UI 개선 — 클릭 이동, 뷰포트 팟, 밀도 히트맵 + 북마크 UI + 레이어 패널 UI
 
 ## Constraints
 
@@ -80,4 +94,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after milestone v1.0 archived — /gsd:complete-milestone*
+*Last updated: 2026-04-06 — milestone v1.1 started*

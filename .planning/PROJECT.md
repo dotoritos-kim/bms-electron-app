@@ -21,10 +21,13 @@ Electron 기반 BMS 차트 에디터 앱. 리듬 게임용 .bms/.bme/.bml 파일
 - **PERF-01**: Worker 기반 BMS 파싱 — Validated in Phase 1: BMS Parser Worker
 - **PERF-02**: requestId 취소 가드 — Validated in Phase 1: BMS Parser Worker
 
+- **PERF-03**: Editor abort + graceful shutdown — Validated in Phase 2+3: AudioPreloader Abort + Editor Graceful Shutdown
+- **PERF-04**: 병렬 scanDir (batchSize=20) — Validated in Phase 4: scanDir 병렬화
+- **TEST-01~05**: 회귀 테스트 33개 — Validated in Phase 5: 회귀 테스트
+
 ### Active
 
-- [ ] **PERF-03**: Editor 이탈 시 오디오 디코딩이 즉시 중단됨 (abort 지원)
-- [ ] **PERF-04**: 폴더 스캔이 대용량 폴더에서도 빠름 (병렬 stat)
+(모든 v1.0 요구사항 완료)
 
 ### Out of Scope
 
@@ -55,8 +58,8 @@ Electron 기반 BMS 차트 에디터 앱. 리듬 게임용 .bms/.bme/.bml 파일
 | Worker per-request (매번 생성/종료) | 취소 = terminate(), 싱글턴보다 단순 | ✓ Phase 1 |
 | Worker Phase1/2 자동 연속 실행 | 메시지 왕복 줄이고 Worker 내부 상태 불필요 | ✓ Phase 1 |
 | requestId guard | PHASE2_DONE 레이스 컨디션 방지 | ✓ Phase 1 |
-| inProgressPreloaderRef | cleanup 시 loadAll/decodeAll 중인 preloader 추적 | — Pending |
-| AudioPreloader.abort() | decodeAll 중 즉시 bail-out 가능 | — Pending |
+| inProgressPreloaderRef | cleanup 시 loadAll/decodeAll 중인 preloader 추적 | ✓ Phase 3 |
+| AudioPreloader.abort() | decodeAll 중 즉시 bail-out 가능 | ✓ Phase 2 |
 
 ## Evolution
 
@@ -76,4 +79,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after Phase 1: BMS Parser Worker complete*
+*Last updated: 2026-04-06 after milestone v1.0 complete — all 5 phases done*

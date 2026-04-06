@@ -41,7 +41,9 @@ Archive: `.planning/milestones/v1.0-ROADMAP.md`
   3. 현재 화면에 보이는 범위가 미니맵에 반투명 팟(박스)으로 표시되며 스크롤에 따라 움직인다
   4. 마디별 노트 밀도가 densityMap.ts 색상(저밀도→고밀도 그라디언트)으로 시각화된다
   5. 저장된 북마크가 미니맵 위에 마커로 표시되고, 해당 마커를 클릭하면 그 위치로 이동한다
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 06-01-PLAN.md — Minimap density bar + bookmark text + showMinimap toggle
 **UI hint**: yes
 
 ### Phase 7: 북마크 추가/삭제 UI + 레이어 패널
@@ -67,5 +69,5 @@ Archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 3. Editor Graceful Shutdown | v1.0 | 1/1 | Complete | 2026-04-06 |
 | 4. scanDir 병렬화 | v1.0 | 1/1 | Complete | 2026-04-06 |
 | 5. 회귀 테스트 | v1.0 | 1/1 | Complete | 2026-04-06 |
-| 6. 수직 미니맵 사이드바 | v1.1 | 0/? | Not started | - |
+| 6. 수직 미니맵 사이드바 | v1.1 | 0/1 | Planned | - |
 | 7. 북마크 추가/삭제 UI + 레이어 패널 | v1.1 | 0/? | Not started | - |

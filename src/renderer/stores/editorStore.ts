@@ -792,9 +792,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
     const newConverter = createBeatConverter(newTS);
 
+    const shiftTicks = beatToTick(shiftAmount);
     set({
       notes: s.notes.map((n) => {
-        const shiftTicks = beatToTick(shiftAmount);
         if (n.beat < shiftBeat) {
           if (n.endBeat !== undefined && n.endBeat >= shiftBeat) {
             const newEndTick = (n.endTick ?? beatToTick(n.endBeat)) + shiftTicks;

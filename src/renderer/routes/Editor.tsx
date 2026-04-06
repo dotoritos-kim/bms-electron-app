@@ -158,9 +158,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         };
       });
       store.initFromChart(ec, editableNotes, editableNotes.length + 1, chart.keyMode);
-      // Load .bms.meta sidecar
+      // Load .bms.meta sidecar (only apply if no user changes yet)
       window.api.file.readMeta(file.path).then((metaJson) => {
-        if (metaJson) {
+        if (metaJson && !useEditorStore.getState().hasUnsavedChanges) {
           const meta = deserializeMeta(metaJson);
           const stateUpdate = applyMetaToState(meta);
           useEditorStore.setState(stateUpdate);

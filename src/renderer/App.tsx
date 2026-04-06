@@ -182,7 +182,7 @@ export function App() {
           <Player file={currentFile} onBack={handleHome} onClearFile={handleClearFile} onRegisterGuard={registerNavigationGuard} />
         )}
         {route === 'editor' && currentFile && (
-          <Editor file={currentFile} onBack={handleHome} onClearFile={handleClearFile} onOpenFile={handleOpenFile} onRegisterGuard={registerNavigationGuard} />
+          <Editor key={currentFile.path} file={currentFile} onBack={handleHome} onClearFile={handleClearFile} onOpenFile={handleOpenFile} onRegisterGuard={registerNavigationGuard} />
         )}
       </ErrorBoundary>
 

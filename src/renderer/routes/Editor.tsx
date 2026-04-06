@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical } from 'lucide-react';
 // Removed react-resizable-panels — using custom resize handles instead
@@ -15,7 +15,7 @@ import {
   BmsChartDiff,
   getLaneIds,
 } from '@rhythm-archive/bms-editor';
-import type { BmsChartDiffInfo } from '@rhythm-archive/bms-editor';
+import type { BmsChartDiffInfo, NoteChartEditorProps } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote, EditableBMSChart, TimingAction } from '@rhythm-archive/bms-core';
 import { BMSWriter, Timing } from '@rhythm-archive/bms-core';
 import { AudioPreloader, WorkerAudioScheduler } from '@rhythm-archive/bms-player';
@@ -125,6 +125,43 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// ─── currentBeat 격리 구독 컴포넌트 ─────────────────────────────────────────
+// currentBeat가 useShallow에 있으면 스크롤마다 전체 Editor가 리렌더됨.
+// 아래 bridge 컴포넌트들이 대신 구독해서 Editor 본체의 리렌더를 차단.
+
+/** NoteChartEditor: scrollToBeat만 currentBeat 구독 */
+function NoteChartEditorBridge(props: Omit<NoteChartEditorProps, 'scrollToBeat'>) {
+  const scrollToBeat = useEditorStore(s => s.currentBeat);
+  return <NoteChartEditor {...props} scrollToBeat={scrollToBeat} />;
+}
+
+/** Minimap: currentBeat 구독 격리 */
+function MinimapBridge({ notes, totalBeats, viewportBeats, onNavigate }: {
+  notes: import('@rhythm-archive/bms-core').EditableBMSNote[];
+  totalBeats: number;
+  viewportBeats: number;
+  onNavigate: (beat: number) => void;
+}) {
+  const currentBeat = useEditorStore(s => s.currentBeat);
+  return <Minimap notes={notes} totalBeats={totalBeats} currentBeat={currentBeat} viewportBeats={viewportBeats} onNavigate={onNavigate} />;
+}
+
+/** StatusBar: currentBeat 구독 격리 */
+function StatusBarBridge({ gridSnap, selectedCount, totalNotes, bpm, zoom }: {
+  gridSnap: number; selectedCount: number; totalNotes: number; bpm: number; zoom: number;
+}) {
+  const currentBeat = useEditorStore(s => s.currentBeat);
+  return <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedCount} totalNotes={totalNotes} bpm={bpm} zoom={zoom} />;
+}
+
+/** BeatKeysoundPanel: currentBeat 구독 격리 */
+function BeatKeysoundPanelBridge(props: Omit<React.ComponentPropsWithRef<typeof BeatKeysoundPanel>, 'currentBeat'>) {
+  const currentBeat = useEditorStore(s => s.currentBeat);
+  return <BeatKeysoundPanel {...props} currentBeat={currentBeat} />;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface EditorProps {
   file: CurrentFile;
   onBack: () => void;
@@ -141,7 +178,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const {
     notes, bpmChanges, stopEvents, headers, timeSignatures, editableChart, keyMode,
     hasUnsavedChanges, activeTool, gridSnap, gridSnapOverrides, snapEnabled, layerConfig, selectedNotes, selectedNoteType,
-    currentKeysound, currentBeat, clipboard, undoStack, redoStack,
+    currentKeysound, clipboard, undoStack, redoStack,
     audioPhase, playbackSpeed, volume,
     noteHeight, inputDialog, showLeftPanel, showRightPanel, headerCollapsed, showBackConfirm,
     loopA, loopB, highlightKeysound,
@@ -151,7 +188,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     hasUnsavedChanges: s.hasUnsavedChanges, activeTool: s.activeTool, gridSnap: s.gridSnap,
     gridSnapOverrides: s.gridSnapOverrides, snapEnabled: s.snapEnabled, layerConfig: s.layerConfig,
     selectedNotes: s.selectedNotes, selectedNoteType: s.selectedNoteType, currentKeysound: s.currentKeysound,
-    currentBeat: s.currentBeat, clipboard: s.clipboard, undoStack: s.undoStack, redoStack: s.redoStack,
+    clipboard: s.clipboard, undoStack: s.undoStack, redoStack: s.redoStack,
     audioPhase: s.audioPhase, playbackSpeed: s.playbackSpeed, volume: s.volume,
     noteHeight: s.noteHeight, inputDialog: s.inputDialog, showLeftPanel: s.showLeftPanel,
     showRightPanel: s.showRightPanel, headerCollapsed: s.headerCollapsed, showBackConfirm: s.showBackConfirm,
@@ -199,13 +236,22 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     return () => document.removeEventListener('mousedown', handler);
   }, [showToolMenu]);
 
+  // 마디 다이얼로그 기본값용 — 열릴 때 currentBeat를 캡처 (구독 없이 getState 사용)
+  const modalBeatRef = useRef(0);
   // Open modal (auto-closes any other modal)
-  const openModal = useCallback((modal: ModalType) => setActiveModal(modal), []);
+  const openModal = useCallback((modal: ModalType) => {
+    if (modal === 'measureInsert' || modal === 'measureDelete') {
+      modalBeatRef.current = useEditorStore.getState().currentBeat;
+    }
+    setActiveModal(modal);
+  }, []);
   // Open overlay (auto-closes any other overlay)
   const openOverlay = useCallback((overlay: OverlayType) => setActiveOverlay(overlay), []);
 
   // Audio refs (imperative, not in store)
   const audioPreloaderRef = useRef<AudioPreloader | null>(null);
+  const inProgressPreloaderRef = useRef<AudioPreloader | null>(null);
+  const loadAbortRef = useRef(false);
   const audioSchedulerRef = useRef<WorkerAudioScheduler | null>(null);
   const isPlayingRef = useRef(false);
   const playbackOffsetRef = useRef(0);
@@ -756,7 +802,14 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         fileMap[id] = filename;
       }
       const total = Object.keys(fileMap).length;
-      if (total === 0) { store.setAudioPhase('ready'); return; }
+      if (total === 0) {
+        audioSchedulerRef.current?.dispose();
+        audioSchedulerRef.current = null;
+        audioPreloaderRef.current?.releaseAllResources();
+        audioPreloaderRef.current = null;
+        store.setAudioPhase('ready');
+        return;
+      }
       const worker = createLocalAudioWorker(file.path);
       preloader = new AudioPreloader('', fileMap, worker, (type, payload) => {
         if (type === 'PROGRESS') {
@@ -764,9 +817,23 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           store.setAudioLoadProgress({ loaded: p.loadedCount, total: p.total });
         }
       });
+      inProgressPreloaderRef.current = preloader;
       await preloader.loadAll();
+      // Bail-out: Editor unmounted or new file selected while loading
+      if (loadAbortRef.current) {
+        preloader.releaseAllResources();
+        inProgressPreloaderRef.current = null;
+        return;
+      }
       await preloader.decodeAll();
+      // Bail-out: abort() already resolved decodeAll early — don't proceed
+      if (loadAbortRef.current) {
+        preloader.releaseAllResources();
+        inProgressPreloaderRef.current = null;
+        return;
+      }
       await preloader.initAudioWorklet();
+      inProgressPreloaderRef.current = null;
       audioSchedulerRef.current?.dispose();
       audioSchedulerRef.current = null;
       audioPreloaderRef.current?.releaseAllResources();
@@ -784,6 +851,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     } catch (err) {
       console.error('[Editor] Audio load failed:', err);
       preloader?.releaseAllResources();
+      inProgressPreloaderRef.current = null;
       store.setAudioPhase('idle');
     }
   }, [chart, file.path, audioPhase, editedTiming]);
@@ -1001,6 +1069,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   // Cleanup
   useEffect(() => {
     return () => {
+      // Signal any in-progress loadAudio to bail out immediately
+      loadAbortRef.current = true;
+      // Abort and release the preloader currently being loaded (if any)
+      inProgressPreloaderRef.current?.abort();
+      inProgressPreloaderRef.current?.releaseAllResources();
+      inProgressPreloaderRef.current = null;
       audioSchedulerRef.current?.dispose();
       audioSchedulerRef.current = null;
       audioPreloaderRef.current?.releaseAllResources();
@@ -1453,7 +1527,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           >
             <div className="flex-1 min-h-0">
               {chart && (
-                <NoteChartEditor
+                <NoteChartEditorBridge
                   notes={notes}
                   keyMode={keyMode}
                   totalBeats={totalBeats}
@@ -1487,7 +1561,6 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   highlightKeysound={highlightKeysound}
                   noteHeight={noteHeight}
                   hasUnsavedChanges={hasUnsavedChanges}
-                  scrollToBeat={currentBeat}
                   onScrollChange={store.setCurrentBeat}
                   scrollBeatImperativeRef={audioPhase === 'playing' ? playbackBeatRef : undefined}
                 />
@@ -1537,9 +1610,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             </div>
           )}
           <div className="border-b border-zinc-800 shrink-0 max-h-48 overflow-y-auto">
-            <BeatKeysoundPanel
+            <BeatKeysoundPanelBridge
               notes={notes}
-              currentBeat={currentBeat}
               wavDefinitions={wavDefinitions}
               onPreview={previewKeysound}
               isAudioReady={isAudioReady}
@@ -1586,10 +1658,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           </div>
           <div className="border-t border-zinc-800 h-48 shrink-0">
             {chart && (
-              <Minimap
+              <MinimapBridge
                 notes={notes}
                 totalBeats={totalBeats}
-                currentBeat={currentBeat}
                 viewportBeats={16}
                 onNavigate={store.setCurrentBeat}
               />
@@ -1604,7 +1675,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       {/* ===== STATUS BAR + DIFFICULTY ===== */}
       <div className="flex items-center border-t border-zinc-800 bg-zinc-900" data-testid="status-bar">
         <div className="flex-1">
-          <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} zoom={1} />
+          <StatusBarBridge gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} zoom={1} />
         </div>
         {midiRecordingMode !== 'off' && (
           <div className="px-2 text-[10px] text-green-400 shrink-0">
@@ -1706,7 +1777,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           <input
             ref={measureInputRef}
             type="number" min={0} step={1}
-            defaultValue={Math.floor(currentBeat / 4)}
+            defaultValue={Math.floor(modalBeatRef.current / 4)}
             autoFocus
             className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
             placeholder="마디 번호"
@@ -1860,7 +1931,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           }))}
           laneIds={laneIds}
           bpm={editedBaseBpm}
-          currentBeat={currentBeat}
+          currentBeat={useEditorStore.getState().currentBeat}
           gridSnap={gridSnap}
           onApplyNotes={(generatedNotes: GeneratedNote[]) => {
             const s = useEditorStore.getState();

@@ -392,13 +392,32 @@ export function registerFileIpc(): void {
 
   // List BMS files in folder (recursive)
   ipcMain.handle('file:listBmsFolder', async (_event, folderPath: string) => {
-    const files: BmsFileInfo[] = [];
-    await scanDir(folderPath, files);
-    return files;
+    // Phase 1: collect all BMS paths (readdir only, no stat)
+    const paths: Array<{ name: string; path: string; ext: string }> = [];
+    await collectBmsPaths(folderPath, paths);
+
+    // Phase 2: stat in parallel batches of 20
+    const BATCH_SIZE = 20;
+    const results: BmsFileInfo[] = [];
+    for (let i = 0; i < paths.length; i += BATCH_SIZE) {
+      const batch = paths.slice(i, i + BATCH_SIZE);
+      const statted = await Promise.all(
+        batch.map(async (p) => {
+          const info = await stat(p.path);
+          return { name: p.name, path: p.path, size: info.size, ext: p.ext };
+        }),
+      );
+      results.push(...statted);
+    }
+    return results;
   });
 }
 
-async function scanDir(dirPath: string, results: BmsFileInfo[], depth = 0): Promise<void> {
+async function collectBmsPaths(
+  dirPath: string,
+  results: Array<{ name: string; path: string; ext: string }>,
+  depth = 0,
+): Promise<void> {
   if (depth > 5) return; // Limit recursion depth
 
   const entries = await readdir(dirPath, { withFileTypes: true });
@@ -407,17 +426,11 @@ async function scanDir(dirPath: string, results: BmsFileInfo[], depth = 0): Prom
     const fullPath = join(dirPath, entry.name);
 
     if (entry.isDirectory()) {
-      await scanDir(fullPath, results, depth + 1);
+      await collectBmsPaths(fullPath, results, depth + 1);
     } else if (entry.isFile()) {
       const ext = extname(entry.name).toLowerCase();
       if (BMS_EXTENSIONS.has(ext)) {
-        const info = await stat(fullPath);
-        results.push({
-          name: basename(entry.name),
-          path: fullPath,
-          size: info.size,
-          ext,
-        });
+        results.push({ name: basename(entry.name), path: fullPath, ext });
       }
     }
   }

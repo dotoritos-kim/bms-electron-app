@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2 } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark } from 'lucide-react';
 // Removed react-resizable-panels — using custom resize handles instead
 import {
   NoteChartEditor,
@@ -26,7 +26,7 @@ import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
 import { createLocalAudioWorker } from '../lib/LocalAudioWorker';
 import { Player } from './Player';
 import { useEditorStore } from '../stores/editorStore';
-import type { AudioPhase, PasteAnalysis } from '../stores/editorStore';
+import type { AudioPhase, PasteAnalysis, LayerConfig } from '../stores/editorStore';
 import { deserializeMeta, serializeMeta, buildMetaFromState, applyMetaToState } from '../lib/bmsMeta';
 import { PatternLibraryPanel } from '../components/PatternLibraryPanel';
 import { KeyBindingsDialog } from '../components/KeyBindingsDialog';
@@ -55,7 +55,7 @@ import { computeDensityMap, densityToColor } from '../lib/densityMap';
 import type { MinimapDensityEntry, MinimapBookmark } from '@rhythm-archive/bms-editor';
 // WaveformOverlay removed — requires NoteChartEditor internal coordinate sync to work correctly
 
-type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | null;
+type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | 'addBookmark' | null;
 type OverlayType = 'diff' | 'audioSlicer' | 'playTest' | null;
 
 /** Isolated playback time display — subscribes only to playbackTime/playbackDuration to avoid re-rendering the entire Editor */
@@ -164,6 +164,62 @@ function BeatKeysoundPanelBridge(props: Omit<React.ComponentPropsWithRef<typeof 
   return <BeatKeysoundPanel {...props} currentBeat={currentBeat} />;
 }
 
+/** 레이어 가시성/잠금/불투명도 패널 */
+const LAYER_LABELS: Record<keyof LayerConfig, string> = {
+  playable: '플레이어블',
+  invisible: '인비저블',
+  landmine: '지뢰',
+  bgm: 'BGM',
+};
+const LAYER_KEYS: (keyof LayerConfig)[] = ['playable', 'invisible', 'landmine', 'bgm'];
+
+function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChange }: {
+  layerConfig: LayerConfig;
+  onVisibleToggle: (layer: keyof LayerConfig) => void;
+  onLockToggle: (layer: keyof LayerConfig) => void;
+  onOpacityChange: (layer: keyof LayerConfig, opacity: number) => void;
+}) {
+  return (
+    <div className="px-2 py-2 space-y-1.5" data-testid="layer-panel">
+      {LAYER_KEYS.map((layer) => {
+        const s = layerConfig[layer];
+        return (
+          <div key={layer} className="flex items-center gap-1.5">
+            <button
+              title={s.visible ? '숨기기' : '표시'}
+              onClick={() => onVisibleToggle(layer)}
+              className="p-0.5 rounded hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100 shrink-0"
+              data-testid={`layer-visible-${layer}`}
+            >
+              {s.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5 text-zinc-600" />}
+            </button>
+            <button
+              title={s.locked ? '잠금 해제' : '잠금'}
+              onClick={() => onLockToggle(layer)}
+              className="p-0.5 rounded hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100 shrink-0"
+              data-testid={`layer-lock-${layer}`}
+            >
+              {s.locked ? <Lock className="h-3.5 w-3.5 text-yellow-400" /> : <Unlock className="h-3.5 w-3.5" />}
+            </button>
+            <span className="text-[10px] text-zinc-400 w-14 truncate shrink-0">{LAYER_LABELS[layer]}</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={s.opacity}
+              onChange={(e) => onOpacityChange(layer, parseFloat(e.target.value))}
+              className="flex-1 h-1 accent-blue-500 cursor-pointer"
+              title={`불투명도 ${Math.round(s.opacity * 100)}%`}
+              data-testid={`layer-opacity-${layer}`}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface EditorProps {
@@ -225,6 +281,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const originalChartInfoRef = useRef<BmsChartDiffInfo | null>(null);
   const measureInputRef = useRef<HTMLInputElement>(null);
   const [showToolMenu, setShowToolMenu] = useState(false);
+  const [pendingBookmarkMeasure, setPendingBookmarkMeasure] = useState(0);
+  const bookmarkNameRef = useRef<HTMLInputElement>(null);
   // showWaveform removed — WaveformOverlay needs NoteChartEditor coordinate integration
   const [leftPanelWidth, setLeftPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-left-w') || '208'));
   const [rightPanelWidth, setRightPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-right-w') || '224'));
@@ -814,9 +872,14 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         case 'toggleDiff': activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff'); break;
         case 'moveToBgm': store.changeNoteType('bgm'); break;
         case 'addBookmark': {
-          const measure = Math.floor(s.currentBeat / 4);
-          const name = prompt(`마디 #${measure} 북마크 이름:`, `Bookmark ${measure}`);
-          if (name) store.addBookmark(measure, name);
+          const measure = store.beatToMF(useEditorStore.getState().currentBeat).measure;
+          const existing = useEditorStore.getState().bookmarks.find((b) => b.measure === measure);
+          if (existing) {
+            store.removeBookmark(measure);
+          } else {
+            setPendingBookmarkMeasure(measure);
+            setActiveModal('addBookmark');
+          }
           break;
         }
         case 'createGroup': {
@@ -1672,6 +1735,23 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             <h3 className="text-xs font-semibold text-zinc-400 mb-1.5">통계</h3>
             <ChartStatsView notes={notes} bpm={editedBaseBpm} totalBeats={totalBeats} />
           </div>
+          {/* Layer Panel */}
+          <div className="border-b border-zinc-800 shrink-0">
+            <div className="px-3 py-1.5 flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-zinc-400">레이어</h3>
+              <button
+                onClick={store.resetLayerConfig}
+                className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                title="레이어 설정 초기화"
+              >초기화</button>
+            </div>
+            <LayerPanel
+              layerConfig={layerConfig}
+              onVisibleToggle={(layer) => store.setLayerVisible(layer, !layerConfig[layer].visible)}
+              onLockToggle={(layer) => store.setLayerLocked(layer, !layerConfig[layer].locked)}
+              onOpacityChange={(layer, opacity) => store.setLayerOpacity(layer, opacity)}
+            />
+          </div>
           <div className={headerCollapsed ? 'shrink-0' : 'flex-1 min-h-0 flex flex-col'}>
             <button
               onClick={store.toggleHeaderCollapsed}
@@ -1862,6 +1942,39 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
           >복구</button>
         </div>
+      </AccessibleDialog>
+
+      {/* ===== ADD BOOKMARK DIALOG ===== */}
+      <AccessibleDialog
+        open={activeModal === 'addBookmark'}
+        onClose={() => setActiveModal(null)}
+        title="북마크 추가"
+        className="border border-zinc-700 p-4 w-72"
+      >
+        <h3 className="text-sm font-semibold text-zinc-200 mb-1 flex items-center gap-1.5">
+          <Bookmark className="h-4 w-4 text-yellow-400" />
+          마디 #{pendingBookmarkMeasure} 북마크
+        </h3>
+        <p className="text-[10px] text-zinc-500 mb-3">북마크 이름을 입력하세요. 단축키(Ctrl+B)로 다시 누르면 삭제됩니다.</p>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const name = bookmarkNameRef.current?.value?.trim();
+          if (name) store.addBookmark(pendingBookmarkMeasure, name);
+          setActiveModal(null);
+        }}>
+          <input
+            ref={bookmarkNameRef}
+            type="text"
+            defaultValue={`Bookmark ${pendingBookmarkMeasure}`}
+            autoFocus
+            className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500 mb-3"
+            placeholder="북마크 이름"
+          />
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setActiveModal(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
+            <button type="submit" className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">추가</button>
+          </div>
+        </form>
       </AccessibleDialog>
 
       {/* ===== PLAY TEST OVERLAY ===== */}

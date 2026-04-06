@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap, Maximize2, X as XIcon } from 'lucide-react';
 // Removed react-resizable-panels — using custom resize handles instead
 import {
   NoteChartEditor,
@@ -15,7 +15,7 @@ import {
   BmsChartDiff,
   getLaneIds,
 } from '@rhythm-archive/bms-editor';
-import type { BmsChartDiffInfo, NoteChartEditorProps } from '@rhythm-archive/bms-editor';
+import type { BmsChartDiffInfo, NoteChartEditorProps, ZoomControl } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote, EditableBMSChart, TimingAction } from '@rhythm-archive/bms-core';
 import { BMSWriter, Timing } from '@rhythm-archive/bms-core';
 import { AudioPreloader, WorkerAudioScheduler } from '@rhythm-archive/bms-player';
@@ -138,16 +138,17 @@ function NoteChartEditorBridge(props: Omit<NoteChartEditorProps, 'scrollToBeat'>
 }
 
 /** Minimap: currentBeat 구독 격리 */
-function MinimapBridge({ notes, totalBeats, viewportBeats, onNavigate, densityData, bookmarks }: {
+function MinimapBridge({ notes, totalBeats, viewportBeats, onNavigate, densityData, bookmarks, hideHeader }: {
   notes: import('@rhythm-archive/bms-core').EditableBMSNote[];
   totalBeats: number;
   viewportBeats: number;
   onNavigate: (beat: number) => void;
   densityData?: MinimapDensityEntry[];
   bookmarks?: MinimapBookmark[];
+  hideHeader?: boolean;
 }) {
   const currentBeat = useEditorStore(s => s.currentBeat);
-  return <Minimap notes={notes} totalBeats={totalBeats} currentBeat={currentBeat} viewportBeats={viewportBeats} onNavigate={onNavigate} densityData={densityData} bookmarks={bookmarks} />;
+  return <Minimap notes={notes} totalBeats={totalBeats} currentBeat={currentBeat} viewportBeats={viewportBeats} onNavigate={onNavigate} densityData={densityData} bookmarks={bookmarks} hideHeader={hideHeader} />;
 }
 
 /** StatusBar: currentBeat 구독 격리 */
@@ -326,6 +327,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const volumeRef = useRef(0.8);
   const playbackBeatRef = useRef(0);
   const editedTimingRef = useRef<Timing | null>(null);
+  const zoomControlRef = useRef<ZoomControl | null>(null);
+  const [currentBeatScale, setCurrentBeatScale] = useState(20);
   // Preview track isolation
   const lastPreviewTrackRef = useRef<string | null>(null);
   const inputDialogRef = useRef<HTMLInputElement>(null);
@@ -1559,6 +1562,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             layerConfig={layerConfig}
             onLayerVisibleToggle={(layer) => store.setLayerVisible(layer as any, !layerConfig[layer as keyof typeof layerConfig].visible)}
             onLayerLockToggle={(layer) => store.setLayerLocked(layer as any, !layerConfig[layer as keyof typeof layerConfig].locked)}
+            onZoomIn={() => zoomControlRef.current?.zoomIn()}
+            onZoomOut={() => zoomControlRef.current?.zoomOut()}
+            onZoomPreset={(s) => zoomControlRef.current?.zoomTo(s)}
+            onZoomFit={() => zoomControlRef.current?.fitToChart()}
+            currentBeatScale={currentBeatScale}
           />
 
           {/* Playback Controls */}
@@ -1675,6 +1683,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   hasUnsavedChanges={hasUnsavedChanges}
                   onScrollChange={store.setCurrentBeat}
                   scrollBeatImperativeRef={audioPhase === 'playing' ? playbackBeatRef : undefined}
+                  zoomControlRef={zoomControlRef}
+                  onBeatScaleChange={setCurrentBeatScale}
                 />
               )}
             </div>
@@ -1688,10 +1698,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">Map</span>
               <button
                 onClick={() => setMinimapPopout(true)}
-                className="p-0.5 rounded hover:bg-zinc-800 transition-colors text-zinc-600 hover:text-zinc-300"
+                className="w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-800 transition-colors text-zinc-600 hover:text-zinc-300"
                 title="미니맵 분리 (드래그 가능)"
               >
-                <Maximize2 className="h-2.5 w-2.5" />
+                <Maximize2 className="h-3.5 w-3.5" />
               </button>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden">
@@ -1702,6 +1712,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 onNavigate={store.setCurrentBeat}
                 densityData={minimapDensityData}
                 bookmarks={minimapBookmarks}
+                hideHeader
               />
             </div>
           </div>
@@ -1824,30 +1835,53 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           className="border border-zinc-700 rounded bg-zinc-900 shadow-xl flex flex-col"
           data-testid="minimap-popout"
         >
-          {/* Drag handle header */}
+          {/* Drag handle header — drag near right edge to re-dock */}
           <div
-            className="px-2 py-1 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-700 shrink-0 flex items-center justify-between cursor-grab select-none"
+            className="px-2 py-1 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-700 shrink-0 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               popoutDragRef.current = { startX: e.clientX, startY: e.clientY, originX: popoutPos.x, originY: popoutPos.y };
             }}
             onPointerMove={(e) => {
               if (!popoutDragRef.current) return;
-              setPopoutPos({
-                x: popoutDragRef.current.originX + (e.clientX - popoutDragRef.current.startX),
-                y: popoutDragRef.current.originY + (e.clientY - popoutDragRef.current.startY),
-              });
+              const SNAP = 48;
+              const PW = 180, PH = 260;
+              const W = window.innerWidth, H = window.innerHeight;
+              let nx = popoutDragRef.current.originX + (e.clientX - popoutDragRef.current.startX);
+              let ny = popoutDragRef.current.originY + (e.clientY - popoutDragRef.current.startY);
+              if (nx < SNAP) nx = 0;
+              if (nx + PW > W - SNAP) nx = W - PW;
+              if (ny < SNAP) ny = 0;
+              if (ny + PH > H - SNAP) ny = H - PH;
+              setPopoutPos({ x: nx, y: ny });
             }}
-            onPointerUp={() => { popoutDragRef.current = null; }}
+            onPointerUp={() => {
+              popoutDragRef.current = null;
+              // Auto-dock when released at the right edge
+              if (popoutPos.x + 180 >= window.innerWidth - 184) {
+                setMinimapPopout(false);
+              }
+            }}
           >
             <span>Minimap</span>
-            <button
-              onClick={() => setMinimapPopout(false)}
-              className="text-zinc-500 hover:text-zinc-200 transition-colors leading-none"
-              title="미니맵 패널로 되돌리기"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-0.5">
+              {/* Dock back to sidebar */}
+              <button
+                onClick={() => setMinimapPopout(false)}
+                className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                title="사이드바로 되돌리기"
+              >
+                <PanelRightOpen className="w-3.5 h-3.5" />
+              </button>
+              {/* Close minimap entirely */}
+              <button
+                onClick={() => { setMinimapPopout(false); store.toggleMinimap(); }}
+                className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700 transition-colors"
+                title="미니맵 닫기"
+              >
+                <XIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
             <MinimapBridge
@@ -1857,6 +1891,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               onNavigate={store.setCurrentBeat}
               densityData={minimapDensityData}
               bookmarks={minimapBookmarks}
+              hideHeader
             />
           </div>
         </div>

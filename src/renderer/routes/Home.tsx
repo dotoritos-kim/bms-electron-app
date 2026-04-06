@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { FolderOpen, File, FilePlus, Play, Edit, Music, RefreshCw, Pin, PinOff, X, Clock } from 'lucide-react';
 import type { CurrentFile } from '../App';
-import { useLocalBmsFile } from '../hooks/useLocalBmsFile';
+import { useHomeBmsFile } from '../hooks/useHomeBmsFile';
 import { dirname, basename } from '../lib/pathUtils';
 import { loadRecentFiles, addRecentFile, removeRecentFile, togglePinRecentFile } from '../lib/sessionStorage';
 import type { RecentFileEntry } from '../lib/sessionStorage';
@@ -33,7 +33,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
   const [folderPath, setFolderPath] = useState<string | null>(null);
   const [files, setFiles] = useState<BmsFileEntry[]>([]);
   const [scanning, setScanning] = useState(false);
-  const { chart, isLoading, error, load } = useLocalBmsFile();
+  const { chart, isLoading, phase, error, load } = useHomeBmsFile();
 
   // New File dialog state
   const [showNewDialog, setShowNewDialog] = useState(false);
@@ -276,7 +276,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
           </div>
         )}
 
-        {currentFile && isLoading && (
+        {currentFile && isLoading && phase === 'idle' && (
           <div className="h-full flex items-center justify-center">
             <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
           </div>
@@ -306,10 +306,10 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                     : `${chart.bpm.min} - ${chart.bpm.max}`
                 }
               />
-              <StatCard label="Total Notes" value={chart.stats.total.toString()} />
-              <StatCard label="Long Notes" value={chart.stats.longNotes.toString()} />
-              <StatCard label="Scratch" value={chart.stats.scratch.toString()} />
-              <StatCard label="Keysounds" value={Object.keys(chart.keysounds).length.toString()} />
+              <StatCard label="Total Notes" value={phase === 'ready' ? chart.stats.total.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label="Long Notes" value={phase === 'ready' ? chart.stats.longNotes.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label="Scratch" value={phase === 'ready' ? chart.stats.scratch.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label="Keysounds" value={phase === 'ready' ? Object.keys(chart.keysounds).length.toString() : '...'} loading={phase === 'phase1'} />
             </div>
             <div className="flex gap-3">
               <button
@@ -415,11 +415,11 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, loading }: { label: string; value: string; loading?: boolean }) {
   return (
     <div className="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
       <div className="text-xs text-zinc-500 mb-1">{label}</div>
-      <div className="text-lg font-semibold">{value}</div>
+      <div className={`text-lg font-semibold ${loading ? 'text-zinc-600 animate-pulse' : ''}`}>{value}</div>
     </div>
   );
 }

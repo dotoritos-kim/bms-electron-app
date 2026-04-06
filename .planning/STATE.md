@@ -24,8 +24,8 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 
 ## Current Position
 
-Phase: 06-minimap-sidebar — Plan 01 at checkpoint:human-verify (Task 3 pending)
-Status: Executing Phase 06 Plan 01 — 2/3 tasks done, awaiting visual verification
+Phase: 06-minimap-sidebar — Plan 01 COMPLETE (all 3 tasks done)
+Status: Complete — minimap repositioned + popout drag window added (a50dd8c)
 
 Progress: [██████████] 100% (prior phases)
 
@@ -75,6 +75,6 @@ None — all requirements met
 
 ## Session Continuity
 
-Last session: 2026-04-06T12:48:28.497Z
-Stopped at: 06-01 checkpoint: human-verify (Task 3)
-Next step: gsd:audit-milestone then gsd:complete-milestone
+Last session: 2026-04-06T22:30:00Z
+Stopped at: 06-01 complete — all 3 tasks committed (a50dd8c)
+Next step: None — plan fully complete

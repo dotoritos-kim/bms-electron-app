@@ -283,6 +283,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const measureInputRef = useRef<HTMLInputElement>(null);
   const [showToolMenu, setShowToolMenu] = useState(false);
   const [pendingBookmarkMeasure, setPendingBookmarkMeasure] = useState(0);
+  const [bookmarkEditMode, setBookmarkEditMode] = useState<'add' | 'rename'>('add');
   const bookmarkNameRef = useRef<HTMLInputElement>(null);
   // showWaveform removed — WaveformOverlay needs NoteChartEditor coordinate integration
   const [leftPanelWidth, setLeftPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-left-w') || '208'));
@@ -886,9 +887,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           const measure = store.beatToMF(useEditorStore.getState().currentBeat).measure;
           const existing = useEditorStore.getState().bookmarks.find((b) => b.measure === measure);
           if (existing) {
-            store.removeBookmark(measure);
+            setPendingBookmarkMeasure(measure);
+            setBookmarkEditMode('rename');
+            setActiveModal('addBookmark');
           } else {
             setPendingBookmarkMeasure(measure);
+            setBookmarkEditMode('add');
             setActiveModal('addBookmark');
           }
           break;
@@ -2062,35 +2066,59 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         </div>
       </AccessibleDialog>
 
-      {/* ===== ADD BOOKMARK DIALOG ===== */}
+      {/* ===== ADD / RENAME BOOKMARK DIALOG ===== */}
       <AccessibleDialog
         open={activeModal === 'addBookmark'}
         onClose={() => setActiveModal(null)}
-        title="북마크 추가"
+        title={bookmarkEditMode === 'rename' ? '북마크 편집' : '북마크 추가'}
         className="border border-zinc-700 p-4 w-72"
       >
         <h3 className="text-sm font-semibold text-zinc-200 mb-1 flex items-center gap-1.5">
           <Bookmark className="h-4 w-4 text-yellow-400" />
           마디 #{pendingBookmarkMeasure} 북마크
         </h3>
-        <p className="text-[10px] text-zinc-500 mb-3">북마크 이름을 입력하세요. 단축키(Ctrl+B)로 다시 누르면 삭제됩니다.</p>
+        <p className="text-[10px] text-zinc-500 mb-3">
+          {bookmarkEditMode === 'rename'
+            ? '북마크 이름을 변경하거나 삭제하세요.'
+            : '북마크 이름을 입력하세요.'}
+        </p>
         <form onSubmit={(e) => {
           e.preventDefault();
           const name = bookmarkNameRef.current?.value?.trim();
-          if (name) store.addBookmark(pendingBookmarkMeasure, name);
+          if (name) {
+            if (bookmarkEditMode === 'rename') {
+              store.renameBookmark(pendingBookmarkMeasure, name);
+            } else {
+              store.addBookmark(pendingBookmarkMeasure, name);
+            }
+          }
           setActiveModal(null);
         }}>
           <input
             ref={bookmarkNameRef}
+            key={`${pendingBookmarkMeasure}-${bookmarkEditMode}`}
             type="text"
-            defaultValue={`Bookmark ${pendingBookmarkMeasure}`}
+            defaultValue={bookmarkEditMode === 'rename'
+              ? (bookmarks.find((b) => b.measure === pendingBookmarkMeasure)?.name ?? `Bookmark ${pendingBookmarkMeasure}`)
+              : `Bookmark ${pendingBookmarkMeasure}`}
             autoFocus
             className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500 mb-3"
             placeholder="북마크 이름"
           />
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setActiveModal(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
-            <button type="submit" className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">추가</button>
+          <div className="flex justify-between gap-2">
+            {bookmarkEditMode === 'rename' && (
+              <button
+                type="button"
+                onClick={() => { store.removeBookmark(pendingBookmarkMeasure); setActiveModal(null); }}
+                className="px-3 py-1.5 text-xs text-red-400 hover:text-red-300 rounded hover:bg-zinc-800 transition-colors"
+              >삭제</button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <button type="button" onClick={() => setActiveModal(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
+              <button type="submit" className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+                {bookmarkEditMode === 'rename' ? '저장' : '추가'}
+              </button>
+            </div>
           </div>
         </form>
       </AccessibleDialog>

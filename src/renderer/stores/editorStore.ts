@@ -13,6 +13,56 @@ import { createBeatConverter, beatToMF44 } from '../lib/beatConverter';
 import type { BeatConverter, MeasureFraction } from '../lib/beatConverter';
 import { beatToTick, tickToBeat, TICKS_PER_BEAT } from '../lib/tickUtils';
 
+// --- Raw header parser (for applyRawHeaders action) ---
+
+function parseRawHeaderText(raw: string): Partial<BMSHeaderData> {
+  const result: Partial<BMSHeaderData> = {
+    wav: new Map(),
+    bmp: new Map(),
+    bpmDef: new Map(),
+    stopDef: new Map(),
+    custom: new Map(),
+  };
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('#')) continue;
+    const spaceIdx = trimmed.indexOf(' ');
+    if (spaceIdx === -1) continue;
+    const key = trimmed.slice(1, spaceIdx).toUpperCase();
+    const value = trimmed.slice(spaceIdx + 1).trim();
+    if (key.startsWith('WAV') && key.length > 3) {
+      result.wav!.set(key.slice(3), value);
+    } else if (key.startsWith('BMP') && key.length > 3) {
+      result.bmp!.set(key.slice(3), value);
+    } else if (key.startsWith('BPM') && key.length > 3) {
+      result.bpmDef!.set(key.slice(3), parseFloat(value));
+    } else if (key.startsWith('STOP') && key.length > 4) {
+      result.stopDef!.set(key.slice(4), parseInt(value, 10));
+    } else {
+      switch (key) {
+        case 'PLAYER': result.player = parseInt(value, 10); break;
+        case 'GENRE': result.genre = value; break;
+        case 'TITLE': result.title = value; break;
+        case 'SUBTITLE': result.subtitle = value; break;
+        case 'ARTIST': result.artist = value; break;
+        case 'SUBARTIST': result.subartist = value; break;
+        case 'BPM': result.bpm = parseFloat(value); break;
+        case 'PLAYLEVEL': result.playlevel = parseInt(value, 10); break;
+        case 'RANK': result.rank = parseInt(value, 10); break;
+        case 'TOTAL': result.total = parseFloat(value); break;
+        case 'DIFFICULTY': result.difficulty = parseInt(value, 10); break;
+        case 'STAGEFILE': result.stagefile = value; break;
+        case 'BANNER': result.banner = value; break;
+        case 'BACKBMP': result.backbmp = value; break;
+        case 'LNTYPE': result.lntype = parseInt(value, 10); break;
+        case 'LNOBJ': result.lnobj = value; break;
+        default: result.custom!.set(key, value); break;
+      }
+    }
+  }
+  return result;
+}
+
 // --- Types ---
 
 export interface UndoEntry {
@@ -303,7 +353,7 @@ interface EditorState {
   /** 조건 기반 노트 선택 (레이어/마디범위/컬럼/키음 필터) */
   selectByFilter: (filter: NoteSelectionFilter) => void;
   clearSelection: () => void;
-  changeNoteType: (newType: NoteType) => void;
+  changeNoteType: (newType: NoteType, defaultColumn?: string) => void;
 
   // Measure management
   insertMeasure: (atMeasure: number) => void;
@@ -344,6 +394,15 @@ interface EditorState {
 
   // Keysound import
   updateHeadersWithWavDefs: (newWavDefs: Record<string, string>) => void;
+
+  // Header Map mutations
+  setCustomHeader: (key: string, value: string) => void;
+  deleteCustomHeader: (key: string) => void;
+  setWavDef: (key: string, value: string) => void;
+  deleteWavDef: (key: string) => void;
+  setBmpDef: (key: string, value: string) => void;
+  deleteBmpDef: (key: string) => void;
+  applyRawHeaders: (raw: string) => void;
 
   // Audio (simple setters)
   setAudioPhase: (phase: AudioPhase) => void;
@@ -806,7 +865,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
   },
 
-  changeNoteType: (newType) => {
+  changeNoteType: (newType, defaultColumn) => {
     const s = get();
     if (s.selectedNotes.size === 0) return;
     s.pushUndo('Change note type');
@@ -833,8 +892,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           updated.bgmChannel = cur + 1;
           tickMaxChannel.set(n.tick, updated.bgmChannel);
         } else {
-          // Leaving BGM → clear bgmChannel
+          // Leaving BGM → clear bgmChannel, assign default column
           updated.bgmChannel = undefined;
+          if (defaultColumn && n.noteType === 'bgm') updated.column = defaultColumn;
         }
         return updated;
       }),
@@ -1384,6 +1444,75 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         newWav.set(id, filename);
       }
       return { headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true };
+    });
+  },
+
+  setCustomHeader: (key, value) => {
+    const s = get();
+    if (!s.headers) return;
+    s.pushUndo('Change custom header');
+    const newCustom = new Map(s.headers.custom);
+    newCustom.set(key.toUpperCase(), value);
+    set({ headers: { ...s.headers, custom: newCustom }, hasUnsavedChanges: true });
+  },
+
+  deleteCustomHeader: (key) => {
+    const s = get();
+    if (!s.headers) return;
+    s.pushUndo('Delete custom header');
+    const newCustom = new Map(s.headers.custom);
+    newCustom.delete(key);
+    set({ headers: { ...s.headers, custom: newCustom }, hasUnsavedChanges: true });
+  },
+
+  setWavDef: (key, value) => {
+    const s = get();
+    if (!s.headers) return;
+    const newWav = new Map(s.headers.wav);
+    newWav.set(key.toUpperCase(), value);
+    set({ headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true });
+  },
+
+  deleteWavDef: (key) => {
+    const s = get();
+    if (!s.headers) return;
+    const newWav = new Map(s.headers.wav);
+    newWav.delete(key);
+    set({ headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true });
+  },
+
+  setBmpDef: (key, value) => {
+    const s = get();
+    if (!s.headers) return;
+    const newBmp = new Map(s.headers.bmp);
+    newBmp.set(key.toUpperCase(), value);
+    set({ headers: { ...s.headers, bmp: newBmp }, hasUnsavedChanges: true });
+  },
+
+  deleteBmpDef: (key) => {
+    const s = get();
+    if (!s.headers) return;
+    const newBmp = new Map(s.headers.bmp);
+    newBmp.delete(key);
+    set({ headers: { ...s.headers, bmp: newBmp }, hasUnsavedChanges: true });
+  },
+
+  applyRawHeaders: (raw) => {
+    const s = get();
+    if (!s.headers) return;
+    s.pushUndo('Apply raw headers');
+    const parsed = parseRawHeaderText(raw);
+    set({
+      headers: {
+        ...s.headers,
+        ...parsed,
+        wav: parsed.wav ?? s.headers.wav,
+        bmp: parsed.bmp ?? s.headers.bmp,
+        bpmDef: parsed.bpmDef ?? s.headers.bpmDef,
+        stopDef: parsed.stopDef ?? s.headers.stopDef,
+        custom: parsed.custom ?? s.headers.custom,
+      },
+      hasUnsavedChanges: true,
     });
   },
 

@@ -181,7 +181,7 @@ function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChang
   onOpacityChange: (layer: keyof LayerConfig, opacity: number) => void;
 }) {
   return (
-    <div className="px-2 py-2 space-y-1.5" data-testid="layer-panel">
+    <div className="px-3 py-2 space-y-1.5" data-testid="layer-panel">
       {LAYER_KEYS.map((layer) => {
         const s = layerConfig[layer];
         return (
@@ -877,6 +877,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         case 'togglePatternPanel': setLeftPanelTab((t) => t === 'pattern' ? 'keysound' : 'pattern'); break;
         case 'toggleDiff': activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff'); break;
         case 'moveToBgm': store.changeNoteType('bgm'); break;
+        case 'moveToPlay': {
+          const firstLane = laneIds.find(id => id !== 'SC' && id !== 'FZ' && id !== 'FZ2') ?? laneIds[0] ?? '1';
+          store.changeNoteType('playable', firstLane);
+          break;
+        }
         case 'addBookmark': {
           const measure = store.beatToMF(useEditorStore.getState().currentBeat).measure;
           const existing = useEditorStore.getState().bookmarks.find((b) => b.measure === measure);
@@ -1758,7 +1763,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               />
             </div>
           )}
-          <div className="border-b border-zinc-800 shrink-0 max-h-48 overflow-y-auto">
+          <div className="border-b border-zinc-800 shrink-0 max-h-48 overflow-y-auto overflow-x-hidden">
             <BeatKeysoundPanelBridge
               notes={notes}
               wavDefinitions={wavDefinitions}
@@ -1806,7 +1811,17 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             {!headerCollapsed && (
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {currentEditableChart ? (
-                  <HeaderEditorPanel chart={currentEditableChart} onHeaderChange={store.changeHeader} />
+                  <HeaderEditorPanel
+                    chart={currentEditableChart}
+                    onHeaderChange={store.changeHeader}
+                    onCustomHeaderSet={store.setCustomHeader}
+                    onCustomHeaderDelete={store.deleteCustomHeader}
+                    onWavDefSet={store.setWavDef}
+                    onWavDefDelete={store.deleteWavDef}
+                    onBmpDefSet={store.setBmpDef}
+                    onBmpDefDelete={store.deleteBmpDef}
+                    onRawApply={store.applyRawHeaders}
+                  />
                 ) : chart && (
                   <div className="p-3 text-xs space-y-3">
                     <div>
@@ -1855,10 +1870,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               if (ny + PH > H - SNAP) ny = H - PH;
               setPopoutPos({ x: nx, y: ny });
             }}
-            onPointerUp={() => {
+            onPointerUp={(e) => {
+              const dr = popoutDragRef.current;
+              const wasDragging = dr !== null && (Math.abs(e.clientX - dr.startX) > 5 || Math.abs(e.clientY - dr.startY) > 5);
               popoutDragRef.current = null;
-              // Auto-dock when released at the right edge
-              if (popoutPos.x + 180 >= window.innerWidth - 184) {
+              // Auto-dock only when actually dragged to right edge (not on plain click)
+              if (wasDragging && popoutPos.x + 180 >= window.innerWidth - 184) {
                 setMinimapPopout(false);
               }
             }}
@@ -1868,16 +1885,18 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               {/* Dock back to sidebar */}
               <button
                 onClick={() => setMinimapPopout(false)}
+                onPointerDown={(e) => e.stopPropagation()}
                 className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
                 title="사이드바로 되돌리기"
               >
                 <PanelRightOpen className="w-3.5 h-3.5" />
               </button>
-              {/* Close minimap entirely */}
+              {/* Close popout — return to inline sidebar */}
               <button
-                onClick={() => { setMinimapPopout(false); store.toggleMinimap(); }}
-                className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700 transition-colors"
-                title="미니맵 닫기"
+                onClick={() => setMinimapPopout(false)}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                title="팝아웃 닫기 (인라인으로 복귀)"
               >
                 <XIcon className="w-3.5 h-3.5" />
               </button>

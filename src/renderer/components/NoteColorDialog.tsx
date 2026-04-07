@@ -124,7 +124,6 @@ export function NoteColorDialog({ open, onClose, colors, onSetColor, onResetAll 
 
   function handleReset() {
     setLocal({});
-    onResetAll();
   }
 
   const hasAnyCustom = COLOR_FIELDS.some((f) => local[f.key] !== undefined);

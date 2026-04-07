@@ -1468,6 +1468,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setWavDef: (key, value) => {
     const s = get();
     if (!s.headers) return;
+    s.pushUndo('Change WAV definition');
     const newWav = new Map(s.headers.wav);
     newWav.set(key.toUpperCase(), value);
     set({ headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true });
@@ -1476,6 +1477,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   deleteWavDef: (key) => {
     const s = get();
     if (!s.headers) return;
+    s.pushUndo('Delete WAV definition');
     const newWav = new Map(s.headers.wav);
     newWav.delete(key);
     set({ headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true });
@@ -1484,6 +1486,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setBmpDef: (key, value) => {
     const s = get();
     if (!s.headers) return;
+    s.pushUndo('Change BMP definition');
     const newBmp = new Map(s.headers.bmp);
     newBmp.set(key.toUpperCase(), value);
     set({ headers: { ...s.headers, bmp: newBmp }, hasUnsavedChanges: true });
@@ -1492,6 +1495,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   deleteBmpDef: (key) => {
     const s = get();
     if (!s.headers) return;
+    s.pushUndo('Delete BMP definition');
     const newBmp = new Map(s.headers.bmp);
     newBmp.delete(key);
     set({ headers: { ...s.headers, bmp: newBmp }, hasUnsavedChanges: true });

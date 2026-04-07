@@ -135,6 +135,14 @@ export function buildMetaFromState(state: {
   bookmarks?: BmsMetaBookmark[];
   noteGroups?: BmsMetaNoteGroup[];
   notes?: Array<{ id: string; noteType?: string; bgmChannel?: number }>;
+  customColors?: {
+    playable?: string;
+    invisible?: string;
+    landmine?: string;
+    bgm?: string;
+    selection?: string;
+    background?: string;
+  };
 }): BmsMetaData {
   const meta: BmsMetaData = { version: META_VERSION };
 
@@ -145,6 +153,10 @@ export function buildMetaFromState(state: {
 
   if (state.bookmarks && state.bookmarks.length > 0) meta.bookmarks = state.bookmarks;
   if (state.noteGroups && state.noteGroups.length > 0) meta.noteGroups = state.noteGroups;
+
+  if (state.customColors && Object.keys(state.customColors).length > 0) {
+    meta.customColors = state.customColors;
+  }
 
   // BGM channel assignments
   if (state.notes) {
@@ -168,9 +180,15 @@ export function buildMetaFromState(state: {
 export function applyMetaToState(meta: BmsMetaData): {
   gridSnapOverrides: Map<number, number>;
   minLnLength?: number;
+  customColors?: BmsMetaData['customColors'];
+  bookmarks?: BmsMetaBookmark[];
+  noteGroups?: BmsMetaNoteGroup[];
 } {
   return {
     gridSnapOverrides: recordToGridSnapOverrides(meta.gridSnapOverrides),
     ...(meta.minLnLength !== undefined ? { minLnLength: meta.minLnLength } : {}),
+    ...(meta.customColors ? { customColors: meta.customColors } : {}),
+    ...(meta.bookmarks ? { bookmarks: meta.bookmarks } : {}),
+    ...(meta.noteGroups ? { noteGroups: meta.noteGroups } : {}),
   };
 }

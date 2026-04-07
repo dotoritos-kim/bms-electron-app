@@ -751,6 +751,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         bookmarks: s.bookmarks,
         noteGroups: s.noteGroups,
         notes: s.notes,
+        customColors: s.customColors,
       });
       const metaJson = serializeMeta(meta);
       if (metaJson !== '{\n  "version": 1\n}') {

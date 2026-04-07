@@ -30,6 +30,7 @@ import type { AudioPhase, PasteAnalysis, LayerConfig } from '../stores/editorSto
 import { deserializeMeta, serializeMeta, buildMetaFromState, applyMetaToState } from '../lib/bmsMeta';
 import { PatternLibraryPanel } from '../components/PatternLibraryPanel';
 import { KeyBindingsDialog } from '../components/KeyBindingsDialog';
+import { NoteColorDialog } from '../components/NoteColorDialog';
 import type { PatternTemplate } from '../lib/patternTemplates';
 import type { KeyBinding, KeyAction } from '../lib/keyBindings';
 import { loadKeyBindings, normalizeKeyCombo, buildActionMap, TOOL_ACTION_MAP } from '../lib/keyBindings';
@@ -55,7 +56,7 @@ import { computeDensityMap, densityToColor } from '../lib/densityMap';
 import type { MinimapDensityEntry, MinimapBookmark } from '@rhythm-archive/bms-editor';
 // WaveformOverlay removed — requires NoteChartEditor internal coordinate sync to work correctly
 
-type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | 'addBookmark' | 'clipboardHistory' | null;
+type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | 'addBookmark' | 'clipboardHistory' | 'noteColor' | null;
 type OverlayType = 'diff' | 'audioSlicer' | 'playTest' | null;
 
 /** Isolated playback time display — subscribes only to playbackTime/playbackDuration to avoid re-rendering the entire Editor */
@@ -243,7 +244,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     audioPhase, playbackSpeed, volume,
     noteHeight, inputDialog, showLeftPanel, showRightPanel, showMinimap, headerCollapsed, showBackConfirm,
     loopA, loopB, highlightKeysound,
-    bookmarks,
+    bookmarks, customColors,
   } = useEditorStore(useShallow((s) => ({
     notes: s.notes, bpmChanges: s.bpmChanges, stopEvents: s.stopEvents, headers: s.headers,
     timeSignatures: s.timeSignatures, editableChart: s.editableChart, keyMode: s.keyMode,
@@ -255,7 +256,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     noteHeight: s.noteHeight, inputDialog: s.inputDialog, showLeftPanel: s.showLeftPanel,
     showRightPanel: s.showRightPanel, showMinimap: s.showMinimap, headerCollapsed: s.headerCollapsed, showBackConfirm: s.showBackConfirm,
     loopA: s.loopA, loopB: s.loopB, highlightKeysound: s.highlightKeysound,
-    bookmarks: s.bookmarks,
+    bookmarks: s.bookmarks, customColors: s.customColors,
   })));
   // Stable actions reference (Zustand actions are stable closures over set/get)
   const store = useMemo(() => useEditorStore.getState(), []);
@@ -1473,6 +1474,14 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 <Keyboard className="h-3.5 w-3.5 text-zinc-400" />
                 키 바인딩 설정
               </button>
+              <button
+                onClick={() => { openModal('noteColor'); setShowToolMenu(false); }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+                data-testid="note-color-btn"
+              >
+                <span className="h-3.5 w-3.5 rounded-sm border border-zinc-500 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #88aaff 0%, #ff4444 50%, #666 100%)' }} />
+                노트 색상 설정
+              </button>
             </div>
           )}
         </div>
@@ -1697,6 +1706,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   scrollBeatImperativeRef={audioPhase === 'playing' ? playbackBeatRef : undefined}
                   zoomControlRef={zoomControlRef}
                   onBeatScaleChange={setCurrentBeatScale}
+                  customColors={customColors}
                 />
               )}
             </div>
@@ -2341,6 +2351,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         onClose={() => setActiveModal(null)}
         bindings={keyBindings}
         onBindingsChange={setKeyBindings}
+      />
+
+      {/* ===== NOTE COLOR DIALOG ===== */}
+      <NoteColorDialog
+        open={activeModal === 'noteColor'}
+        onClose={() => setActiveModal(null)}
+        colors={customColors}
+        onSetColor={(key, value) => store.setCustomColor(key, value)}
+        onResetAll={store.resetCustomColors}
       />
 
       {/* ===== TOAST STACK ===== */}

@@ -51,6 +51,8 @@ export type KeyAction =
   | 'setLoopA'
   | 'setLoopB'
   | 'clearLoop'
+  // Clipboard
+  | 'clipboardHistory'
   // Panel
   | 'togglePatternPanel'
   // Diff
@@ -96,6 +98,7 @@ export const ACTION_LABELS: Record<KeyAction, string> = {
   setLoopA: '루프 시작점',
   setLoopB: '루프 끝점',
   clearLoop: '루프 해제',
+  clipboardHistory: '클립보드 히스토리',
   togglePatternPanel: '패턴 패널 전환',
   toggleDiff: '변경사항 비교',
   moveToBgm: '선택 노트 → BGM',
@@ -115,6 +118,7 @@ export const ACTION_CATEGORIES: { label: string; actions: KeyAction[] }[] = [
   { label: '이동', actions: ['moveUp', 'moveDown', 'moveLeft', 'moveRight'] },
   { label: '도구', actions: ['toolSelect', 'toolAddNote', 'toolDelete', 'toolMove', 'toolKeysound', 'toolBpm', 'toolStop'] },
   { label: '루프', actions: ['setLoopA', 'setLoopB', 'clearLoop'] },
+  { label: '클립보드', actions: ['clipboardHistory'] },
   { label: '패널', actions: ['togglePatternPanel', 'toggleDiff'] },
   { label: '레이어', actions: ['moveToBgm', 'moveToPlay'] },
   { label: '북마크/그룹', actions: ['addBookmark', 'createGroup', 'toggleSnap'] },
@@ -163,6 +167,7 @@ export const DEFAULT_BINDINGS: KeyBinding[] = [
   { label: '루프 시작점', action: 'setLoopA', key: '[' },
   { label: '루프 끝점', action: 'setLoopB', key: ']' },
   { label: '루프 해제', action: 'clearLoop', key: '\\' },
+  { label: '클립보드 히스토리', action: 'clipboardHistory', key: 'ctrl+shift+v' },
   { label: '패턴 패널', action: 'togglePatternPanel', key: 'p' },
   { label: '변경사항 비교', action: 'toggleDiff', key: 'ctrl+d' },
   { label: 'BGM으로 이동', action: 'moveToBgm', key: 'ctrl+shift+b' },

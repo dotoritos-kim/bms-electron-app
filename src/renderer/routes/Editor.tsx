@@ -55,7 +55,7 @@ import { computeDensityMap, densityToColor } from '../lib/densityMap';
 import type { MinimapDensityEntry, MinimapBookmark } from '@rhythm-archive/bms-editor';
 // WaveformOverlay removed — requires NoteChartEditor internal coordinate sync to work correctly
 
-type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | 'addBookmark' | null;
+type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | 'addBookmark' | 'clipboardHistory' | null;
 type OverlayType = 'diff' | 'audioSlicer' | 'playTest' | null;
 
 /** Isolated playback time display — subscribes only to playbackTime/playbackDuration to avoid re-rendering the entire Editor */
@@ -239,7 +239,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const {
     notes, bpmChanges, stopEvents, headers, timeSignatures, editableChart, keyMode,
     hasUnsavedChanges, activeTool, gridSnap, gridSnapOverrides, snapEnabled, layerConfig, selectedNotes, selectedNoteType,
-    currentKeysound, clipboard, undoStack, redoStack,
+    currentKeysound, clipboard, clipboardHistory, undoStack, redoStack,
     audioPhase, playbackSpeed, volume,
     noteHeight, inputDialog, showLeftPanel, showRightPanel, showMinimap, headerCollapsed, showBackConfirm,
     loopA, loopB, highlightKeysound,
@@ -250,7 +250,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     hasUnsavedChanges: s.hasUnsavedChanges, activeTool: s.activeTool, gridSnap: s.gridSnap,
     gridSnapOverrides: s.gridSnapOverrides, snapEnabled: s.snapEnabled, layerConfig: s.layerConfig,
     selectedNotes: s.selectedNotes, selectedNoteType: s.selectedNoteType, currentKeysound: s.currentKeysound,
-    clipboard: s.clipboard, undoStack: s.undoStack, redoStack: s.redoStack,
+    clipboard: s.clipboard, clipboardHistory: s.clipboardHistory, undoStack: s.undoStack, redoStack: s.redoStack,
     audioPhase: s.audioPhase, playbackSpeed: s.playbackSpeed, volume: s.volume,
     noteHeight: s.noteHeight, inputDialog: s.inputDialog, showLeftPanel: s.showLeftPanel,
     showRightPanel: s.showRightPanel, showMinimap: s.showMinimap, headerCollapsed: s.headerCollapsed, showBackConfirm: s.showBackConfirm,
@@ -875,6 +875,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         case 'setLoopA': store.setLoopA(s.currentBeat); break;
         case 'setLoopB': store.setLoopB(s.currentBeat); break;
         case 'clearLoop': store.setLoopA(null); store.setLoopB(null); break;
+        case 'clipboardHistory':
+          if (useEditorStore.getState().clipboardHistory.length > 0) setActiveModal('clipboardHistory');
+          break;
         case 'togglePatternPanel': setLeftPanelTab((t) => t === 'pattern' ? 'keysound' : 'pattern'); break;
         case 'toggleDiff': activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff'); break;
         case 'moveToBgm': store.changeNoteType('bgm'); break;
@@ -2121,6 +2124,45 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             </div>
           </div>
         </form>
+      </AccessibleDialog>
+
+      {/* ===== CLIPBOARD HISTORY DIALOG ===== */}
+      <AccessibleDialog
+        open={activeModal === 'clipboardHistory'}
+        onClose={() => setActiveModal(null)}
+        title="클립보드 히스토리"
+        className="border border-zinc-700 p-4 w-80"
+      >
+        <h3 className="text-sm font-semibold text-zinc-200 mb-1">클립보드 히스토리</h3>
+        <p className="text-[10px] text-zinc-500 mb-3">항목을 선택하면 해당 노트들이 클립보드로 복사됩니다.</p>
+        <div className="space-y-1 max-h-64 overflow-y-auto">
+          {clipboardHistory.map((entry, i) => {
+            const keysounds = [...new Set(entry.map((n) => n.keysound).filter(Boolean))].slice(0, 3);
+            const isCurrentClipboard = i === 0 && clipboard === entry;
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  store.selectClipboardHistory(i);
+                  store.paste();
+                  setActiveModal(null);
+                }}
+                className="w-full text-left px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-300 font-mono">{entry.length}개 노트</span>
+                  {isCurrentClipboard && <span className="text-[10px] text-blue-400">현재</span>}
+                </div>
+                <div className="text-[10px] text-zinc-500 mt-0.5 truncate">
+                  {keysounds.length > 0 ? keysounds.join(', ') + (keysounds.length < [...new Set(entry.map((n) => n.keysound).filter(Boolean))].length ? ' …' : '') : '키음 없음'}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-3 flex justify-end">
+          <button onClick={() => setActiveModal(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">닫기</button>
+        </div>
       </AccessibleDialog>
 
       {/* ===== PLAY TEST OVERLAY ===== */}

@@ -112,25 +112,12 @@ export function NoteColorDialog({ open, onClose, colors, onSetColor, onResetAll 
   }
 
   function handleApply() {
-    // Apply all local changes to store
+    // 초기화된 색상이 있으면 전체 리셋 후 재적용, 아니면 바로 적용
+    const hasAnyClear = COLOR_FIELDS.some((f) => colors[f.key] !== undefined && local[f.key] === undefined);
+    if (hasAnyClear) onResetAll();
     for (const field of COLOR_FIELDS) {
       const val = local[field.key];
-      if (val !== undefined) {
-        onSetColor(field.key, val);
-      }
-    }
-    // For cleared values, reset them individually is not directly supported —
-    // we use a full reset then re-apply remaining values
-    const hasAnyClear = COLOR_FIELDS.some((f) => colors[f.key] !== undefined && local[f.key] === undefined);
-    if (hasAnyClear) {
-      onResetAll();
-      // Re-apply all non-undefined local values
-      for (const field of COLOR_FIELDS) {
-        const val = local[field.key];
-        if (val !== undefined) {
-          onSetColor(field.key, val);
-        }
-      }
+      if (val !== undefined) onSetColor(field.key, val);
     }
     onClose();
   }

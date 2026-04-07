@@ -2148,7 +2148,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <div className="space-y-1 max-h-64 overflow-y-auto">
           {clipboardHistory.map((entry, i) => {
             const keysounds = [...new Set(entry.map((n) => n.keysound).filter(Boolean))].slice(0, 3);
-            const isCurrentClipboard = i === 0 && clipboard === entry;
+            const isCurrentClipboard = clipboard === entry;
             return (
               <button
                 key={i}

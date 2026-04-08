@@ -281,6 +281,24 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     isDraggingRef.current = false;
   }, []);
 
+  // Double-click: toggle marker at click position (add if none nearby, delete if near existing)
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    const t = getTimeFromX(e.clientX);
+    const tolerance = viewDuration * 0.01; // 1% of view as tolerance
+    const nearIdx = markers.findIndex((m) => Math.abs(m.time - t) < tolerance);
+    if (nearIdx >= 0) {
+      // Delete marker
+      setMarkers((prev) => prev.filter((_, i) => i !== nearIdx).map((m, i) => ({ ...m, label: `${i + 1}` })));
+    } else {
+      // Add marker
+      setMarkers((prev) => {
+        const newMarkers = [...prev, { time: t, label: `${prev.length + 1}` }];
+        newMarkers.sort((a, b) => a.time - b.time);
+        return newMarkers.map((m, i) => ({ ...m, label: `${i + 1}` }));
+      });
+    }
+  }, [getTimeFromX, markers, viewDuration]);
+
   const handleZoomIn = useCallback(() => {
     if (!audioBuffer) return;
     setViewDuration((prev) => Math.max(0.5, prev * 0.7));
@@ -439,9 +457,10 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
         {audioBuffer && (
           <>
             <div className="w-px h-4 bg-zinc-700" />
-            <button onClick={handlePlay} className="flex items-center gap-1 px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300">
+            <button onClick={handlePlay} className={`flex items-center gap-1 px-2 py-1.5 rounded text-zinc-300 ${isPlaying ? 'bg-red-900/50 hover:bg-red-900/70 ring-1 ring-red-500/50' : 'bg-zinc-800 hover:bg-zinc-700'}`}>
               {isPlaying ? <Square className="h-3.5 w-3.5 text-red-400" /> : <Play className="h-3.5 w-3.5 text-green-400" />}
               {isPlaying ? '정지' : (selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.01) ? '선택 구간 재생' : '재생'}
+              {isPlaying && <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
             </button>
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handleZoomIn} className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300">
@@ -469,14 +488,25 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
               감도:
               <input
                 type="range"
-                min={0.02}
-                max={0.5}
-                step={0.01}
+                min={0.005}
+                max={1.0}
+                step={0.005}
                 value={onsetThreshold}
                 onChange={(e) => setOnsetThreshold(parseFloat(e.target.value))}
-                className="w-16 h-1 accent-orange-500"
+                className="w-20 h-1 accent-orange-500"
               />
-              <span className="text-zinc-400 font-mono w-8">{onsetThreshold.toFixed(2)}</span>
+              <input
+                type="number"
+                min={0.005}
+                max={1.0}
+                step={0.005}
+                value={onsetThreshold}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  if (!isNaN(v) && v >= 0.005 && v <= 1.0) setOnsetThreshold(v);
+                }}
+                className="w-14 px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-300 font-mono text-center"
+              />
             </label>
             {autoSliceMsg && (
               <span className={`text-xs px-2 py-1 rounded font-medium ${autoSliceMsg.startsWith('감지된') ? 'text-yellow-300 bg-yellow-800/60 border border-yellow-600/50 animate-pulse' : 'text-green-400 bg-green-950/40'}`}>
@@ -509,6 +539,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onDoubleClick={handleDoubleClick}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-zinc-600">

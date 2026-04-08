@@ -1495,6 +1495,23 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               </button>
               <div className="h-px bg-zinc-800 my-1" />
               <button
+                onClick={() => { openModal('measureInsert'); setShowToolMenu(false); }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+              >
+                <span className="h-3.5 w-3.5 text-zinc-400 text-center font-bold text-[10px]">+</span>
+                마디 삽입
+                <span className="ml-auto text-[9px] text-zinc-500">Ctrl+Shift+I</span>
+              </button>
+              <button
+                onClick={() => { openModal('measureDelete'); setShowToolMenu(false); }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+              >
+                <span className="h-3.5 w-3.5 text-zinc-400 text-center font-bold text-[10px]">−</span>
+                마디 삭제
+                <span className="ml-auto text-[9px] text-zinc-500">Ctrl+Shift+D</span>
+              </button>
+              <div className="h-px bg-zinc-800 my-1" />
+              <button
                 onClick={() => { openModal('keyBindings'); setShowToolMenu(false); }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
                 data-testid="keybindings-btn"
@@ -1702,6 +1719,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               {hoverKeysoundInfo && (
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none px-3 py-1 bg-zinc-900/90 border border-zinc-700 rounded text-xs text-zinc-300 font-mono shadow-lg">
                   {hoverKeysoundInfo}
+                </div>
+              )}
+              {/* Current keysound indicator for addNote/keysound tool */}
+              {(activeTool === 'addNote' || activeTool === 'keysound') && currentKeysound && !hoverKeysoundInfo && (
+                <div className="absolute top-2 right-3 z-10 pointer-events-none px-2 py-1 bg-zinc-900/80 border border-zinc-700/50 rounded text-[10px] text-zinc-400 font-mono">
+                  키음: {currentKeysound}{keysoundRecord[currentKeysound] ? ` (${keysoundRecord[currentKeysound]})` : currentKeysound === '00' ? ' (무음)' : ''}
                 </div>
               )}
               {chart && (

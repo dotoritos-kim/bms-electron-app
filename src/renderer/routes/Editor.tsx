@@ -1879,7 +1879,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               onToggleSolo={store.toggleBgmSolo}
               onToggleMute={store.toggleBgmMute}
             />
-          </div>
+          </div>}
           {/* Chart Statistics */}
           <div className="border-b border-zinc-800 shrink-0">
             <button onClick={() => toggleSection('stats')} className="w-full flex items-center justify-between px-3 py-1 text-[10px] font-semibold text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors">

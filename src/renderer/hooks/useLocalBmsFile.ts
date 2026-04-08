@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { BMSParser, Timing, Positioning, Spacing, SongInfo, KeySounds, Notes } from '@rhythm-archive/bms-core';
 import type { BMSChart, BMSNote, ISongInfoData } from '@rhythm-archive/bms-core';
-import { detectKeyMode } from '../../../bms-editor/src/chart/useBmsChart';
+import { detectKeyMode } from '../../../../bms-editor/src/chart/useBmsChart';
 import type { KeyMode, BpmChange, StopEvent, ScrollSpeedChange } from '@rhythm-archive/bms-editor';
 
 export interface LocalBmsChartInfo {

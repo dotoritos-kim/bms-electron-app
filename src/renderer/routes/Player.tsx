@@ -259,7 +259,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
         <button onClick={handleExit} className="p-1 rounded hover:bg-zinc-800 transition-colors">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <div className="flex-1 min-w-0 text-xs text-zinc-400 truncate">
+        <div className="flex-1 min-w-0 text-xs text-zinc-400 truncate" title="키 설정은 편집 화면 > 도구 > 키 바인딩 설정에서 변경할 수 있습니다">
           {chart?.songInfo?.title || file.name} — {chart?.keyMode} | BPM {chart?.bpm.initial}
         </div>
         <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0">

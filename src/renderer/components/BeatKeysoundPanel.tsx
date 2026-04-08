@@ -77,7 +77,7 @@ export function BeatKeysoundPanel({
     <div className="px-3 py-2">
       <h3 className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5 mb-1.5">
         <Headphones className="h-3 w-3" />
-        키음 타임라인
+        <span title="현재 위치 근처의 키음을 시간순으로 표시합니다. 클릭하면 해당 키음을 선택합니다.">키음 타임라인</span>
       </h3>
       <div className="space-y-1">
         {nearbyNotes.map((group) => {

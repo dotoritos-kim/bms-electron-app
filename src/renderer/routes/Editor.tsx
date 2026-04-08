@@ -518,15 +518,24 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   }, []);
 
   const handleDeleteUnused = useCallback((keysoundId: string) => {
-    // 삭제 전 재검증
     const count = keysoundUsageCounts[keysoundId] ?? 0;
     if (count > 0) {
-      store.setToast({ message: `이 키음은 ${count}개 노트에서 사용 중입니다`, type: 'error' });
-      return;
+      // Confirm: replace all usages with silent (00) then delete
+      const ok = window.confirm(
+        `이 키음은 ${count}개 노트에서 사용 중입니다.\n삭제하면 해당 노트의 키음이 무음(00)으로 교체됩니다.\n\n삭제하시겠습니까?`
+      );
+      if (!ok) return;
+      // Replace all notes using this keysound with 00
+      const s = useEditorStore.getState();
+      s.pushUndo('Delete keysound (replace with silent)');
+      const updatedNotes = s.notes.map((n) =>
+        n.keysound === keysoundId ? { ...n, keysound: '00' } : n
+      );
+      useEditorStore.setState({ notes: updatedNotes });
     }
     store.removeWavDefinitions([keysoundId]);
-    store.setToast({ message: `키음 ${keysoundId} 삭제됨 (Ctrl+Z로 복원 가능)`, type: 'success' });
-  }, [keysoundUsageCounts, store]);
+    showToast(`키음 ${keysoundId} 삭제됨 (Ctrl+Z로 복원 가능)`, 'success');
+  }, [keysoundUsageCounts, showToast]);
 
   // Lane config (uses store keyMode so mode switching works)
   const laneIds = useMemo(() => {

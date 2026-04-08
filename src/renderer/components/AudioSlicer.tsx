@@ -83,6 +83,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   const [onsetThreshold, setOnsetThreshold] = useState(0.15);
   // isDragging removed — use isDraggingRef only to avoid toolbar re-render flicker
   const [autoSliceMsg, setAutoSliceMsg] = useState<string | null>(null);
+  const draggingMarkerRef = useRef<number | null>(null); // index of marker being dragged
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -265,19 +266,67 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     return viewStart + ratio * viewDuration;
   }, [viewStart, viewDuration]);
 
+  // Middle-button panning state
+  const panningRef = useRef<{ startX: number; startViewStart: number } | null>(null);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Middle button → start panning
+    if (e.button === 1) {
+      e.preventDefault();
+      panningRef.current = { startX: e.clientX, startViewStart: viewStart };
+      isDraggingRef.current = true;
+      return;
+    }
     const t = getTimeFromX(e.clientX);
+    // Check if clicking near a marker → start marker drag
+    const tolerance = viewDuration * 0.008;
+    const nearIdx = markers.findIndex((m) => Math.abs(m.time - t) < tolerance);
+    if (nearIdx >= 0) {
+      draggingMarkerRef.current = nearIdx;
+      isDraggingRef.current = true;
+      return;
+    }
     setSelStart(t);
     setSelEnd(t);
     isDraggingRef.current = true;
-  }, [getTimeFromX]);
+  }, [getTimeFromX, markers, viewDuration, viewStart]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDraggingRef.current) return;
+    // Middle-button panning
+    if (panningRef.current) {
+      const canvas = canvasRef.current;
+      if (!canvas || !audioBuffer) return;
+      const rect = canvas.getBoundingClientRect();
+      const dx = e.clientX - panningRef.current.startX;
+      const timeDelta = -(dx / rect.width) * viewDuration;
+      const maxStart = Math.max(0, audioBuffer.duration - viewDuration);
+      setViewStart(Math.max(0, Math.min(maxStart, panningRef.current.startViewStart + timeDelta)));
+      return;
+    }
+    if (draggingMarkerRef.current !== null) {
+      const t = Math.max(0, getTimeFromX(e.clientX));
+      setMarkers((prev) => {
+        const updated = [...prev];
+        updated[draggingMarkerRef.current!] = { ...updated[draggingMarkerRef.current!], time: t };
+        return updated;
+      });
+      return;
+    }
     setSelEnd(getTimeFromX(e.clientX));
-  }, [getTimeFromX]);
+  }, [getTimeFromX, viewDuration, audioBuffer]);
 
   const handleMouseUp = useCallback(() => {
+    if (panningRef.current) {
+      panningRef.current = null;
+    }
+    if (draggingMarkerRef.current !== null) {
+      setMarkers((prev) => {
+        const sorted = [...prev].sort((a, b) => a.time - b.time);
+        return sorted.map((m, i) => ({ ...m, label: `${i + 1}` }));
+      });
+      draggingMarkerRef.current = null;
+    }
     isDraggingRef.current = false;
   }, []);
 
@@ -540,6 +589,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onDoubleClick={handleDoubleClick}
+            onAuxClick={(e) => e.preventDefault()}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-zinc-600">
@@ -565,6 +615,17 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
               ({Math.abs(selEnd - selStart).toFixed(3)}s)
             </span>
           )}
+          {/* Mini overview bar showing viewport position within full audio */}
+          <div className="flex-1" />
+          <div className="w-32 h-2 bg-zinc-800 rounded-full relative overflow-hidden" title="전체 오디오 내 현재 뷰포트 위치">
+            <div
+              className="absolute top-0 h-full bg-blue-500/50 rounded-full"
+              style={{
+                left: `${(viewStart / audioBuffer.duration) * 100}%`,
+                width: `${Math.max(2, (viewDuration / audioBuffer.duration) * 100)}%`,
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

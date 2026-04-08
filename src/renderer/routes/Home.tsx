@@ -296,8 +296,8 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
             {chart.songInfo?.artist && (
               <p className="text-lg text-zinc-400 mb-4">{chart.songInfo.artist}</p>
             )}
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              <StatCard label="Key Mode" value={chart.keyMode} />
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <StatCard label="키 모드" value={chart.keyMode} />
               <StatCard
                 label="BPM"
                 value={
@@ -306,11 +306,17 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                     : `${chart.bpm.min} - ${chart.bpm.max}`
                 }
               />
-              <StatCard label="Total Notes" value={phase === 'ready' ? chart.stats.total.toString() : '...'} loading={phase === 'phase1'} />
-              <StatCard label="Long Notes" value={phase === 'ready' ? chart.stats.longNotes.toString() : '...'} loading={phase === 'phase1'} />
-              <StatCard label="Scratch" value={phase === 'ready' ? chart.stats.scratch.toString() : '...'} loading={phase === 'phase1'} />
-              <StatCard label="Keysounds" value={phase === 'ready' ? Object.keys(chart.keysounds).length.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label="총 노트" value={phase === 'ready' ? chart.stats.total.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label="롱노트" value={phase === 'ready' ? chart.stats.longNotes.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label="스크래치" value={phase === 'ready' ? chart.stats.scratch.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label="키음" value={phase === 'ready' ? Object.keys(chart.keysounds).length.toString() : '...'} loading={phase === 'phase1'} />
             </div>
+            {phase === 'ready' && (chart.stats.landmines > 0 || chart.stats.invisible > 0) && (
+              <div className="flex gap-4 mb-4 text-xs text-zinc-500">
+                {chart.stats.landmines > 0 && <span>지뢰: {chart.stats.landmines}</span>}
+                {chart.stats.invisible > 0 && <span>인비저블: {chart.stats.invisible}</span>}
+              </div>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={onPlay}
@@ -327,9 +333,11 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                 Edit
               </button>
             </div>
-            {chart.songInfo?.genre && (
-              <div className="mt-6 text-sm text-zinc-500">
-                Genre: {chart.songInfo.genre}
+            {(chart.songInfo?.genre || currentFile) && (
+              <div className="mt-4 space-y-1 text-xs text-zinc-500">
+                {chart.songInfo?.genre && <div>장르: {chart.songInfo.genre}</div>}
+                <div className="truncate" title={currentFile.path}>파일: {currentFile.name}</div>
+                <div className="truncate text-zinc-600" title={currentFile.folderPath}>{currentFile.folderPath}</div>
               </div>
             )}
           </div>

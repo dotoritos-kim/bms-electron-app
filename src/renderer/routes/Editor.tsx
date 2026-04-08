@@ -592,13 +592,21 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
   // --- Note hover preview ---
   const lastHoverKeysoundRef = useRef<string | null>(null);
+  const [hoverKeysoundInfo, setHoverKeysoundInfo] = useState<string | null>(null);
   const handleNoteHover = useCallback((keysoundId: string | null) => {
     if (keysoundId === lastHoverKeysoundRef.current) return;
     lastHoverKeysoundRef.current = keysoundId;
+    // Show keysound info overlay
+    if (keysoundId && keysoundId !== '00') {
+      const filename = keysoundRecord[keysoundId] || keysoundRecord[keysoundId.toLowerCase()] || '';
+      setHoverKeysoundInfo(`${keysoundId}: ${filename}`);
+    } else {
+      setHoverKeysoundInfo(null);
+    }
     if (keysoundId && audioPreloaderRef.current) {
       playPreview(keysoundId);
     }
-  }, [playPreview]);
+  }, [playPreview, keysoundRecord]);
 
   // --- Pattern apply/save ---
   const lastPatternInsertRef = useRef<{ patternId: string; beat: number } | null>(null);
@@ -871,6 +879,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         case 'selectAll': store.selectAll(); break;
         case 'delete': store.deleteNotes(ids); break;
         case 'escape':
+          // Stop any playing keysound preview
+          if (lastPreviewTrackRef.current && audioPreloaderRef.current) {
+            audioPreloaderRef.current.stopAudio(lastPreviewTrackRef.current);
+            lastPreviewTrackRef.current = null;
+          }
           if (s.inputDialog) store.setInputDialog(null);
           else if (activeModal) setActiveModal(null);
           else if (activeOverlay) setActiveOverlay(null);
@@ -1607,8 +1620,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
           {/* Playback Controls */}
           <div className="flex items-center gap-2 px-3 py-1.5 border-b border-zinc-800 bg-muted/30 shrink-0 text-xs" data-testid="playback-controls">
-            {audioPhase === 'idle' && chart && Object.keys(chart.keysounds).length > 0 ? (
-              // Auto-load pending — show spinner to prevent button flicker
+            {audioPhase === 'idle' && (!chart || Object.keys(chart.keysounds).length > 0) ? (
+              // Chart not loaded yet or auto-load pending — show spinner to prevent button flicker
               <AudioLoadingProgress />
             ) : audioPhase === 'idle' ? (
               <button onClick={loadAudio} className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors text-zinc-300">
@@ -1684,7 +1697,13 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             onClearSelection={store.clearSelection}
             onChangeType={store.changeNoteType}
           >
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-hidden relative">
+              {/* Keysound hover info overlay */}
+              {hoverKeysoundInfo && (
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none px-3 py-1 bg-zinc-900/90 border border-zinc-700 rounded text-xs text-zinc-300 font-mono shadow-lg">
+                  {hoverKeysoundInfo}
+                </div>
+              )}
               {chart && (
                 <NoteChartEditorBridge
                   notes={notes}

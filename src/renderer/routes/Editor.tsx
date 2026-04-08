@@ -1121,10 +1121,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     const ctx = audioPreloaderRef.current.context;
     if (ctx?.state === 'suspended') await ctx.resume();
 
-    // Create scheduler if needed (first play or after notes change)
-    if (!audioSchedulerRef.current) {
-      createAudioScheduler();
-    }
+    // Always recreate scheduler to ensure latest notes are used
+    createAudioScheduler();
 
     isPlayingRef.current = true;
     speedRef.current = playbackSpeed;

@@ -287,7 +287,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       return;
     }
     setSelStart(t);
-    setSelEnd(t);
+    setSelEnd(null); // Don't set selEnd yet — only on drag
     isDraggingRef.current = true;
   }, [getTimeFromX, markers, viewDuration, viewStart]);
 

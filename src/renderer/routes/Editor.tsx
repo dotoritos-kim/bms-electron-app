@@ -1535,6 +1535,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       {/* ===== MAIN 3-COLUMN LAYOUT ===== */}
       <div className="flex flex-1 min-h-0">
         {/* --- LEFT: Keysound / Pattern Panel --- */}
+        {!showLeftPanel && (
+          <button onClick={store.toggleLeftPanel} className="shrink-0 w-5 flex items-center justify-center bg-zinc-900 border-r border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-500 hover:text-zinc-300" title="키음 패널 열기">
+            <PanelLeftOpen className="h-3.5 w-3.5" />
+          </button>
+        )}
         {showLeftPanel && (
           <>
           <div style={{ width: leftPanelWidth }} className="border-r border-zinc-800 flex flex-col bg-zinc-900 shrink-0 overflow-hidden" data-testid="left-panel">
@@ -1802,6 +1807,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         )}
 
         {/* --- RIGHT: Header Editor + Note Info + Minimap --- */}
+        {!showRightPanel && (
+          <button onClick={store.toggleRightPanel} className="shrink-0 w-5 flex items-center justify-center bg-zinc-900 border-l border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-500 hover:text-zinc-300" title="정보 패널 열기">
+            <PanelRightOpen className="h-3.5 w-3.5" />
+          </button>
+        )}
         {showRightPanel && (
           <>
           <div
@@ -2239,6 +2249,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       {/* ===== PLAY TEST OVERLAY ===== */}
       {activeOverlay === 'playTest' && (
         <div className="fixed inset-0 z-[60] bg-zinc-950">
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-4 py-1.5 bg-zinc-900/90 border border-zinc-700 rounded-full text-xs text-zinc-400 shadow-lg">
+            <span>플레이 테스트</span>
+            <span className="text-zinc-600">|</span>
+            <button onClick={() => setActiveOverlay(null)} className="text-blue-400 hover:text-blue-300">편집으로 돌아가기 (Esc)</button>
+          </div>
           <Player
             file={file}
             onBack={() => setActiveOverlay(null)}

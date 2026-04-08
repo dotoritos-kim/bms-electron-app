@@ -207,31 +207,35 @@ export function App() {
               </button>
               {navConfirm.onSave && (
                 <button
-                  onClick={async () => {
-                    try {
-                      const result = await navConfirm.onSave!();
-                      if (result === false) return; // Save failed — stay on page
-                      const target = navConfirm.targetRoute;
-                      setNavConfirm(null);
-                      setRoute(target);
-                    } catch (err) {
-                      console.error('[Nav] Save failed:', err);
-                    }
+                  onClick={() => {
+                    const target = navConfirm.targetRoute;
+                    setNavConfirm(null);
+                    setRoute(target);
                   }}
-                  className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                  className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
                 >
-                  저장 후 이동
+                  저장 안 함
                 </button>
               )}
               <button
-                onClick={() => {
+                onClick={navConfirm.onSave ? async () => {
+                  try {
+                    const result = await navConfirm.onSave!();
+                    if (result === false) return;
+                    const target = navConfirm.targetRoute;
+                    setNavConfirm(null);
+                    setRoute(target);
+                  } catch (err) {
+                    console.error('[Nav] Save failed:', err);
+                  }
+                } : () => {
                   const target = navConfirm.targetRoute;
                   setNavConfirm(null);
                   setRoute(target);
                 }}
-                className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
+                className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
               >
-                {navConfirm.onSave ? '저장 안 함' : '나가기'}
+                {navConfirm.onSave ? '저장 후 이동' : '나가기'}
               </button>
             </div>
           </div>

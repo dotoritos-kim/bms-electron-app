@@ -386,6 +386,7 @@ interface EditorState {
   requestBpmEdit: (bpmChange: BMSBpmChange) => void;
   requestStopAdd: (beat: number) => void;
   requestStopEdit: (stopEvent: BMSStopEvent) => void;
+  deleteStop: (stopEvent: BMSStopEvent) => void;
   requestTimeSignatureEdit: (measure: number) => void;
   submitInputDialog: (value: string) => void;
 
@@ -1358,6 +1359,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   requestBpmEdit: (bpmChange) => set({ inputDialog: { type: 'bpm-edit', defaultValue: String(bpmChange.bpm), bpmChange } }),
   requestStopAdd: (beat) => set({ inputDialog: { type: 'stop-add', defaultValue: '48', beat } }),
   requestStopEdit: (stopEvent) => set({ inputDialog: { type: 'stop-edit', defaultValue: String(stopEvent.duration), stopEvent } }),
+  deleteStop: (stopEvent) => {
+    const s = get();
+    s.pushUndo('Delete STOP');
+    set({
+      stopEvents: s.stopEvents.filter(
+        (ev) => !(ev.measure === stopEvent.measure && ev.fraction === stopEvent.fraction),
+      ),
+      hasUnsavedChanges: true,
+    });
+  },
   requestTimeSignatureEdit: (measure) => {
     const s = get();
     const currentSize = s.timeSignatures.get(measure) ?? 1.0;
@@ -1437,14 +1448,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   updateHeadersWithWavDefs: (newWavDefs) => {
-    set((s) => {
-      if (!s.headers) return {};
-      const newWav = new Map(s.headers.wav);
-      for (const [id, filename] of Object.entries(newWavDefs)) {
-        newWav.set(id, filename);
-      }
-      return { headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true };
-    });
+    const s = get();
+    if (!s.headers) return;
+    s.pushUndo('Import keysounds');
+    const newWav = new Map(s.headers.wav);
+    for (const [id, filename] of Object.entries(newWavDefs)) {
+      newWav.set(id, filename);
+    }
+    set({ headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true });
   },
 
   setCustomHeader: (key, value) => {
@@ -1709,6 +1720,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const converter = getConverter(get);
     const startColIdx = laneIds.indexOf(startColumn);
     const baseCol = startColIdx >= 0 ? startColIdx : 0;
+    // Build set of existing note positions for duplicate prevention
+    const existingPositions = new Set<string>();
+    for (const n of s.notes) {
+      if (n.column) existingPositions.add(`${n.beat.toFixed(6)}:${n.column}`);
+    }
     let nextId = s.nextNoteId;
     const newNotes: EditableBMSNote[] = [];
     for (const pn of pattern.notes) {
@@ -1716,13 +1732,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (colIdx < 0 || colIdx >= laneIds.length) continue;
       const beat = startBeat + pn.beatOffset;
       if (beat < 0) continue;
+      const col = laneIds[colIdx];
+      const posKey = `${beat.toFixed(6)}:${col}`;
+      if (existingPositions.has(posKey)) continue; // Skip duplicates
+      existingPositions.add(posKey);
       const synced = syncFromBeat(beat, converter);
       const endBeat = pn.endBeatOffset !== undefined ? startBeat + pn.endBeatOffset : undefined;
       const endTick = endBeat !== undefined ? beatToTick(endBeat) : undefined;
       newNotes.push({
         id: `note-${nextId++}`,
         ...synced,
-        column: laneIds[colIdx],
+        column: col,
         noteType: pn.noteType || 'playable',
         keysound,
         channel: '',

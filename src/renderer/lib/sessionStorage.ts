@@ -30,25 +30,20 @@ export function loadRecentFiles(): RecentFileEntry[] {
 
 export function addRecentFile(file: CurrentFile): RecentFileEntry[] {
   const recent = loadRecentFiles();
-  // Remove existing entry for same path
-  const filtered = recent.filter((r) => r.path !== file.path);
-  const entry: RecentFileEntry = {
-    path: file.path,
-    name: file.name,
-    folderPath: file.folderPath,
-    lastOpened: Date.now(),
-  };
-  // Preserve pinned status
-  const old = recent.find((r) => r.path === file.path);
-  if (old?.pinned) entry.pinned = true;
-  // Add to front
-  const updated = [entry, ...filtered];
-  // Trim non-pinned entries to MAX_RECENT
-  const pinned = updated.filter((r) => r.pinned);
-  const unpinned = updated.filter((r) => !r.pinned);
-  const result = [...pinned, ...unpinned].slice(0, MAX_RECENT + pinned.length);
-  saveRecentFiles(result);
-  return result;
+  const existing = recent.find((r) => r.path === file.path);
+  const entry: RecentFileEntry = existing
+    ? { ...existing, name: file.name, folderPath: file.folderPath, lastOpened: Date.now() }
+    : { path: file.path, name: file.name, folderPath: file.folderPath, lastOpened: Date.now() };
+  // Remove old entry if exists, then add to front of unpinned section (LRU)
+  const rest = recent.filter((r) => r.path !== file.path);
+  const pinned = rest.filter((r) => r.pinned);
+  const unpinned = rest.filter((r) => !r.pinned);
+  const result = entry.pinned
+    ? [entry, ...pinned, ...unpinned]
+    : [...pinned, entry, ...unpinned];
+  const trimmed = result.slice(0, MAX_RECENT + pinned.filter((r) => r.path !== file.path).length);
+  saveRecentFiles(trimmed);
+  return trimmed;
 }
 
 export function removeRecentFile(path: string): RecentFileEntry[] {

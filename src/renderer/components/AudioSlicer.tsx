@@ -81,6 +81,8 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   const [isPlaying, setIsPlaying] = useState(false);
   const [slicing, setSlicing] = useState(false);
   const [onsetThreshold, setOnsetThreshold] = useState(0.15);
+  // isDragging removed — use isDraggingRef only to avoid toolbar re-render flicker
+  const [autoSliceMsg, setAutoSliceMsg] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -160,7 +162,12 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     if (!audioBuffer) return;
     const channelData = audioBuffer.getChannelData(0);
     const onsets = detectOnsets(channelData, audioBuffer.sampleRate, onsetThreshold);
-    setMarkers(onsets.map((t, i) => ({ time: t, label: `${i + 1}` })));
+    if (onsets.length === 0) {
+      setAutoSliceMsg('감지된 구간이 없습니다. 감도 슬라이더를 올려 다시 시도해보세요.');
+    } else {
+      setMarkers(onsets.map((t, i) => ({ time: t, label: `${i + 1}` })));
+      setAutoSliceMsg(`${onsets.length}개 구간이 감지되었습니다.`);
+    }
   }, [audioBuffer, onsetThreshold]);
 
   // Draw waveform
@@ -434,7 +441,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handlePlay} className="flex items-center gap-1 px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300">
               {isPlaying ? <Square className="h-3.5 w-3.5 text-red-400" /> : <Play className="h-3.5 w-3.5 text-green-400" />}
-              {isPlaying ? '정지' : selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.001 ? '선택 구간 재생' : '재생'}
+              {isPlaying ? '정지' : (selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.01) ? '선택 구간 재생' : '재생'}
             </button>
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handleZoomIn} className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300">
@@ -471,6 +478,11 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
               />
               <span className="text-zinc-400 font-mono w-8">{onsetThreshold.toFixed(2)}</span>
             </label>
+            {autoSliceMsg && (
+              <span className={`text-xs px-2 py-1 rounded font-medium ${autoSliceMsg.startsWith('감지된') ? 'text-yellow-300 bg-yellow-800/60 border border-yellow-600/50 animate-pulse' : 'text-green-400 bg-green-950/40'}`}>
+                {autoSliceMsg}
+              </span>
+            )}
             <div className="flex-1" />
             <span className="text-zinc-500">{markers.length}개 마커 → {markers.length + 1}개 슬라이스</span>
             <button

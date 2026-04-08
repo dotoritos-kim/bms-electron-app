@@ -434,19 +434,27 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const autoLoadedRef = useRef(false);
   const loadAudioRef = useRef<(() => Promise<void>) | null>(null);
 
-  // WAV definitions
+  // WAV definitions — prefer store headers.wav (reflects uploads/edits) over original chart.keysounds
   const wavDefinitions = useMemo(() => {
-    if (!chart) return new Map<string, string>();
     const map = new Map<string, string>();
-    for (const [id, filename] of Object.entries(chart.keysounds)) {
+    const source = headers?.wav.size ? headers.wav : (chart ? new Map(Object.entries(chart.keysounds)) : null);
+    if (!source) return map;
+    for (const [id, filename] of source.entries()) {
       map.set(id, filename);
       const upper = id.toUpperCase();
       if (upper !== id) map.set(upper, filename);
     }
     return map;
-  }, [chart]);
+  }, [headers, chart]);
 
-  const keysoundRecord = useMemo(() => chart?.keysounds || {}, [chart]);
+  const keysoundRecord = useMemo<Record<string, string>>(() => {
+    if (headers?.wav.size) {
+      const rec: Record<string, string> = {};
+      headers.wav.forEach((v, k) => { rec[k] = v; });
+      return rec;
+    }
+    return chart?.keysounds || {};
+  }, [headers, chart]);
 
   // Minimap density data — precompute per-measure density + color for Minimap overlay
   const minimapDensityData = useMemo((): MinimapDensityEntry[] | undefined => {
@@ -593,9 +601,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   }, [playPreview]);
 
   // --- Pattern apply/save ---
+  const lastPatternInsertRef = useRef<{ patternId: string; beat: number } | null>(null);
   const handleApplyPattern = useCallback((pattern: PatternTemplate) => {
     const s = useEditorStore.getState();
-    store.applyPattern(pattern, laneIds, s.currentBeat, laneIds[0] || '', s.currentKeysound);
+    const beat = s.currentBeat;
+    // Prevent duplicate insertion at the same beat (accidental double-click guard)
+    const last = lastPatternInsertRef.current;
+    if (last && last.patternId === pattern.id && Math.abs(last.beat - beat) < 0.01) return;
+    lastPatternInsertRef.current = { patternId: pattern.id, beat };
+    store.applyPattern(pattern, laneIds, beat, laneIds[0] || '', s.currentKeysound);
   }, [laneIds]);
 
   const handleSaveSelectionAsPattern = useCallback(() => {
@@ -1593,7 +1607,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
           {/* Playback Controls */}
           <div className="flex items-center gap-2 px-3 py-1.5 border-b border-zinc-800 bg-muted/30 shrink-0 text-xs" data-testid="playback-controls">
-            {audioPhase === 'idle' ? (
+            {audioPhase === 'idle' && chart && Object.keys(chart.keysounds).length > 0 ? (
+              // Auto-load pending — show spinner to prevent button flicker
+              <AudioLoadingProgress />
+            ) : audioPhase === 'idle' ? (
               <button onClick={loadAudio} className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors text-zinc-300">
                 <Volume2 className="h-3.5 w-3.5" />
                 오디오 로드
@@ -1667,7 +1684,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             onClearSelection={store.clearSelection}
             onChangeType={store.changeNoteType}
           >
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
               {chart && (
                 <NoteChartEditorBridge
                   notes={notes}
@@ -1697,6 +1714,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   onBpmEditRequest={store.requestBpmEdit}
                   onStopRequest={store.requestStopAdd}
                   onStopEditRequest={store.requestStopEdit}
+                  onStopDelete={store.deleteStop}
                   onKeysoundAssign={handleKeysoundAssign}
                   onDropKeysound={handleDropKeysound}
                   onNoteHover={handleNoteHover}
@@ -1996,13 +2014,13 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <div className="flex justify-end gap-2">
           <button onClick={() => store.setShowBackConfirm(false)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
           <button
-            onClick={async () => { const ok = await handleSaveWithCleanup(); if (!ok) return; store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
-            className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-          >저장 후 나가기</button>
-          <button
             onClick={() => { store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
             className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
           >저장 안 함</button>
+          <button
+            onClick={async () => { const ok = await handleSaveWithCleanup(); if (!ok) return; store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
+            className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+          >저장 후 나가기</button>
         </div>
       </AccessibleDialog>
 

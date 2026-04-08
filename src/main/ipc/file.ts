@@ -242,6 +242,7 @@ export function registerFileIpc(): void {
 
         const lines: string[] = [
           `#PLAYER ${player}`,
+          `#KEYMODE ${opts.keyMode}`,
           `#GENRE `,
           `#TITLE ${opts.title || 'Untitled'}`,
           `#ARTIST ${opts.artist || ''}`,

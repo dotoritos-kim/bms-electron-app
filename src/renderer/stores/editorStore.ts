@@ -526,7 +526,7 @@ const initialState = {
   loopA: null as number | null,
   loopB: null as number | null,
   metronomeEnabled: false,
-  noteHeight: 2,
+  noteHeight: 4,
   inputDialog: null as InputDialog | null,
   showLeftPanel: true,
   showRightPanel: true,
@@ -673,6 +673,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   // --- Notes ---
   addNote: (note) => {
+    if (note.beat < 0) return; // Prevent placing notes before measure 0
     const s = get();
     const id = `note-${s.nextNoteId}`;
     const converter = getConverter(get);

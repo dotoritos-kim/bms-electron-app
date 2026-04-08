@@ -276,6 +276,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [activeOverlay, setActiveOverlay] = useState<OverlayType>(null);
   const [leftPanelTab, setLeftPanelTab] = useState<'keysound' | 'pattern'>('keysound');
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const toggleSection = useCallback((id: string) => setCollapsedSections((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; }), []);
   const [keyBindings, setKeyBindings] = useState<KeyBinding[]>(() => loadKeyBindings());
   const actionMapRef = useRef(buildActionMap(keyBindings));
   const [midiMapping, setMidiMapping] = useState<MidiMapping>(() => loadMidiMapping() || createDefaultMapping([]));
@@ -1860,7 +1862,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               />
             </div>
           )}
-          <div className="border-b border-zinc-800 shrink-0 max-h-48 overflow-y-auto overflow-x-hidden">
+          <div className="border-b border-zinc-800 shrink-0">
+            <button onClick={() => toggleSection('timeline')} className="w-full flex items-center justify-between px-3 py-1 text-[10px] font-semibold text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors">
+              <span>키음 타임라인</span><span>{collapsedSections.has('timeline') ? '▸' : '▾'}</span>
+            </button>
+          </div>
+          {!collapsedSections.has('timeline') && <div className="border-b border-zinc-800 shrink-0 max-h-48 overflow-y-auto overflow-x-hidden">
             <BeatKeysoundPanelBridge
               notes={notes}
               wavDefinitions={wavDefinitions}
@@ -1876,26 +1883,34 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             />
           </div>
           {/* Chart Statistics */}
-          <div className="border-b border-zinc-800 shrink-0 px-3 py-2">
-            <h3 className="text-xs font-semibold text-zinc-400 mb-1.5">통계</h3>
-            <ChartStatsView notes={notes} bpm={editedBaseBpm} totalBeats={totalBeats} />
+          <div className="border-b border-zinc-800 shrink-0">
+            <button onClick={() => toggleSection('stats')} className="w-full flex items-center justify-between px-3 py-1 text-[10px] font-semibold text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors">
+              <span>통계</span><span>{collapsedSections.has('stats') ? '▸' : '▾'}</span>
+            </button>
+            {!collapsedSections.has('stats') && (
+              <div className="px-3 py-2">
+                <ChartStatsView notes={notes} bpm={editedBaseBpm} totalBeats={totalBeats} />
+              </div>
+            )}
           </div>
           {/* Layer Panel */}
           <div className="border-b border-zinc-800 shrink-0">
             <div className="px-3 py-1.5 flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-zinc-400">레이어</h3>
+              <button onClick={() => toggleSection('layers')} className="text-xs font-semibold text-zinc-400 hover:text-zinc-300 flex items-center gap-1"><span>레이어</span><span className="text-[10px]">{collapsedSections.has('layers') ? '▸' : '▾'}</span></button>
               <button
                 onClick={store.resetLayerConfig}
                 className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
                 title="레이어 설정 초기화"
               >초기화</button>
             </div>
-            <LayerPanel
-              layerConfig={layerConfig}
-              onVisibleToggle={(layer) => store.setLayerVisible(layer, !layerConfig[layer].visible)}
-              onLockToggle={(layer) => store.setLayerLocked(layer, !layerConfig[layer].locked)}
-              onOpacityChange={(layer, opacity) => store.setLayerOpacity(layer, opacity)}
-            />
+            {!collapsedSections.has('layers') && (
+              <LayerPanel
+                layerConfig={layerConfig}
+                onVisibleToggle={(layer) => store.setLayerVisible(layer, !layerConfig[layer].visible)}
+                onLockToggle={(layer) => store.setLayerLocked(layer, !layerConfig[layer].locked)}
+                onOpacityChange={(layer, opacity) => store.setLayerOpacity(layer, opacity)}
+              />
+            )}
           </div>
           <div className={headerCollapsed ? 'shrink-0' : 'flex-1 min-h-0 flex flex-col'}>
             <button

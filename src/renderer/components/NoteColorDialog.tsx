@@ -44,14 +44,14 @@ function ColorRow({ label, description, defaultColor, value, onChange }: ColorRo
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-zinc-200">{label}</span>
           {isCustom && (
-            <span className="text-[9px] bg-blue-900/60 text-blue-300 px-1 py-0.5 rounded">커스텀</span>
+            <span className="text-xs bg-blue-900/60 text-blue-300 px-1 py-0.5 rounded">커스텀</span>
           )}
         </div>
-        <div className="text-[10px] text-zinc-500">{description}</div>
+        <div className="text-xs text-zinc-500">{description}</div>
       </div>
 
       {/* Hex display */}
-      <span className="text-[10px] font-mono text-zinc-400 w-16 text-right">{active}</span>
+      <span className="text-xs font-mono text-zinc-400 w-16 text-right">{active}</span>
 
       {/* Reset button */}
       {isCustom && (

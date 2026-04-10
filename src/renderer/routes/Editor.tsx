@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Wrench, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap, Maximize2, X as XIcon } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Settings2, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap, Maximize2, X as XIcon } from 'lucide-react';
 // Removed react-resizable-panels — using custom resize handles instead
 import {
   NoteChartEditor,
@@ -189,21 +189,25 @@ function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChang
           <div key={layer} className="flex items-center gap-1.5">
             <button
               title={s.visible ? '숨기기' : '표시'}
+              aria-label={s.visible ? `${LAYER_LABELS[layer]} 숨기기` : `${LAYER_LABELS[layer]} 표시`}
+              aria-pressed={s.visible}
               onClick={() => onVisibleToggle(layer)}
-              className="p-0.5 rounded hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100 shrink-0"
+              className="p-2 rounded hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100 shrink-0"
               data-testid={`layer-visible-${layer}`}
             >
               {s.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5 text-zinc-600" />}
             </button>
             <button
               title={s.locked ? '잠금 해제' : '잠금'}
+              aria-label={s.locked ? `${LAYER_LABELS[layer]} 잠금 해제` : `${LAYER_LABELS[layer]} 잠금`}
+              aria-pressed={s.locked}
               onClick={() => onLockToggle(layer)}
-              className="p-0.5 rounded hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100 shrink-0"
+              className="p-2 rounded hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100 shrink-0"
               data-testid={`layer-lock-${layer}`}
             >
               {s.locked ? <Lock className="h-3.5 w-3.5 text-yellow-400" /> : <Unlock className="h-3.5 w-3.5" />}
             </button>
-            <span className="text-[10px] text-zinc-400 w-14 truncate shrink-0">{LAYER_LABELS[layer]}</span>
+            <span className="text-xs text-zinc-400 w-14 truncate shrink-0">{LAYER_LABELS[layer]}</span>
             <input
               type="range"
               min={0}
@@ -211,7 +215,7 @@ function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChang
               step={0.05}
               value={s.opacity}
               onChange={(e) => onOpacityChange(layer, parseFloat(e.target.value))}
-              className="flex-1 h-1 accent-blue-500 cursor-pointer"
+              className="flex-1 min-w-0 h-1 accent-blue-500 cursor-pointer"
               title={`불투명도 ${Math.round(s.opacity * 100)}%`}
               data-testid={`layer-opacity-${layer}`}
             />
@@ -544,7 +548,16 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     return getLaneIds(keyMode);
   }, [keyMode]);
 
-  const totalBeats = chart?.totalBeats || 100;
+  const totalBeats = useMemo(() => {
+    const chartMax = chart?.totalBeats || 100;
+    if (notes.length === 0) return chartMax;
+    let max = 0;
+    for (const n of notes) {
+      const b = n.endBeat ?? n.beat;
+      if (b > max) max = b;
+    }
+    return Math.max(chartMax, Math.ceil(max) + 8);
+  }, [notes, chart?.totalBeats]);
 
   // Edited BPM
   const editedBaseBpm = useMemo(() => {
@@ -1362,7 +1375,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           <div className="text-xs text-red-300/80 bg-red-950/30 border border-red-900/50 rounded px-3 py-1.5 mb-3 break-all select-all max-h-24 overflow-y-auto">{error}</div>
           <button
             onClick={() => navigator.clipboard.writeText(`파일: ${file.path}\n오류: ${error}`)}
-            className="text-[10px] text-zinc-500 hover:text-zinc-300 underline"
+            className="text-xs text-zinc-400 hover:text-zinc-300 underline"
           >
             오류 정보 복사
           </button>
@@ -1402,7 +1415,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     <div className="h-full flex flex-col bg-zinc-950 overflow-hidden">
       {/* ===== HEADER BAR ===== */}
       <div className="flex items-center gap-3 px-4 py-2 border-b border-zinc-800 bg-zinc-900 shrink-0">
-        <button onClick={handleBack} className="p-1 rounded hover:bg-zinc-800 transition-colors" data-testid="back-btn">
+        <button onClick={handleBack} className="p-2 rounded hover:bg-zinc-800 transition-colors" data-testid="back-btn">
           <ArrowLeft className="h-4 w-4" />
         </button>
         <span className="text-sm font-medium truncate">{chart?.songInfo?.title || file.name}</span>
@@ -1410,10 +1423,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <button
           onClick={handleSaveWithCleanup}
           disabled={!hasUnsavedChanges}
-          className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded transition-all ${
             hasUnsavedChanges
               ? 'bg-yellow-500 text-yellow-950 font-semibold hover:bg-yellow-400 shadow-sm shadow-yellow-500/30 animate-[pulse_2s_ease-in-out_1]'
-              : 'bg-zinc-800 text-zinc-500'
+              : 'bg-zinc-800 text-zinc-400'
           }`}
           title="저장 (Ctrl+S)"
           data-testid="save-btn"
@@ -1423,56 +1436,37 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         </button>
         <div className="flex-1" />
 
-        {/* === Group: View === */}
-        <button onClick={store.toggleLeftPanel} className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="키사운드 패널 토글" data-testid="toggle-left-panel">
-          {showLeftPanel ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-        </button>
-        <button onClick={store.toggleRightPanel} className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="정보 패널 토글" data-testid="toggle-right-panel">
-          {showRightPanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
-        </button>
-        <button onClick={store.toggleMinimap} className={`p-1 rounded hover:bg-zinc-800 transition-colors ${showMinimap ? 'text-zinc-200' : 'text-zinc-400'}`} title="미니맵 토글" data-testid="toggle-minimap">
-          <LucideMap className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff')}
-          className={`p-1 rounded hover:bg-zinc-800 transition-colors ${activeOverlay === 'diff' ? 'text-orange-400' : 'text-zinc-400'}`}
-          title="변경사항 비교 (Ctrl+D)"
-          data-testid="diff-btn"
-        >
-          <GitCompare className="h-4 w-4" />
-        </button>
+        {/* === 마디 삽입/삭제 — 헤더에 직접 노출 === */}
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={() => openModal('measureInsert')}
+            title="마디 삽입 (Ctrl+Shift+I)"
+            className="flex items-center gap-0.5 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors"
+          >
+            <span className="font-bold text-zinc-300">+</span>마디
+          </button>
+          <button
+            onClick={() => openModal('measureDelete')}
+            title="마디 삭제 (Ctrl+Shift+D)"
+            className="flex items-center gap-0.5 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors"
+          >
+            <span className="font-bold text-zinc-300">−</span>마디
+          </button>
+        </div>
 
-        <div className="w-px h-4 bg-zinc-700" />
+        <div className="w-px h-5 bg-zinc-700" />
 
-        {/* === Group: Playback === */}
-        <button
-          onClick={() => openModal('bpmTap')}
-          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400"
-          title="BPM 탭"
-          data-testid="bpm-btn"
-        >
-          <Timer className="h-4 w-4" />
-        </button>
-        <button
-          onClick={handlePlayTest}
-          className="p-1 rounded hover:bg-zinc-800 transition-colors text-zinc-400"
-          title="플레이 테스트 (F5)"
-          data-testid="play-test-btn"
-        >
-          <PlayCircle className="h-4 w-4" />
-        </button>
-
-        <div className="w-px h-4 bg-zinc-700" />
-
-        {/* === Group: Tools (dropdown) === */}
+        {/* === Group: Settings (dropdown) === */}
         <div className="relative" ref={toolMenuRef}>
           <button
             onClick={() => setShowToolMenu(!showToolMenu)}
-            className={`flex items-center gap-1 px-2 py-1 rounded hover:bg-zinc-800 transition-colors text-xs ${showToolMenu ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-400'}`}
-            title="도구 메뉴"
+            aria-expanded={showToolMenu}
+            aria-haspopup="menu"
+            className={`flex items-center gap-1 px-2 py-1.5 rounded hover:bg-zinc-800 transition-colors text-xs ${showToolMenu ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-400'}`}
+            title="설정 메뉴"
           >
-            <Wrench className="h-3.5 w-3.5" />
-            <span>도구</span>
+            <Settings2 className="h-3.5 w-3.5" />
+            <span>설정</span>
             <ChevronDown className="h-3 w-3" />
           </button>
           {showToolMenu && (
@@ -1500,24 +1494,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               >
                 <Piano className="h-3.5 w-3.5 text-green-400" />
                 MIDI 설정
-                {midiRecordingMode !== 'off' && <span className="ml-auto text-[9px] bg-green-900/50 px-1 rounded">ON</span>}
-              </button>
-              <div className="h-px bg-zinc-800 my-1" />
-              <button
-                onClick={() => { openModal('measureInsert'); setShowToolMenu(false); }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
-              >
-                <span className="h-3.5 w-3.5 text-zinc-400 text-center font-bold text-[10px]">+</span>
-                마디 삽입
-                <span className="ml-auto text-[9px] text-zinc-500">Ctrl+Shift+I</span>
-              </button>
-              <button
-                onClick={() => { openModal('measureDelete'); setShowToolMenu(false); }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
-              >
-                <span className="h-3.5 w-3.5 text-zinc-400 text-center font-bold text-[10px]">−</span>
-                마디 삭제
-                <span className="ml-auto text-[9px] text-zinc-500">Ctrl+Shift+D</span>
+                {midiRecordingMode !== 'off' && <span className="ml-auto text-xs bg-green-900/50 px-1 rounded">ON</span>}
               </button>
               <div className="h-px bg-zinc-800 my-1" />
               <button
@@ -1545,7 +1522,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       <div className="flex flex-1 min-h-0">
         {/* --- LEFT: Keysound / Pattern Panel --- */}
         {!showLeftPanel && (
-          <button onClick={store.toggleLeftPanel} className="shrink-0 w-5 flex items-center justify-center bg-zinc-900 border-r border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-500 hover:text-zinc-300" title="키음 패널 열기">
+          <button onClick={store.toggleLeftPanel} className="shrink-0 w-6 flex items-center justify-center bg-zinc-900 border-r border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200" title="키음 패널 열기">
             <PanelLeftOpen className="h-3.5 w-3.5" />
           </button>
         )}
@@ -1555,16 +1532,16 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             <div className="flex border-b border-zinc-800 shrink-0">
               <button
                 onClick={() => setLeftPanelTab('keysound')}
-                className={`flex-1 px-2 py-1.5 text-[10px] font-semibold transition-colors ${
-                  leftPanelTab === 'keysound' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-zinc-500 hover:text-zinc-300'
+                className={`flex-1 px-2 py-1.5 text-xs font-semibold transition-colors ${
+                  leftPanelTab === 'keysound' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 키음
               </button>
               <button
                 onClick={() => setLeftPanelTab('pattern')}
-                className={`flex-1 px-2 py-1.5 text-[10px] font-semibold transition-colors ${
-                  leftPanelTab === 'pattern' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-zinc-500 hover:text-zinc-300'
+                className={`flex-1 px-2 py-1.5 text-xs font-semibold transition-colors ${
+                  leftPanelTab === 'pattern' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 패턴
@@ -1663,44 +1640,41 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               <AudioLoadingProgress />
             ) : (
               <>
-                <button onClick={handlePlaybackToggle} className="p-1.5 rounded hover:bg-muted transition-colors" title="Space">
+                <button onClick={handlePlaybackToggle} className="p-2 rounded hover:bg-muted transition-colors" title="재생/일시정지 (Space)">
                   {audioPhase === 'playing' ? <Pause className="h-4 w-4 text-orange-400" /> : <Play className="h-4 w-4 text-green-400" />}
                 </button>
-                <button onClick={handlePlaybackStop} className="p-1.5 rounded hover:bg-muted transition-colors">
+                <button onClick={handlePlaybackStop} className="p-2 rounded hover:bg-muted transition-colors" title="정지">
                   <Square className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
                 <PlaybackTimeDisplay />
                 <PlaybackSeekbar onSeek={handleSeek} />
-                <div className="w-px h-4 bg-zinc-700" />
-                {[0.25, 0.5, 0.75, 1, 1.5, 2].map((spd) => (
-                  <button
-                    key={spd}
-                    onClick={() => store.setPlaybackSpeed(spd)}
-                    className={`px-1.5 py-0.5 rounded text-[10px] transition-colors ${
-                      playbackSpeed === spd ? 'bg-blue-600 text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
-                    }`}
-                  >
-                    {spd}x
-                  </button>
-                ))}
-                <input
-                  type="range" min={0.1} max={3} step={0.05} value={playbackSpeed}
-                  onChange={(e) => store.setPlaybackSpeed(parseFloat(e.target.value))}
-                  className="w-14 h-1 accent-blue-500"
-                  title={`속도: ${playbackSpeed.toFixed(2)}x`}
-                />
                 {/* A-B Loop indicator */}
                 {(loopA !== null || loopB !== null) && (
                   <button
                     onClick={() => { store.setLoopA(null); store.setLoopB(null); }}
-                    className="px-1.5 py-0.5 rounded text-[10px] bg-orange-900/50 text-orange-300 hover:bg-orange-800/50"
-                    title="[ ] 루프 해제 (\)"
+                    className="px-2 py-1 rounded text-xs bg-orange-900/50 text-orange-300 hover:bg-orange-800/50"
+                    title="루프 해제 (\)"
                   >
                     🔁 {loopA !== null ? Math.floor(loopA / 4) : '?'}-{loopB !== null ? Math.floor(loopB / 4) : '?'}
                   </button>
                 )}
-                <div className="flex-1" />
-                <button onClick={() => store.setVolume(volume > 0 ? 0 : 0.8)} className="p-1 rounded hover:bg-muted transition-colors">
+                <div className="w-px h-4 bg-zinc-700" />
+                {/* Speed control — select for presets + slider for fine control */}
+                <select
+                  value={[0.25, 0.5, 0.75, 1, 1.5, 2].includes(playbackSpeed) ? String(playbackSpeed) : 'custom'}
+                  onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) store.setPlaybackSpeed(v); }}
+                  className="bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs rounded px-1.5 py-1 cursor-pointer"
+                  title="재생 속도 프리셋"
+                >
+                  {([0.25, 0.5, 0.75, 1, 1.5, 2] as const).map((s) => (
+                    <option key={s} value={String(s)}>{s}×</option>
+                  ))}
+                  {![0.25, 0.5, 0.75, 1, 1.5, 2].includes(playbackSpeed) && (
+                    <option value="custom">{playbackSpeed.toFixed(2)}×</option>
+                  )}
+                </select>
+                <div className="w-px h-4 bg-zinc-700" />
+                <button onClick={() => store.setVolume(volume > 0 ? 0 : 0.8)} className="p-2 rounded hover:bg-muted transition-colors" title={volume > 0 ? '음소거' : '음소거 해제'}>
                   {volume > 0 ? <Volume2 className="h-3.5 w-3.5 text-muted-foreground" /> : <VolumeX className="h-3.5 w-3.5 text-zinc-500" />}
                 </button>
                 <input
@@ -1710,10 +1684,46 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                     store.setVolume(v);
                     audioPreloaderRef.current?.setMasterVolume?.(v);
                   }}
-                  className="w-16 h-1 accent-blue-500"
+                  className="w-16 h-1 accent-blue-500 cursor-pointer"
+                  title={`볼륨: ${Math.round(volume * 100)}%`}
                 />
+                <div className="flex-1" />
+                <div className="w-px h-4 bg-zinc-700" />
+                {/* BPM tap + Play test — moved from header to transport context */}
+                <button
+                  onClick={() => openModal('bpmTap')}
+                  className="p-2 rounded hover:bg-zinc-800 transition-colors text-zinc-400"
+                  title="BPM 탭"
+                  data-testid="bpm-btn"
+                >
+                  <Timer className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={handlePlayTest}
+                  className="p-2 rounded hover:bg-zinc-800 transition-colors text-zinc-400"
+                  title="플레이 테스트 (F5)"
+                  data-testid="play-test-btn"
+                >
+                  <PlayCircle className="h-3.5 w-3.5" />
+                </button>
               </>
             )}
+            {/* View toggles — 항상 표시 (오디오 상태 무관) */}
+            <div className="ml-auto flex items-center gap-0.5 shrink-0">
+              <div className="w-px h-4 bg-zinc-700 mx-0.5" />
+              <button onClick={store.toggleLeftPanel} aria-pressed={showLeftPanel} aria-label="키사운드 패널 토글" className="p-1.5 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="키사운드 패널" data-testid="toggle-left-panel">
+                {showLeftPanel ? <PanelLeftClose className="h-3.5 w-3.5" /> : <PanelLeftOpen className="h-3.5 w-3.5" />}
+              </button>
+              <button onClick={store.toggleRightPanel} aria-pressed={showRightPanel} aria-label="정보 패널 토글" className="p-1.5 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="정보 패널" data-testid="toggle-right-panel">
+                {showRightPanel ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
+              </button>
+              <button onClick={store.toggleMinimap} aria-pressed={showMinimap} aria-label="미니맵 토글" className={`p-1.5 rounded hover:bg-zinc-800 transition-colors ${showMinimap ? 'text-zinc-200' : 'text-zinc-400'}`} title="미니맵" data-testid="toggle-minimap">
+                <LucideMap className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={() => activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff')} aria-pressed={activeOverlay === 'diff'} aria-label="변경사항 비교" className={`p-1.5 rounded hover:bg-zinc-800 transition-colors ${activeOverlay === 'diff' ? 'text-orange-400' : 'text-zinc-400'}`} title="변경사항 비교 (Ctrl+D)" data-testid="diff-btn">
+                <GitCompare className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Canvas with Context Menu */}
@@ -1728,7 +1738,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             onClearSelection={store.clearSelection}
             onChangeType={store.changeNoteType}
           >
-            <div className="flex-1 min-h-0 overflow-hidden relative">
+            <div className="flex-1 min-h-0 overflow-hidden relative" role="application" aria-label="BMS 차트 편집기">
               {/* Keysound hover info overlay */}
               {hoverKeysoundInfo && (
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none px-3 py-1 bg-zinc-900/90 border border-zinc-700 rounded text-xs text-zinc-300 font-mono shadow-lg">
@@ -1737,7 +1747,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               )}
               {/* Current keysound indicator for addNote/keysound tool */}
               {(activeTool === 'addNote' || activeTool === 'keysound') && currentKeysound && !hoverKeysoundInfo && (
-                <div className="absolute top-2 right-3 z-10 pointer-events-none px-2 py-1 bg-zinc-900/80 border border-zinc-700/50 rounded text-[10px] text-zinc-400 font-mono">
+                <div className="absolute top-2 right-3 z-10 pointer-events-none px-2 py-1 bg-zinc-900/80 border border-zinc-700/50 rounded text-xs text-zinc-400 font-mono">
                   키음: {currentKeysound}{keysoundRecord[currentKeysound] ? ` (${keysoundRecord[currentKeysound]})` : currentKeysound === '00' ? ' (무음)' : ''}
                 </div>
               )}
@@ -1792,11 +1802,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         {chart && showMinimap && !minimapPopout && (
           <div className="w-20 border-l border-zinc-800 flex flex-col bg-zinc-950 shrink-0 min-h-0" data-testid="minimap-sidebar">
             <div className="px-1.5 py-1 flex items-center justify-between border-b border-zinc-800 shrink-0">
-              <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">Map</span>
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Map</span>
               <button
                 onClick={() => setMinimapPopout(true)}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-800 transition-colors text-zinc-600 hover:text-zinc-300"
+                className="p-1.5 flex items-center justify-center rounded hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-300"
                 title="미니맵 분리 (드래그 가능)"
+                aria-label="미니맵 팝아웃"
               >
                 <Maximize2 className="h-3.5 w-3.5" />
               </button>
@@ -1817,7 +1828,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
         {/* --- RIGHT: Header Editor + Note Info + Minimap --- */}
         {!showRightPanel && (
-          <button onClick={store.toggleRightPanel} className="shrink-0 w-5 flex items-center justify-center bg-zinc-900 border-l border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-500 hover:text-zinc-300" title="정보 패널 열기">
+          <button onClick={store.toggleRightPanel} className="shrink-0 w-6 flex items-center justify-center bg-zinc-900 border-l border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200" title="정보 패널 열기">
             <PanelRightOpen className="h-3.5 w-3.5" />
           </button>
         )}
@@ -1861,7 +1872,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             </div>
           )}
           <div className="border-b border-zinc-800 shrink-0">
-            <button onClick={() => toggleSection('timeline')} className="w-full flex items-center justify-between px-3 py-1 text-[10px] font-semibold text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors">
+            <button onClick={() => toggleSection('timeline')} className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors">
               <span>키음 타임라인</span><span>{collapsedSections.has('timeline') ? '▸' : '▾'}</span>
             </button>
           </div>
@@ -1882,7 +1893,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           </div>}
           {/* Chart Statistics */}
           <div className="border-b border-zinc-800 shrink-0">
-            <button onClick={() => toggleSection('stats')} className="w-full flex items-center justify-between px-3 py-1 text-[10px] font-semibold text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors">
+            <button onClick={() => toggleSection('stats')} className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors">
               <span>통계</span><span>{collapsedSections.has('stats') ? '▸' : '▾'}</span>
             </button>
             {!collapsedSections.has('stats') && (
@@ -1894,10 +1905,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           {/* Layer Panel */}
           <div className="border-b border-zinc-800 shrink-0">
             <div className="px-3 py-1.5 flex items-center justify-between">
-              <button onClick={() => toggleSection('layers')} className="text-xs font-semibold text-zinc-400 hover:text-zinc-300 flex items-center gap-1"><span>레이어</span><span className="text-[10px]">{collapsedSections.has('layers') ? '▸' : '▾'}</span></button>
+              <button onClick={() => toggleSection('layers')} className="text-xs font-semibold text-zinc-400 hover:text-zinc-200 flex items-center gap-1"><span>레이어</span><span className="text-xs">{collapsedSections.has('layers') ? '▸' : '▾'}</span></button>
               <button
                 onClick={store.resetLayerConfig}
-                className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
                 title="레이어 설정 초기화"
               >초기화</button>
             </div>
@@ -1916,7 +1927,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800 shrink-0"
             >
               <span>차트 정보</span>
-              <span className="text-[10px]">{headerCollapsed ? '▸' : '▾'}</span>
+              <span className="text-xs">{headerCollapsed ? '▸' : '▾'}</span>
             </button>
             {!headerCollapsed && (
               <div className="flex-1 min-h-0 overflow-y-auto">
@@ -1962,7 +1973,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         >
           {/* Drag handle header — drag near right edge to re-dock */}
           <div
-            className="px-2 py-1 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-700 shrink-0 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
+            className="px-2 py-1 text-xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-700 shrink-0 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               popoutDragRef.current = { startX: e.clientX, startY: e.clientY, originX: popoutPos.x, originY: popoutPos.y };
@@ -1996,8 +2007,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               <button
                 onClick={() => setMinimapPopout(false)}
                 onPointerDown={(e) => e.stopPropagation()}
-                className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                className="p-1.5 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
                 title="사이드바로 되돌리기"
+                aria-label="미니맵 사이드바로 되돌리기"
               >
                 <PanelRightOpen className="w-3.5 h-3.5" />
               </button>
@@ -2005,8 +2017,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               <button
                 onClick={() => setMinimapPopout(false)}
                 onPointerDown={(e) => e.stopPropagation()}
-                className="w-6 h-6 flex items-center justify-center rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                className="p-1.5 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
                 title="팝아웃 닫기 (인라인으로 복귀)"
+                aria-label="미니맵 팝아웃 닫기"
               >
                 <XIcon className="w-3.5 h-3.5" />
               </button>
@@ -2031,7 +2044,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <div className="flex-1 min-w-0">
           <StatusBarBridge gridSnap={gridSnap} selectedCount={selectedNotes.size} totalNotes={notes.length} bpm={editedBaseBpm} noteHeight={noteHeight} audioReady={isAudioReady} />
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 shrink-0 text-[10px] text-zinc-500 border-l border-zinc-800">
+        <div className="flex items-center gap-2 px-3 py-1.5 shrink-0 text-xs text-zinc-400 border-l border-zinc-800">
           {midiRecordingMode !== 'off' && (
             <span className="text-green-400">MIDI: {midiRecordingMode === 'step' ? '스텝' : '실시간'}</span>
           )}
@@ -2062,10 +2075,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               {inputDialog.type === 'timesig-edit' && `마디 ${inputDialog.measure ?? 0} 박자표`}
             </h3>
             {(inputDialog.type === 'stop-add' || inputDialog.type === 'stop-edit') && (
-              <p className="text-[10px] text-zinc-500 mb-2">192 = 1비트, 0 입력 시 삭제</p>
+              <p className="text-xs text-zinc-400 mb-2">192 = 1비트, 0 입력 시 삭제</p>
             )}
             {inputDialog.type === 'timesig-edit' && (
-              <p className="text-[10px] text-zinc-500 mb-2">1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8</p>
+              <p className="text-xs text-zinc-400 mb-2">1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8</p>
             )}
             <form onSubmit={(e) => { e.preventDefault(); store.submitInputDialog(inputDialogRef.current?.value || ''); }}>
               <input
@@ -2116,7 +2129,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <h3 className="text-sm font-semibold text-zinc-200 mb-2">
           {activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
         </h3>
-        <p className="text-[10px] text-zinc-500 mb-2">
+        <p className="text-xs text-zinc-400 mb-2">
           {activeModal === 'measureInsert' ? '지정 마디 앞에 빈 마디를 삽입합니다.' : '지정 마디의 노트를 삭제하고 이후 내용을 당깁니다.'}
         </p>
         <form onSubmit={(e) => {
@@ -2130,7 +2143,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           <input
             ref={measureInputRef}
             type="number" min={0} step={1}
-            defaultValue={Math.floor(modalBeatRef.current / 4)}
+            defaultValue={store.beatToMF(modalBeatRef.current).measure}
             autoFocus
             className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
             placeholder="마디 번호"
@@ -2183,7 +2196,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           <Bookmark className="h-4 w-4 text-yellow-400" />
           마디 #{pendingBookmarkMeasure} 북마크
         </h3>
-        <p className="text-[10px] text-zinc-500 mb-3">
+        <p className="text-xs text-zinc-400 mb-3">
           {bookmarkEditMode === 'rename'
             ? '북마크 이름을 변경하거나 삭제하세요.'
             : '북마크 이름을 입력하세요.'}
@@ -2237,7 +2250,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         className="border border-zinc-700 p-4 w-80"
       >
         <h3 className="text-sm font-semibold text-zinc-200 mb-1">클립보드 히스토리</h3>
-        <p className="text-[10px] text-zinc-500 mb-3">항목을 선택하면 해당 노트들이 클립보드로 복사됩니다.</p>
+        <p className="text-xs text-zinc-400 mb-3">항목을 선택하면 해당 노트들이 클립보드로 복사됩니다.</p>
         <div className="space-y-1 max-h-64 overflow-y-auto">
           {clipboardHistory.map((entry, i) => {
             const keysounds = [...new Set(entry.map((n) => n.keysound).filter(Boolean))].slice(0, 3);
@@ -2254,9 +2267,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-zinc-300 font-mono">{entry.length}개 노트</span>
-                  {isCurrentClipboard && <span className="text-[10px] text-blue-400">현재</span>}
+                  {isCurrentClipboard && <span className="text-xs text-blue-400">현재</span>}
                 </div>
-                <div className="text-[10px] text-zinc-500 mt-0.5 truncate">
+                <div className="text-xs text-zinc-400 mt-0.5 truncate">
                   {keysounds.length > 0 ? keysounds.join(', ') + (keysounds.length < [...new Set(entry.map((n) => n.keysound).filter(Boolean))].length ? ' …' : '') : '키음 없음'}
                 </div>
               </button>

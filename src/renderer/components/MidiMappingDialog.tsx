@@ -132,7 +132,7 @@ export function MidiMappingDialog({
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3 space-y-4">
           {/* Device selection */}
           <div>
-            <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">장치</h3>
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">장치</h3>
             <div className="flex gap-2">
               <select
                 value={selectedDevice}
@@ -161,10 +161,10 @@ export function MidiMappingDialog({
               )}
             </div>
             {devices.length === 0 && (
-              <div className="text-[10px] text-zinc-600 mt-1">MIDI 장치가 감지되지 않습니다</div>
+              <div className="text-xs text-zinc-600 mt-1">MIDI 장치가 감지되지 않습니다</div>
             )}
             {lastNote !== null && (
-              <div className="text-[10px] text-zinc-500 mt-1">
+              <div className="text-xs text-zinc-500 mt-1">
                 마지막 입력: <span className="text-blue-400 font-mono">{midiNoteName(lastNote)} ({lastNote})</span>
               </div>
             )}
@@ -172,7 +172,7 @@ export function MidiMappingDialog({
 
           {/* Recording mode */}
           <div>
-            <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">레코딩 모드</h3>
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">레코딩 모드</h3>
             <div className="flex gap-1.5">
               {(['off', 'step', 'realtime'] as MidiRecordingMode[]).map((mode) => (
                 <button
@@ -188,7 +188,7 @@ export function MidiMappingDialog({
                 </button>
               ))}
             </div>
-            <div className="text-[10px] text-zinc-600 mt-1">
+            <div className="text-xs text-zinc-600 mt-1">
               {recordingMode === 'step' && '스텝: MIDI 입력 → 현재 위치에 노트 배치 후 자동 전진'}
               {recordingMode === 'realtime' && '실시간: 재생 중 MIDI 입력 → 재생 위치에 배치'}
               {recordingMode === 'off' && 'MIDI 레코딩 비활성화'}
@@ -197,19 +197,19 @@ export function MidiMappingDialog({
 
           {/* Presets */}
           <div>
-            <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
               프리셋 <span className="text-zinc-600 font-normal normal-case">({mapping.presetName})</span>
             </h3>
             <div className="flex gap-1.5">
-              <button onClick={() => handlePreset('default')} className="flex-1 px-2 py-1 text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded">Default</button>
-              <button onClick={() => handlePreset('iidx')} className="flex-1 px-2 py-1 text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded">IIDX</button>
-              <button onClick={() => handlePreset('keyboard')} className="flex-1 px-2 py-1 text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded">Piano</button>
+              <button onClick={() => handlePreset('default')} className="flex-1 px-2 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded">Default</button>
+              <button onClick={() => handlePreset('iidx')} className="flex-1 px-2 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded">IIDX</button>
+              <button onClick={() => handlePreset('keyboard')} className="flex-1 px-2 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded">Piano</button>
             </div>
           </div>
 
           {/* Lane mapping */}
           <div>
-            <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">레인 매핑</h3>
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">레인 매핑</h3>
             <div className="space-y-0.5">
               {laneMappings.map(({ lane, mappedNote }) => (
                 <div
@@ -219,7 +219,7 @@ export function MidiMappingDialog({
                   }`}
                 >
                   <span className="text-xs text-zinc-300 font-mono w-12">{lane}</span>
-                  <span className="text-[10px] text-zinc-500 flex-1 text-center">
+                  <span className="text-xs text-zinc-500 flex-1 text-center">
                     {mappedNote !== null ? (
                       <span className="text-zinc-300">{midiNoteName(mappedNote)} ({mappedNote})</span>
                     ) : (
@@ -228,7 +228,7 @@ export function MidiMappingDialog({
                   </span>
                   <button
                     onClick={() => handleLearn(lane)}
-                    className={`px-2 py-0.5 text-[10px] rounded transition-colors ${
+                    className={`px-2 py-0.5 text-xs rounded transition-colors ${
                       learnLane === lane
                         ? 'bg-blue-600 text-white animate-pulse'
                         : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'

@@ -231,11 +231,11 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="검색..."
-          className="w-full px-2 py-1 text-[10px] bg-zinc-800 border border-zinc-700 rounded text-zinc-200 focus:outline-none focus:border-blue-500"
+          className="w-full px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-200 focus:outline-none focus:border-blue-500"
         />
         <button
           onClick={handleSaveFromSelection}
-          className="mt-1.5 w-full flex items-center justify-center gap-1 px-2 py-1 text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded transition-colors"
+          className="mt-1.5 w-full flex items-center justify-center gap-1 px-2 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded transition-colors"
         >
           <Plus className="h-3 w-3" />
           선택 노트를 패턴으로 저장
@@ -252,7 +252,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
             <div key={cat}>
               <button
                 onClick={() => toggleCategory(cat)}
-                className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
+                className="w-full flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
               >
                 {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                 {CATEGORY_LABELS[cat]}
@@ -269,14 +269,14 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
                     >
                       <PatternPreview pattern={pattern} />
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] text-zinc-200 truncate">{pattern.name}</div>
-                        <div className="text-[9px] text-zinc-500">
+                        <div className="text-xs text-zinc-200 truncate">{pattern.name}</div>
+                        <div className="text-xs text-zinc-400">
                           {pattern.notes.length}노트 · {pattern.beatLength}비트
                         </div>
                         {pattern.tags.length > 0 && (
                           <div className="flex flex-wrap gap-0.5 mt-0.5">
                             {pattern.tags.slice(0, 3).map((tag) => (
-                              <span key={tag} className="text-[8px] px-1 py-0 rounded bg-zinc-800 text-zinc-500">
+                              <span key={tag} className="text-xs px-1 py-0.5 rounded bg-zinc-800 text-zinc-400">
                                 {tag}
                               </span>
                             ))}
@@ -289,7 +289,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
                             e.stopPropagation();
                             handleDelete(pattern.id);
                           }}
-                          className="p-0.5 rounded hover:bg-red-900/50 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                          className="p-1.5 rounded hover:bg-red-900/50 text-zinc-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                           title="삭제"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -303,7 +303,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
           );
         })}
         {grouped.size === 0 && (
-          <div className="px-3 py-4 text-[10px] text-zinc-600 text-center">
+          <div className="px-3 py-4 text-xs text-zinc-600 text-center">
             {filter ? '검색 결과 없음' : '패턴 없음'}
           </div>
         )}

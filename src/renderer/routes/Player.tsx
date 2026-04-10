@@ -269,7 +269,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
             onChange={(e) => setAutoplay(e.target.checked)}
             className="w-3.5 h-3.5 accent-orange-500"
           />
-          <span className="text-[10px] text-zinc-500">AUTOPLAY</span>
+          <span className="text-xs text-zinc-400">AUTOPLAY</span>
         </label>
       </div>
 

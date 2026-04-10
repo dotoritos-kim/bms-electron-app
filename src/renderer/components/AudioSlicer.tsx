@@ -604,7 +604,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
 
       {/* Info bar */}
       {audioBuffer && (
-        <div className="flex items-center gap-4 px-4 py-1.5 border-t border-zinc-800 text-[10px] text-zinc-500 shrink-0">
+        <div className="flex items-center gap-4 px-4 py-1.5 border-t border-zinc-800 text-xs text-zinc-500 shrink-0">
           <span>길이: {audioBuffer.duration.toFixed(2)}s</span>
           <span>샘플레이트: {audioBuffer.sampleRate}Hz</span>
           <span>채널: {audioBuffer.numberOfChannels}</span>

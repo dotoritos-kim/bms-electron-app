@@ -166,7 +166,7 @@ export function AutoChartDialog({
             <>
               {/* Audio source */}
               <div>
-                <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">오디오 소스</h3>
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">오디오 소스</h3>
                 <button
                   onClick={handleLoadAudio}
                   disabled={loadingAudio}
@@ -178,7 +178,7 @@ export function AutoChartDialog({
 
               {/* Difficulty */}
               <div>
-                <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
                   난이도: <span className="text-zinc-300">{difficulty}</span>/12
                 </h3>
                 <input
@@ -190,7 +190,7 @@ export function AutoChartDialog({
 
               {/* LN Ratio */}
               <div>
-                <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
                   LN 비율: <span className="text-zinc-300">{Math.round(lnRatio * 100)}%</span>
                 </h3>
                 <input
@@ -230,7 +230,7 @@ export function AutoChartDialog({
               </div>
 
               <div>
-                <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
                   생성할 노트 수: <span className="text-zinc-300">{suggestCount}</span>
                 </h3>
                 <input
@@ -249,24 +249,24 @@ export function AutoChartDialog({
                 패턴 제안 생성
               </button>
               {existingNotes.length < 4 && (
-                <div className="text-[10px] text-yellow-500">최소 4개 이상의 노트가 필요합니다</div>
+                <div className="text-xs text-yellow-500">최소 4개 이상의 노트가 필요합니다</div>
               )}
             </>
           )}
 
           {/* Preview */}
           {generateAttempted && preview.length === 0 && (
-            <div className="text-[10px] text-yellow-500 bg-yellow-900/20 rounded p-2">
+            <div className="text-xs text-yellow-500 bg-yellow-900/20 rounded p-2">
               감지된 온셋이 없습니다. 오디오 볼륨이 너무 낮거나 무음일 수 있습니다. 난이도를 낮추면 감도가 올라갑니다.
             </div>
           )}
           {preview.length > 0 && (
             <div>
-              <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
                 미리보기 ({preview.length}개 노트)
               </h3>
               <div className="bg-zinc-800/50 rounded p-2 max-h-40 overflow-y-auto">
-                <div className="grid grid-cols-8 gap-0.5 text-[9px] font-mono text-zinc-400">
+                <div className="grid grid-cols-8 gap-0.5 text-xs font-mono text-zinc-400">
                   <div className="font-semibold text-zinc-500">Beat</div>
                   <div className="font-semibold text-zinc-500">Col</div>
                   <div className="col-span-6"></div>
@@ -288,7 +288,7 @@ export function AutoChartDialog({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800 shrink-0">
-          <div className="text-[10px] text-zinc-500">
+          <div className="text-xs text-zinc-500">
             {preview.length > 0 && `${preview.length}개 노트 생성됨`}
           </div>
           <div className="flex gap-2">

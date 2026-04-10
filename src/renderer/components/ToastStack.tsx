@@ -17,7 +17,7 @@ export function ToastStack({ toasts, onDismiss }: ToastStackProps) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-sm">
+    <div role="status" aria-live="polite" aria-atomic="false" className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-sm">
       {toasts.map((t) => (
         <div
           key={t.id}
@@ -31,7 +31,8 @@ export function ToastStack({ toasts, onDismiss }: ToastStackProps) {
           <span className="flex-1">{t.message}</span>
           <button
             onClick={() => onDismiss(t.id)}
-            className="p-0.5 rounded hover:bg-white/10 shrink-0"
+            aria-label="알림 닫기"
+            className="p-1.5 rounded hover:bg-white/10 shrink-0"
           >
             <X className="h-3 w-3" />
           </button>

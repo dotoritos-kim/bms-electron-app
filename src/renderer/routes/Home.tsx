@@ -229,14 +229,14 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <button
                       onClick={(e) => { e.stopPropagation(); setRecentFiles(togglePinRecentFile(rf.path)); }}
-                      className="p-0.5 rounded hover:bg-zinc-700 text-zinc-500"
+                      className="p-1.5 rounded hover:bg-zinc-700 text-zinc-400"
                       title={rf.pinned ? '고정 해제' : '고정'}
                     >
                       {rf.pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setRecentFiles(removeRecentFile(rf.path)); }}
-                      className="p-0.5 rounded hover:bg-zinc-700 text-zinc-500"
+                      className="p-1.5 rounded hover:bg-zinc-700 text-zinc-400"
                       title="목록에서 제거"
                     >
                       <X className="h-3 w-3" />
@@ -267,7 +267,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
       {/* Right: Chart Info */}
       <div className="flex-1 overflow-y-auto p-6">
         {!currentFile && (
-          <div className="h-full flex items-center justify-center text-zinc-500">
+          <div className="h-full flex items-center justify-center text-zinc-400">
             <div className="text-center">
               <Music className="h-16 w-16 mx-auto mb-4 opacity-20" />
               <p className="text-lg">Select a BMS file to view details</p>
@@ -426,7 +426,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
 function StatCard({ label, value, loading }: { label: string; value: string; loading?: boolean }) {
   return (
     <div className="bg-zinc-900 rounded-lg p-3 border border-zinc-800">
-      <div className="text-xs text-zinc-500 mb-1">{label}</div>
+      <div className="text-xs text-zinc-400 mb-1">{label}</div>
       <div className={`text-lg font-semibold ${loading ? 'text-zinc-600 animate-pulse' : ''}`}>{value}</div>
     </div>
   );

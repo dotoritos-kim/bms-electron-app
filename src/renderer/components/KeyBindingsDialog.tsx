@@ -95,7 +95,7 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-2">
           {ACTION_CATEGORIES.map((cat) => (
             <div key={cat.label} className="mb-3">
-              <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">{cat.label}</h3>
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">{cat.label}</h3>
               <div className="space-y-0.5">
                 {cat.actions.map((action) => {
                   const binding = bindingMap.get(action);
@@ -113,11 +113,11 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
                     >
                       <span className={`text-xs ${hasConflict ? 'text-red-400' : isModified ? 'text-yellow-300' : 'text-zinc-300'}`}>
                         {ACTION_LABELS[action]}
-                        {hasConflict && <span className="ml-1 text-[9px] text-red-500">충돌</span>}
+                        {hasConflict && <span className="ml-1 text-xs text-red-500">충돌</span>}
                       </span>
                       <button
                         onClick={() => handleStartEdit(action)}
-                        className={`min-w-[100px] px-2 py-0.5 text-[10px] font-mono rounded text-center transition-colors ${
+                        className={`min-w-[100px] px-2 py-0.5 text-xs font-mono rounded text-center transition-colors ${
                           isEditing
                             ? 'bg-blue-600 text-white animate-pulse'
                             : hasConflict
@@ -144,7 +144,7 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
               기본값 복원
             </button>
             {conflictActions.size > 0 && (
-              <span className="text-[10px] text-red-400">{conflictActions.size}개 항목 키 충돌</span>
+              <span className="text-xs text-red-400">{conflictActions.size}개 항목 키 충돌</span>
             )}
           </div>
           <div className="flex gap-2">

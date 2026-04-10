@@ -27,15 +27,15 @@ export function ChartStatsView({ notes, bpm, totalBeats }: ChartStatsViewProps) 
   };
 
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
-      <div className="text-zinc-500">Playable</div><div className="text-zinc-300 text-right">{stats.playable}</div>
-      <div className="text-zinc-500">LN</div><div className="text-zinc-300 text-right">{stats.ln}</div>
-      <div className="text-zinc-500">BGM</div><div className="text-zinc-300 text-right">{stats.bgm}</div>
-      <div className="text-zinc-500">Invisible</div><div className="text-zinc-300 text-right">{stats.invisible}</div>
-      <div className="text-zinc-500">Landmine</div><div className="text-zinc-300 text-right">{stats.landmine}</div>
-      <div className="text-zinc-500">NPS</div><div className="text-zinc-300 text-right">{stats.nps.toFixed(1)}</div>
-      <div className="text-zinc-500">마디</div><div className="text-zinc-300 text-right">{stats.measures}</div>
-      <div className="text-zinc-500">재생 시간</div><div className="text-zinc-300 text-right">{fmt(stats.durationSec)}</div>
+    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs">
+      <div className="text-zinc-400">Playable</div><div className="text-zinc-300 text-right">{stats.playable}</div>
+      <div className="text-zinc-400">LN</div><div className="text-zinc-300 text-right">{stats.ln}</div>
+      <div className="text-zinc-400">BGM</div><div className="text-zinc-300 text-right">{stats.bgm}</div>
+      <div className="text-zinc-400">Invisible</div><div className="text-zinc-300 text-right">{stats.invisible}</div>
+      <div className="text-zinc-400">Landmine</div><div className="text-zinc-300 text-right">{stats.landmine}</div>
+      <div className="text-zinc-400">NPS</div><div className="text-zinc-300 text-right">{stats.nps.toFixed(1)}</div>
+      <div className="text-zinc-400">마디</div><div className="text-zinc-300 text-right">{stats.measures}</div>
+      <div className="text-zinc-400">재생 시간</div><div className="text-zinc-300 text-right">{fmt(stats.durationSec)}</div>
     </div>
   );
 }

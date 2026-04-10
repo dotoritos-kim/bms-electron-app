@@ -68,7 +68,7 @@ export function BeatKeysoundPanel({
           <Headphones className="h-3 w-3" />
           키음 타임라인
         </h3>
-        <div className="text-[10px] text-zinc-600">현재 위치 근처에 키음 없음</div>
+        <div className="text-xs text-zinc-600">현재 위치 근처에 키음 없음</div>
       </div>
     );
   }
@@ -87,14 +87,14 @@ export function BeatKeysoundPanel({
           return (
             <div
               key={group.beat.toFixed(4)}
-              className={`rounded px-2 py-1 text-[10px] ${
+              className={`rounded px-2 py-1 text-xs ${
                 isCurrent ? 'bg-blue-900/40 border border-blue-700/50' : 'bg-zinc-800/50'
               }`}
             >
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="font-mono text-zinc-500">#{String(measure).padStart(3, '0')}:{frac}</span>
                 <span className="font-mono text-zinc-600">({group.beat.toFixed(2)})</span>
-                {isCurrent && <span className="text-blue-400 text-[9px]">◀ 현재</span>}
+                {isCurrent && <span className="text-blue-400 text-xs">◀ 현재</span>}
               </div>
               {group.playable.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-0.5">
@@ -195,7 +195,7 @@ function BgmManagerSection({
       {expanded && (
         <div className="space-y-1.5">
           {channelGroups.map(([ch, group]) => (
-            <div key={ch} className="bg-zinc-800/50 rounded px-2 py-1 text-[10px]">
+            <div key={ch} className="bg-zinc-800/50 rounded px-2 py-1 text-xs">
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="font-semibold text-zinc-300">CH {ch}</span>
                 <span className="text-zinc-600">({group.count}개 노트, {group.keysounds.size}종 키음)</span>

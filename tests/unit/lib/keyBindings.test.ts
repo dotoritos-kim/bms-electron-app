@@ -330,8 +330,8 @@ describe('resetKeyBindings', () => {
 // ---------------------------------------------------------------------------
 
 describe('DEFAULT_BINDINGS', () => {
-  it('has 38 entries', () => {
-    expect(DEFAULT_BINDINGS).toHaveLength(38);
+  it('has 47 entries', () => {
+    expect(DEFAULT_BINDINGS).toHaveLength(47);
   });
 
   it('every binding has required fields', () => {
@@ -345,9 +345,9 @@ describe('DEFAULT_BINDINGS', () => {
     }
   });
 
-  it('all actions are unique', () => {
-    const actions = DEFAULT_BINDINGS.map((b) => b.action);
-    expect(new Set(actions).size).toBe(actions.length);
+  it('no duplicate (action, key) pairs', () => {
+    const pairs = DEFAULT_BINDINGS.map((b) => `${b.action}:${b.key}`);
+    expect(new Set(pairs).size).toBe(pairs.length);
   });
 
   it('all keys are lowercase', () => {

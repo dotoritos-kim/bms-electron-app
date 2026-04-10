@@ -169,19 +169,19 @@ describe('KeyBindingsDialog', () => {
 
   // 13. Reset button restores DEFAULT_BINDINGS
   it('restores DEFAULT_BINDINGS when "기본값 복원" is clicked', () => {
-    // Start with a modified binding
+    // Start with a modified binding — use ctrl+shift+f (not in DEFAULT_BINDINGS)
     const modified = DEFAULT_BINDINGS.map((b) =>
-      b.action === 'save' ? { ...b, key: 'ctrl+shift+p' } : b,
+      b.action === 'save' ? { ...b, key: 'ctrl+shift+f' } : b,
     );
     renderDialog({ bindings: modified });
 
-    expect(screen.getByText('Ctrl+Shift+P')).toBeInTheDocument();
+    expect(screen.getByText('Ctrl+Shift+F')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('기본값 복원'));
 
     // After reset, the save action should be back to Ctrl+S
     expect(screen.getByText(keyComboToDisplay('ctrl+s'))).toBeInTheDocument();
-    expect(screen.queryByText('Ctrl+Shift+P')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ctrl+Shift+F')).not.toBeInTheDocument();
   });
 
   // 14. Save button calls saveKeyBindings, onBindingsChange, and onClose
@@ -261,7 +261,7 @@ describe('KeyBindingsDialog', () => {
   // 19. Bindings prop sync: updating bindings prop resets local state
   it('syncs localBindings when the bindings prop changes', () => {
     const modified = DEFAULT_BINDINGS.map((b) =>
-      b.action === 'save' ? { ...b, key: 'ctrl+shift+p' } : b,
+      b.action === 'save' ? { ...b, key: 'ctrl+shift+f' } : b,
     );
     const { rerender, props } = renderDialog();
 
@@ -278,7 +278,7 @@ describe('KeyBindingsDialog', () => {
       />,
     );
 
-    expect(screen.getByText('Ctrl+Shift+P')).toBeInTheDocument();
+    expect(screen.getByText('Ctrl+Shift+F')).toBeInTheDocument();
   });
 
   // 20. Dialog has correct ARIA attributes

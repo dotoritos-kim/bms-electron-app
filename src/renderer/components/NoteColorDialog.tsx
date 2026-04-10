@@ -136,7 +136,7 @@ export function NoteColorDialog({ open, onClose, colors, onSetColor, onResetAll 
       className="border border-zinc-700 w-[420px] flex flex-col"
     >
       <div className="px-4 pb-1 pt-1">
-        <p className="text-[11px] text-zinc-500">
+        <p className="text-xs text-zinc-400">
           노트 타입별 색상을 변경합니다. 색상 칸을 클릭하여 색을 선택하세요.
         </p>
       </div>

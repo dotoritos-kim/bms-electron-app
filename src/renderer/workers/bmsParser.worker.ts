@@ -11,8 +11,8 @@
  *   PARSE_ERROR  {requestId, error: string}
  */
 
-import { BMSParser } from '../../../../bms-core/src/parser';
-import { detectKeyMode } from '../../../../bms-editor/src/chart/useBmsChart';
+import { BMSParser } from '@rhythm-archive/bms-core';
+import { detectKeyMode } from '@rhythm-archive/bms-editor';
 
 interface ParsePhase1Message {
   type: 'PARSE_PHASE1';

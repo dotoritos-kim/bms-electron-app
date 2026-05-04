@@ -61,6 +61,22 @@ jobs:
           cache: 'npm'
           cache-dependency-path: bms-electron-app/package-lock.json
 
+      # Sibling repos do not commit dist/, so build them first so file:
+      # dependencies in bms-electron-app expose proper type declarations
+      # and runtime modules. Order: bms-core → bms-player → bms-editor
+      # (matches the dependency graph).
+      - name: Install & build bms-core
+        working-directory: bms-core
+        run: npm ci --legacy-peer-deps && npm run build
+
+      - name: Install & build bms-player
+        working-directory: bms-player
+        run: npm ci --legacy-peer-deps && npm run build
+
+      - name: Install & build bms-editor
+        working-directory: bms-editor
+        run: npm ci --legacy-peer-deps && npm run build
+
       - name: Install dependencies (bms-electron-app)
         working-directory: bms-electron-app
         run: npm ci
@@ -134,6 +150,18 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: bms-electron-app/package-lock.json
+
+      - name: Install & build bms-core
+        working-directory: bms-core
+        run: npm ci --legacy-peer-deps && npm run build
+
+      - name: Install & build bms-player
+        working-directory: bms-player
+        run: npm ci --legacy-peer-deps && npm run build
+
+      - name: Install & build bms-editor
+        working-directory: bms-editor
+        run: npm ci --legacy-peer-deps && npm run build
 
       - name: Install dependencies (bms-electron-app)
         working-directory: bms-electron-app

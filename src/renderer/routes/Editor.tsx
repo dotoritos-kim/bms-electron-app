@@ -2124,14 +2124,64 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         open={activeModal === 'measureInsert' || activeModal === 'measureDelete'}
         onClose={() => setActiveModal(null)}
         title={activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
-        className="border border-zinc-700 p-4 w-72"
+        className="border border-zinc-700 p-4 w-80"
       >
-        <h3 className="text-sm font-semibold text-zinc-200 mb-2">
+        <h3 className="text-sm font-semibold text-zinc-200 mb-3">
           {activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
         </h3>
-        <p className="text-xs text-zinc-400 mb-2">
-          {activeModal === 'measureInsert' ? '지정 마디 앞에 빈 마디를 삽입합니다.' : '지정 마디의 노트를 삭제하고 이후 내용을 당깁니다.'}
-        </p>
+
+        {/* Quick action buttons */}
+        {activeModal === 'measureInsert' ? (
+          <div className="flex flex-col gap-1.5 mb-3">
+            <button
+              className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-200 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-500 rounded text-left transition-colors"
+              onClick={() => {
+                const m = store.beatToMF(modalBeatRef.current).measure;
+                store.insertMeasure(m);
+                setActiveModal(null);
+              }}
+            >
+              <span className="text-blue-400 font-bold">↑</span>
+              <span>마디 <span className="text-blue-300 font-mono font-bold">{store.beatToMF(modalBeatRef.current).measure}</span> 앞에 삽입</span>
+              <span className="ml-auto text-zinc-500">(현재 마디)</span>
+            </button>
+            <button
+              className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-200 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-500 rounded text-left transition-colors"
+              onClick={() => {
+                const m = store.beatToMF(modalBeatRef.current).measure;
+                store.insertMeasure(m + 1);
+                setActiveModal(null);
+              }}
+            >
+              <span className="text-blue-400 font-bold">↓</span>
+              <span>마디 <span className="text-blue-300 font-mono font-bold">{store.beatToMF(modalBeatRef.current).measure}</span> 뒤에 삽입</span>
+            </button>
+          </div>
+        ) : (
+          <div className="mb-3">
+            <button
+              className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-200 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-red-700 rounded text-left w-full transition-colors"
+              onClick={() => {
+                const m = store.beatToMF(modalBeatRef.current).measure;
+                store.deleteMeasure(m);
+                setActiveModal(null);
+              }}
+            >
+              <span className="text-red-400 font-bold">✕</span>
+              <span>마디 <span className="text-red-300 font-mono font-bold">{store.beatToMF(modalBeatRef.current).measure}</span> 삭제</span>
+              <span className="ml-auto text-zinc-500">(현재 마디)</span>
+            </button>
+          </div>
+        )}
+
+        {/* Divider */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex-1 border-t border-zinc-700" />
+          <span className="text-xs text-zinc-500">직접 입력</span>
+          <div className="flex-1 border-t border-zinc-700" />
+        </div>
+
+        {/* Manual input form */}
         <form onSubmit={(e) => {
           e.preventDefault();
           const val = parseInt(measureInputRef.current?.value || '');
@@ -2144,7 +2194,6 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             ref={measureInputRef}
             type="number" min={0} step={1}
             defaultValue={store.beatToMF(modalBeatRef.current).measure}
-            autoFocus
             className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
             placeholder="마디 번호"
           />

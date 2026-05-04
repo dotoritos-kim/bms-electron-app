@@ -1,15 +1,12 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron';
+import { dialog, BrowserWindow } from 'electron';
 import { readFile, writeFile, readdir, stat, copyFile, rename, unlink } from 'fs/promises';
 import { join, extname, basename, dirname } from 'path';
+import { handle } from './handle';
+import type { BmsFileInfo } from '../../shared/ipc-contract';
 
 const BMS_EXTENSIONS = new Set(['.bms', '.bme', '.bml', '.pms', '.bmson']);
 
-export interface BmsFileInfo {
-  name: string;
-  path: string;
-  size: number;
-  ext: string;
-}
+export type { BmsFileInfo };
 
 function getWindowFromEvent(event: Electron.IpcMainInvokeEvent): BrowserWindow | null {
   return BrowserWindow.fromWebContents(event.sender);
@@ -27,7 +24,7 @@ let dialogOpen = false;
 
 export function registerFileIpc(): void {
   // Open BMS file dialog
-  ipcMain.handle('dialog:openBmsFile', async (event) => {
+  handle('dialog:openBmsFile', async (event) => {
     if (dialogOpen) return null;
     dialogOpen = true;
     const win = getWindowFromEvent(event);
@@ -45,14 +42,14 @@ export function registerFileIpc(): void {
 
       refocusWindow(win);
       if (result.canceled || result.filePaths.length === 0) return null;
-      return result.filePaths[0];
+      return result.filePaths[0] ?? null;
     } finally {
       dialogOpen = false;
     }
   });
 
   // Open BMS folder dialog
-  ipcMain.handle('dialog:openBmsFolder', async (event) => {
+  handle('dialog:openBmsFolder', async (event) => {
     if (dialogOpen) return null;
     dialogOpen = true;
     const win = getWindowFromEvent(event);
@@ -66,20 +63,20 @@ export function registerFileIpc(): void {
 
       refocusWindow(win);
       if (result.canceled || result.filePaths.length === 0) return null;
-      return result.filePaths[0];
+      return result.filePaths[0] ?? null;
     } finally {
       dialogOpen = false;
     }
   });
 
-  // Read BMS file as buffer
-  ipcMain.handle('file:readBms', async (_event, filePath: string) => {
+  // Read BMS file as buffer (Electron serialises Buffer→Uint8Array on the renderer side)
+  handle('file:readBms', async (_event, filePath: string) => {
     const buffer = await readFile(filePath);
-    return buffer;
+    return buffer as unknown as Uint8Array;
   });
 
   // Save BMS file (atomic: write to temp, then rename)
-  ipcMain.handle('file:saveBms', async (_event, filePath: string, content: string) => {
+  handle('file:saveBms', async (_event, filePath: string, content: string) => {
     const tmpPath = filePath + '.tmp';
     await writeFile(tmpPath, content, 'utf-8');
     try {
@@ -93,7 +90,7 @@ export function registerFileIpc(): void {
   });
 
   // Read .bms.meta sidecar file
-  ipcMain.handle('file:readMeta', async (_event, bmsFilePath: string) => {
+  handle('file:readMeta', async (_event, bmsFilePath: string) => {
     try {
       const metaPath = bmsFilePath + '.meta';
       const content = await readFile(metaPath, 'utf-8');
@@ -104,14 +101,14 @@ export function registerFileIpc(): void {
   });
 
   // Write .bms.meta sidecar file
-  ipcMain.handle('file:saveMeta', async (_event, bmsFilePath: string, content: string) => {
+  handle('file:saveMeta', async (_event, bmsFilePath: string, content: string) => {
     const metaPath = bmsFilePath + '.meta';
     await writeFile(metaPath, content, 'utf-8');
     return true;
   });
 
   // Save As dialog + write
-  ipcMain.handle('file:saveAs', async (event, content: string, defaultName?: string) => {
+  handle('file:saveAs', async (event, content: string, defaultName?: string) => {
     if (dialogOpen) return null;
     dialogOpen = true;
     const win = getWindowFromEvent(event);
@@ -144,7 +141,7 @@ export function registerFileIpc(): void {
   });
 
   // Import keysound files: open dialog to pick audio files, copy them to BMS directory
-  ipcMain.handle('file:importKeysounds', async (event, bmsFilePath: string) => {
+  handle('file:importKeysounds', async (event, bmsFilePath: string) => {
     if (dialogOpen) return [];
     dialogOpen = true;
     const win = getWindowFromEvent(event);
@@ -182,14 +179,14 @@ export function registerFileIpc(): void {
   });
 
   // Write autosave file
-  ipcMain.handle('file:writeAutoSave', async (_event, filePath: string, content: string) => {
+  handle('file:writeAutoSave', async (_event, filePath: string, content: string) => {
     const autoPath = filePath + '.autosave';
     await writeFile(autoPath, content, 'utf-8');
     return true;
   });
 
   // Check for autosave file (returns content if newer than main file, null otherwise)
-  ipcMain.handle('file:checkAutoSave', async (_event, filePath: string) => {
+  handle('file:checkAutoSave', async (_event, filePath: string) => {
     const autoPath = filePath + '.autosave';
     try {
       const [mainStat, autoStat] = await Promise.all([
@@ -208,14 +205,14 @@ export function registerFileIpc(): void {
   });
 
   // Delete autosave file
-  ipcMain.handle('file:deleteAutoSave', async (_event, filePath: string) => {
+  handle('file:deleteAutoSave', async (_event, filePath: string) => {
     const autoPath = filePath + '.autosave';
     await unlink(autoPath).catch(() => {});
     return true;
   });
 
   // Create new BMS file
-  ipcMain.handle(
+  handle(
     'file:createNewBms',
     async (
       event,
@@ -278,7 +275,7 @@ export function registerFileIpc(): void {
   );
 
   // Open audio file for slicer
-  ipcMain.handle('dialog:openAudioFile', async (event) => {
+  handle('dialog:openAudioFile', async (event) => {
     if (dialogOpen) return null;
     dialogOpen = true;
     const win = getWindowFromEvent(event);
@@ -296,14 +293,14 @@ export function registerFileIpc(): void {
 
       refocusWindow(win);
       if (result.canceled || result.filePaths.length === 0) return null;
-      return result.filePaths[0];
+      return result.filePaths[0] ?? null;
     } finally {
       dialogOpen = false;
     }
   });
 
   // Save WAV slice: receives PCM float32 data and writes as WAV file
-  ipcMain.handle(
+  handle(
     'file:saveWavSlice',
     async (
       _event,
@@ -348,7 +345,7 @@ export function registerFileIpc(): void {
   );
 
   // Save multiple WAV slices at once (batch)
-  ipcMain.handle(
+  handle(
     'file:saveWavSlices',
     async (
       _event,
@@ -392,7 +389,7 @@ export function registerFileIpc(): void {
   );
 
   // List BMS files in folder (recursive)
-  ipcMain.handle('file:listBmsFolder', async (_event, folderPath: string) => {
+  handle('file:listBmsFolder', async (_event, folderPath: string) => {
     // Phase 1: collect all BMS paths (readdir only, no stat)
     const paths: Array<{ name: string; path: string; ext: string }> = [];
     await collectBmsPaths(folderPath, paths);

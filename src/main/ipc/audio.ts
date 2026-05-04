@@ -1,19 +1,19 @@
-import { ipcMain } from 'electron';
 import { readFile, readdir } from 'fs/promises';
 import { join, dirname, parse } from 'path';
+import { handle } from './handle';
 
 const AUDIO_EXTENSIONS = new Set(['.wav', '.ogg', '.mp3', '.flac']);
 
 export function registerAudioIpc(): void {
   // Read a single audio file as ArrayBuffer
-  ipcMain.handle('audio:readFile', async (_event, filePath: string) => {
+  handle('audio:readFile', async (_event, filePath: string) => {
     const buffer = await readFile(filePath);
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   });
 
   // Batch read audio files from a BMS folder
   // Given the BMS file path and a keysound map { id: filename }, reads all audio files
-  ipcMain.handle(
+  handle(
     'audio:readBatch',
     async (_event, bmsFilePath: string, keysoundMap: Record<string, string>) => {
       const dir = dirname(bmsFilePath);

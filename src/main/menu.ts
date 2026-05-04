@@ -1,4 +1,5 @@
 import { Menu, BrowserWindow } from 'electron';
+import { sendToRenderer } from './ipc/handle';
 
 export function createMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
@@ -10,7 +11,7 @@ export function createMenu(): void {
           accelerator: 'CmdOrCtrl+O',
           click: () => {
             const win = BrowserWindow.getFocusedWindow();
-            win?.webContents.send('menu:openFile');
+            if (win) sendToRenderer(win.webContents, 'menu:openFile');
           },
         },
         {
@@ -18,7 +19,7 @@ export function createMenu(): void {
           accelerator: 'CmdOrCtrl+Shift+O',
           click: () => {
             const win = BrowserWindow.getFocusedWindow();
-            win?.webContents.send('menu:openFolder');
+            if (win) sendToRenderer(win.webContents, 'menu:openFolder');
           },
         },
         { type: 'separator' },
@@ -27,7 +28,7 @@ export function createMenu(): void {
           accelerator: 'CmdOrCtrl+S',
           click: () => {
             const win = BrowserWindow.getFocusedWindow();
-            win?.webContents.send('menu:save');
+            if (win) sendToRenderer(win.webContents, 'menu:save');
           },
         },
         {
@@ -35,7 +36,7 @@ export function createMenu(): void {
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => {
             const win = BrowserWindow.getFocusedWindow();
-            win?.webContents.send('menu:saveAs');
+            if (win) sendToRenderer(win.webContents, 'menu:saveAs');
           },
         },
         { type: 'separator' },

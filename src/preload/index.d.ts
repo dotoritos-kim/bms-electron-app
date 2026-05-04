@@ -1,9 +1,21 @@
-export interface BmsFileInfo {
-  name: string;
-  path: string;
-  size: number;
-  ext: string;
-}
+/**
+ * Renderer-visible type for `window.api`.
+ *
+ * The runtime shape is defined in `src/preload/index.ts`. The typed channel
+ * map and helpers live in `src/shared/ipc-contract.ts` (single source of truth).
+ *
+ * NOTE: this file used to hand-mirror every method signature, which was a
+ * frequent source of drift. The new approach re-exports the inferred type
+ * from preload so the renderer stays in lockstep automatically.
+ */
+
+import type {
+  BmsFileInfo,
+  IpcSendChannel,
+  IpcSendMap,
+} from '../shared/ipc-contract';
+
+export type { BmsFileInfo };
 
 export interface ElectronAPI {
   file: {
@@ -31,7 +43,15 @@ export interface ElectronAPI {
       keysoundMap: Record<string, string>,
     ) => Promise<{ results: Record<string, ArrayBuffer>; errors: Record<string, string> }>;
   };
-  on: (channel: string, callback: (...args: unknown[]) => void) => () => void;
+  /**
+   * Subscribe to a typed main → renderer channel.
+   * The channel must be one of the values declared in `IpcSendMap`.
+   * Returns an unsubscribe function.
+   */
+  on: <K extends IpcSendChannel>(
+    channel: K,
+    callback: (...args: IpcSendMap[K]) => void,
+  ) => () => void;
 }
 
 declare global {

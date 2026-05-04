@@ -17,5 +17,9 @@
     "outDir": "./out/renderer",
     "types": ["vite/client"]
   },
-  "include": ["src/renderer/**/*.ts", "src/renderer/**/*.tsx", "src/preload/index.d.ts", "src/shared/**/*.ts"]
+  "include": ["src/renderer/**/*.ts", "src/renderer/**/*.tsx", "src/preload/index.d.ts", "src/shared/**/*.ts"],
+  "exclude": [
+    "src/renderer/workers/gameLoop.worker.ts",
+    "src/renderer/workers/audioScheduler.worker.ts"
+  ]
 }

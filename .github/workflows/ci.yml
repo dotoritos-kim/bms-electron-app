@@ -67,15 +67,15 @@ jobs:
       # (matches the dependency graph).
       - name: Install & build bms-core
         working-directory: bms-core
-        run: npm ci && npm run build
+        run: npm ci --legacy-peer-deps && npm run build
 
       - name: Install & build bms-player
         working-directory: bms-player
-        run: npm ci && npm run build
+        run: npm ci --legacy-peer-deps && npm run build
 
       - name: Install & build bms-editor
         working-directory: bms-editor
-        run: npm ci && npm run build
+        run: npm ci --legacy-peer-deps && npm run build
 
       - name: Install dependencies (bms-electron-app)
         working-directory: bms-electron-app
@@ -153,15 +153,15 @@ jobs:
 
       - name: Install & build bms-core
         working-directory: bms-core
-        run: npm ci && npm run build
+        run: npm ci --legacy-peer-deps && npm run build
 
       - name: Install & build bms-player
         working-directory: bms-player
-        run: npm ci && npm run build
+        run: npm ci --legacy-peer-deps && npm run build
 
       - name: Install & build bms-editor
         working-directory: bms-editor
-        run: npm ci && npm run build
+        run: npm ci --legacy-peer-deps && npm run build
 
       - name: Install dependencies (bms-electron-app)
         working-directory: bms-electron-app

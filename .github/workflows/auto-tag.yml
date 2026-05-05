@@ -1,0 +1,59 @@
+name: Auto Tag
+
+on:
+  push:
+    branches:
+      - ship/v1.0-complete
+      - main
+      - master
+      - refactor/stage-2-strict-returns
+    paths:
+      - 'package.json'
+  workflow_dispatch:
+
+concurrency:
+  group: auto-tag-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    name: Tag from package.json version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read version from package.json
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Create & push tag if missing
+        env:
+          VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          set -e
+          TAG="v${VERSION}"
+          if [ -z "${VERSION}" ]; then
+            echo "::error::package.json version is empty"
+            exit 1
+          fi
+          if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists locally — nothing to do."
+            exit 0
+          fi
+          if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "${TAG}"; then
+            echo "Tag ${TAG} already exists on remote — nothing to do."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "${TAG}"
+          echo "Pushed ${TAG} — release.yml will run."

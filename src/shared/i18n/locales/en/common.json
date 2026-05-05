@@ -1,6 +1,29 @@
 {
+  "actions": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveAs": "Save As",
+    "open": "Open",
+    "close": "Close",
+    "delete": "Delete",
+    "discard": "Discard",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "dismiss": "Dismiss notification"
+  },
   "language": {
-    "current": "",
-    "label": ""
+    "label": "Language",
+    "current": "Current language: {{name}}",
+    "changeTo": "Switch to {{name}}",
+    "changing": "Switching language...",
+    "changed": "Language changed to {{name}}",
+    "loadFailed": "Failed to load {{name}} translations. Keeping previous language."
+  },
+  "status": {
+    "saved": "Saved",
+    "saving": "Saving...",
+    "modified": "Modified"
   }
 }

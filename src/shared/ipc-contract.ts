@@ -136,6 +136,7 @@ export const ALLOWED_RECV_CHANNELS: readonly IpcSendChannel[] = [
   'menu:openFolder',
   'menu:save',
   'menu:saveAs',
+  'locale:changed',
 ] as const;
 
 export function isAllowedRecvChannel(channel: string): channel is IpcSendChannel {

@@ -7,8 +7,8 @@
  * 직접 테스트하여 Worker가 사용하는 파싱 로직을 검증합니다.
  */
 
-import { BMSParser } from '../../../../bms-core/src/parser';
-import { detectKeyMode } from '../../../../bms-editor/src/chart/useBmsChart';
+import { BMSParser } from '../../../vendor/bms-core/src/parser';
+import { detectKeyMode } from '../../../vendor/bms-editor/src/chart/useBmsChart';
 
 // Simple ASCII BMS for basic parsing
 const SIMPLE_BMS = `

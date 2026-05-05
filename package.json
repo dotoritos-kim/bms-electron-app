@@ -2,6 +2,12 @@
   "name": "bms-electron-app",
   "version": "0.1.2",
   "description": "BMS Desktop - Rhythm game player and chart editor",
+  "license": "MIT",
+  "author": "dotoritos-kim",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotoritos-kim/bms-electron-app.git"
+  },
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "node scripts/dev.js",

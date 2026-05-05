@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.2.0). Must already exist.'
+        required: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Resolve ref
+        id: ref
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ github.ref }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout bms-electron-app
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+          path: bms-electron-app
+
+      - name: Checkout bms-core
+        uses: actions/checkout@v4
+        with:
+          repository: dotoritos-kim/bms-core
+          token: ${{ secrets.SIBLING_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+          path: bms-core
+
+      - name: Checkout bms-editor
+        uses: actions/checkout@v4
+        with:
+          repository: dotoritos-kim/bms-editor
+          token: ${{ secrets.SIBLING_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+          path: bms-editor
+
+      - name: Checkout bms-player
+        uses: actions/checkout@v4
+        with:
+          repository: dotoritos-kim/bms-player
+          token: ${{ secrets.SIBLING_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+          path: bms-player
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: bms-electron-app/package-lock.json
+
+      - name: Install & build bms-core
+        working-directory: bms-core
+        run: npm ci --legacy-peer-deps && npm run build
+
+      - name: Install & build bms-player
+        working-directory: bms-player
+        run: npm ci --legacy-peer-deps && npm run build
+
+      - name: Install & build bms-editor
+        working-directory: bms-editor
+        run: npm ci --legacy-peer-deps && npm run build
+
+      - name: Install dependencies (bms-electron-app)
+        working-directory: bms-electron-app
+        run: npm ci
+
+      - name: Build renderer/main/preload
+        working-directory: bms-electron-app
+        run: npm run build
+
+      - name: Package & publish to GitHub Releases
+        working-directory: bms-electron-app
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --publish always
+
+      - name: Upload installer artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            bms-electron-app/dist/*.exe
+            bms-electron-app/dist/*.blockmap
+            bms-electron-app/dist/latest*.yml
+          retention-days: 14
+          if-no-files-found: warn

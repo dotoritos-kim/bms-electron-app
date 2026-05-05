@@ -148,24 +148,24 @@ test.describe('Editor GUI - Real BMS File', () => {
     // Click left panel toggle (키사운드 패널 title)
     const leftToggle = window.locator('button[title="키사운드 패널"]');
     if (await leftToggle.count() > 0) {
-      await leftToggle.click({ force: true });
+      await leftToggle.dispatchEvent('click');
       await window.waitForTimeout(300);
       await window.screenshot({ path: 'test-results/gui-left-panel-closed.png' });
 
       // Re-open
-      await leftToggle.click({ force: true });
+      await leftToggle.dispatchEvent('click');
       await window.waitForTimeout(300);
     }
 
     // Click right panel toggle (정보 패널 title)
     const rightToggle = window.locator('button[title="정보 패널"]');
     if (await rightToggle.count() > 0) {
-      await rightToggle.click({ force: true });
+      await rightToggle.dispatchEvent('click');
       await window.waitForTimeout(300);
       await window.screenshot({ path: 'test-results/gui-right-panel-closed.png' });
 
       // Re-open
-      await rightToggle.click({ force: true });
+      await rightToggle.dispatchEvent('click');
       await window.waitForTimeout(300);
     }
 

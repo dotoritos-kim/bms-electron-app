@@ -282,7 +282,7 @@ test.describe('BPM Tap Dialog - Deep Interaction', () => {
 
     // Open BPM Tap dialog
     const bpmBtn = window.locator('[data-testid="bpm-btn"]');
-    await bpmBtn.click({ force: true });
+    await bpmBtn.dispatchEvent('click');
     await window.waitForTimeout(500);
 
     // Should show "BPM 탭" header
@@ -312,7 +312,7 @@ test.describe('BPM Tap Dialog - Deep Interaction', () => {
     await openEditorWithRealFile(window);
 
     const bpmBtn = window.locator('[data-testid="bpm-btn"]');
-    await bpmBtn.click({ force: true });
+    await bpmBtn.dispatchEvent('click');
     await window.waitForTimeout(500);
 
     // Tap a few times
@@ -403,7 +403,7 @@ test.describe('Chart Diff Overlay', () => {
 
     // Click diff button
     const diffBtn = window.locator('[data-testid="diff-btn"]');
-    await diffBtn.click({ force: true });
+    await diffBtn.dispatchEvent('click');
     await window.waitForTimeout(500);
 
     // Should show diff-related content

@@ -174,7 +174,7 @@ test.describe('Diff View Workflow', () => {
     // Open diff
     const diffBtn = window.locator('[data-testid="diff-btn"]');
     if (await diffBtn.count() > 0) {
-      await diffBtn.click({ force: true });
+      await diffBtn.dispatchEvent('click');
       await window.waitForTimeout(500);
 
       await window.screenshot({ path: 'test-results/gui-workflow-diff.png' });

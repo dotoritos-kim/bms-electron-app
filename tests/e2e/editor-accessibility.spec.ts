@@ -150,7 +150,7 @@ test.describe('Escape Key Management', () => {
     await openEditorWithRealFile(window);
 
     const bpmBtn = window.locator('[data-testid="bpm-btn"]');
-    await bpmBtn.click({ force: true });
+    await bpmBtn.dispatchEvent('click');
     await window.waitForTimeout(500);
 
     await expect(window.locator('text=BPM 탭')).toHaveCount(1);
@@ -210,16 +210,16 @@ test.describe('Panel Visibility', () => {
     const leftPanel = window.locator('[data-testid="left-panel"]');
     expect(await leftPanel.count()).toBeGreaterThan(0);
 
-    // Toggle off
+    // Toggle off — dispatchEvent because resize handle / right-panel intercepts pointer in CI viewport
     const toggleBtn = window.locator('[data-testid="toggle-left-panel"]');
-    await toggleBtn.click({ force: true });
+    await toggleBtn.dispatchEvent('click');
     await window.waitForTimeout(300);
 
     // Should be hidden
     expect(await leftPanel.count()).toBe(0);
 
     // Toggle back on
-    await toggleBtn.click({ force: true });
+    await toggleBtn.dispatchEvent('click');
     await window.waitForTimeout(300);
 
     expect(await leftPanel.count()).toBeGreaterThan(0);
@@ -232,12 +232,12 @@ test.describe('Panel Visibility', () => {
     expect(await rightPanel.count()).toBeGreaterThan(0);
 
     const toggleBtn = window.locator('[data-testid="toggle-right-panel"]');
-    await toggleBtn.click({ force: true });
+    await toggleBtn.dispatchEvent('click');
     await window.waitForTimeout(300);
 
     expect(await rightPanel.count()).toBe(0);
 
-    await toggleBtn.click({ force: true });
+    await toggleBtn.dispatchEvent('click');
     await window.waitForTimeout(300);
 
     expect(await rightPanel.count()).toBeGreaterThan(0);

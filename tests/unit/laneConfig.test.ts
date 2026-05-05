@@ -19,85 +19,85 @@ describe('generateLaneConfig', () => {
     }
   > = {
     '4K': {
-      laneCount: 7,
-      laneIds: ['SC', '1', '2', '4', '5', 'FZ', 'BGM'],
+      laneCount: 6,
+      laneIds: ['SC', '1', '2', '4', '5', 'FZ'],
       scratchLanes: ['SC'],
       laneWidth: 35,
       scratchWidth: 35,
     },
     '5K': {
-      laneCount: 8,
-      laneIds: ['SC', '1', '2', '3', '4', '5', 'FZ', 'BGM'],
+      laneCount: 7,
+      laneIds: ['SC', '1', '2', '3', '4', '5', 'FZ'],
       scratchLanes: ['SC'],
       laneWidth: 31,
       scratchWidth: 35,
     },
     '6K': {
-      laneCount: 9,
-      laneIds: ['SC', '1', '2', '3', '5', '6', '7', 'FZ', 'BGM'],
+      laneCount: 8,
+      laneIds: ['SC', '1', '2', '3', '5', '6', '7', 'FZ'],
       scratchLanes: ['SC'],
       laneWidth: 28,
       scratchWidth: 31,
     },
     '7K': {
-      laneCount: 10,
-      laneIds: ['SC', '1', '2', '3', '4', '5', '6', '7', 'FZ', 'BGM'],
+      laneCount: 9,
+      laneIds: ['SC', '1', '2', '3', '4', '5', '6', '7', 'FZ'],
       scratchLanes: ['SC'],
       laneWidth: 25,
       scratchWidth: 31,
     },
     '8K': {
-      laneCount: 9,
-      laneIds: ['1', '2', '3', '4', '5', '6', '7', '8', 'BGM'],
+      laneCount: 8,
+      laneIds: ['1', '2', '3', '4', '5', '6', '7', '8'],
       scratchLanes: [],
       laneWidth: 25,
       scratchWidth: 0,
     },
     '9K': {
-      laneCount: 10,
-      laneIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'BGM'],
+      laneCount: 9,
+      laneIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
       scratchLanes: [],
       laneWidth: 24,
       scratchWidth: 0,
     },
     '10K': {
-      laneCount: 13,
-      laneIds: ['SC', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'SC2', 'BGM'],
+      laneCount: 12,
+      laneIds: ['SC', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'SC2'],
       scratchLanes: ['SC', 'SC2'],
       laneWidth: 18,
       scratchWidth: 28,
     },
     '12K': {
-      laneCount: 13,
-      laneIds: [...Array.from({ length: 12 }, (_, i) => (i + 1).toString()), 'BGM'],
+      laneCount: 12,
+      laneIds: Array.from({ length: 12 }, (_, i) => (i + 1).toString()),
       scratchLanes: [],
       laneWidth: 18,
       scratchWidth: 0,
     },
     '14K': {
-      laneCount: 19,
-      laneIds: ['SC', '1', '2', '3', '4', '5', '6', '7', 'FZ', '8', '9', '10', '11', '12', '13', '14', 'FZ2', 'SC2', 'BGM'],
+      laneCount: 18,
+      laneIds: ['SC', '1', '2', '3', '4', '5', '6', '7', 'FZ', '8', '9', '10', '11', '12', '13', '14', 'FZ2', 'SC2'],
       scratchLanes: ['SC', 'SC2'],
       laneWidth: 14,
       scratchWidth: 25,
     },
     '18K': {
-      laneCount: 19,
-      laneIds: [...Array.from({ length: 18 }, (_, i) => (i + 1).toString()), 'BGM'],
+      laneCount: 18,
+      laneIds: Array.from({ length: 18 }, (_, i) => (i + 1).toString()),
       scratchLanes: [],
       laneWidth: 13,
       scratchWidth: 0,
     },
     '24K': {
-      laneCount: 25,
-      laneIds: [...Array.from({ length: 24 }, (_, i) => (i + 1).toString()), 'BGM'],
+      laneCount: 24,
+      laneIds: Array.from({ length: 24 }, (_, i) => (i + 1).toString()),
       scratchLanes: [],
       laneWidth: 10,
       scratchWidth: 0,
     },
     '48K': {
-      laneCount: 49,
-      laneIds: [...Array.from({ length: 48 }, (_, i) => (i + 1).toString()), 'BGM'],
+      laneCount: 48,
+      laneIds: Array.from({ length: 48 }, (_, i) => (i + 1).toString()),
       scratchLanes: [],
       laneWidth: 5,
       scratchWidth: 0,
@@ -239,16 +239,42 @@ describe('key mode specific properties', () => {
     expect(ids).toContain('FZ2');
   });
 
-  it('48K total width is 270px (48 * 5 + BGM 30)', () => {
+  it('48K total width is 240px (48 * 5, no BGM by default)', () => {
     const lanes = generateLaneConfig('48K');
     const totalWidth = lanes.reduce((sum, l) => sum + l.width, 0);
-    expect(totalWidth).toBe(270);
+    expect(totalWidth).toBe(240);
   });
 
-  it('24K total width is 270px (24 * 10 + BGM 30)', () => {
+  it('24K total width is 240px (24 * 10, no BGM by default)', () => {
     const lanes = generateLaneConfig('24K');
     const totalWidth = lanes.reduce((sum, l) => sum + l.width, 0);
-    expect(totalWidth).toBe(270);
+    expect(totalWidth).toBe(240);
+  });
+});
+
+describe('explicit BGM channel count', () => {
+  it('adds N BGM lanes when bgmChannelCount is provided', () => {
+    const lanes = generateLaneConfig('7K', 1);
+    expect(lanes).toHaveLength(10);
+    expect(lanes[lanes.length - 1].id).toBe('BGM');
+    expect(lanes[lanes.length - 1].isBgm).toBe(true);
+  });
+
+  it('adds zero BGM lanes when bgmChannelCount is 0', () => {
+    const lanes = generateLaneConfig('7K', 0);
+    expect(lanes.some((l) => l.isBgm)).toBe(false);
+    expect(lanes).toHaveLength(9);
+  });
+
+  it('adds multiple BGM lanes named BGM, BGM1, BGM2 ...', () => {
+    const lanes = generateLaneConfig('5K', 3);
+    const bgms = lanes.filter((l) => l.isBgm).map((l) => l.id);
+    expect(bgms).toEqual(['BGM', 'BGM1', 'BGM2']);
+  });
+
+  it('default (undefined) yields no BGM lane (playable structure only)', () => {
+    const lanes = generateLaneConfig('7K');
+    expect(lanes.some((l) => l.isBgm)).toBe(false);
   });
 });
 

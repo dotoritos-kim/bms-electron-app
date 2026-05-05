@@ -183,11 +183,15 @@ self.onmessage = async (event: MessageEvent<WorkerInMessage>) => {
   }
 };
 
-self.onerror = (event: ErrorEvent) => {
-  // Crash-level error — requestId unknown, send -1 as sentinel
+self.onerror = (event: string | Event) => {
+  // Crash-level error — requestId unknown, send -1 as sentinel.
+  // OnErrorEventHandler signature is `string | Event`; narrow to ErrorEvent for .message access.
+  const message = typeof event === 'string'
+    ? event
+    : (event as ErrorEvent).message ?? 'Worker crashed';
   self.postMessage({
     type: 'PARSE_ERROR',
     requestId: -1,
-    error: event.message ?? 'Worker crashed',
+    error: message,
   });
 };

@@ -18,6 +18,7 @@ import {
 import type { BmsChartDiffInfo, NoteChartEditorProps, ZoomControl } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote, EditableBMSChart, TimingAction } from '@rhythm-archive/bms-core';
 import { BMSWriter, Timing } from '@rhythm-archive/bms-core';
+import { beatToTick } from '../lib/tickUtils';
 import { AudioPreloader, WorkerAudioScheduler } from '@rhythm-archive/bms-player';
 import type { FileMap, SchedulerNote } from '@rhythm-archive/bms-player';
 import AudioSchedulerWorkerConstructor from '../workers/audioScheduler.worker?worker';
@@ -1258,7 +1259,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   }, []);
 
   // Auto-save (every 60s when dirty)
-  const autoSaveRef = useRef<ReturnType<typeof setInterval>>();
+  const autoSaveRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   useEffect(() => {
     autoSaveRef.current = setInterval(async () => {
       const chartToSave = store.savableChart();
@@ -2440,11 +2441,13 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <AutoChartDialog
           open={activeModal === 'autoChart'}
           onClose={() => setActiveModal(null)}
-          existingNotes={notes.filter((n) => n.noteType === 'playable').map((n) => ({
-            beat: n.beat,
-            column: n.column,
-            columnIndex: laneIds.indexOf(n.column),
-          }))}
+          existingNotes={notes
+            .filter((n): n is typeof n & { column: string } => n.noteType === 'playable' && typeof n.column === 'string')
+            .map((n) => ({
+              beat: n.beat,
+              column: n.column,
+              columnIndex: laneIds.indexOf(n.column),
+            }))}
           laneIds={laneIds}
           bpm={editedBaseBpm}
           currentBeat={useEditorStore.getState().currentBeat}
@@ -2453,12 +2456,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             const s = useEditorStore.getState();
             store.pushUndo('Auto-generate chart');
             let nextId = s.nextNoteId;
-            const newNotes = generatedNotes.map((gn) => {
+            const newNotes: EditableBMSNote[] = generatedNotes.map((gn) => {
               const col = laneIds[gn.columnIndex] || laneIds[0] || '';
               const { measure, fraction } = store.beatToMF(gn.beat);
+              const tick = beatToTick(gn.beat);
+              const endTick = gn.endBeat !== undefined ? beatToTick(gn.endBeat) : undefined;
               return {
                 id: `note-${nextId++}`,
                 beat: gn.beat,
+                tick,
                 column: col,
                 noteType: gn.noteType,
                 keysound: s.currentKeysound,
@@ -2466,6 +2472,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 fraction,
                 channel: '',
                 endBeat: gn.endBeat,
+                endTick,
               };
             });
             useEditorStore.setState({

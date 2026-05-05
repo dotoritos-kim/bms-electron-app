@@ -7,9 +7,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@rhythm-archive/bms-core': resolve(__dirname, '../bms-core/src/index.ts'),
-      '@rhythm-archive/bms-player': resolve(__dirname, '../bms-player/src/index.ts'),
-      '@rhythm-archive/bms-editor': resolve(__dirname, '../bms-editor/src/index.ts'),
+      '@rhythm-archive/bms-core': resolve(__dirname, 'vendor/bms-core/src/index.ts'),
+      '@rhythm-archive/bms-player': resolve(__dirname, 'vendor/bms-player/src/index.ts'),
+      '@rhythm-archive/bms-editor': resolve(__dirname, 'vendor/bms-editor/src/index.ts'),
     },
   },
   test: {

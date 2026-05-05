@@ -76,7 +76,7 @@ vi.stubGlobal('AudioWorkletNode', vi.fn(() => ({
   connect: vi.fn(), disconnect: vi.fn(),
 })));
 
-import { AudioPreloader } from '../../../../bms-player/src/audio/loader/AudioPreloader';
+import { AudioPreloader } from '../../../vendor/bms-player/src/audio/loader/AudioPreloader';
 
 describe('AudioPreloader.abort()', () => {
   it('abort() resolves decodeAll() immediately without waiting for pending decodes', async () => {

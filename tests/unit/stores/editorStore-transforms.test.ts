@@ -4,7 +4,7 @@
  * work correctly with different lane configurations.
  */
 import { getLaneIds } from '@rhythm-archive/bms-editor';
-import type { KeyMode } from '../../../bms-editor/src/chart/NoteChartViewer';
+import type { KeyMode } from '../../../vendor/bms-editor/src/chart/NoteChartViewer';
 import { useEditorStore } from '../../../src/renderer/stores/editorStore';
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
 

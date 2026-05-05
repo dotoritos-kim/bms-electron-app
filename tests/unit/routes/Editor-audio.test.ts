@@ -56,7 +56,7 @@ class MockWorker {
   }
 }
 
-import { AudioPreloader } from '../../../../bms-player/src/audio/loader/AudioPreloader';
+import { AudioPreloader } from '../../../vendor/bms-player/src/audio/loader/AudioPreloader';
 
 describe('Editor audio abort bail-out', () => {
   it('abort() + releaseAllResources() during loadAll resolves immediately', async () => {

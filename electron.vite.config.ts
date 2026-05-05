@@ -61,10 +61,10 @@ export default defineConfig({
     resolve: {
       dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'three', '@react-three/fiber', 'zustand', 'lucide-react'],
       alias: {
-        // Dev: resolve file: deps to source so HMR picks up changes without rebuild
-        '@rhythm-archive/bms-core': resolve(__dirname, '../bms-core/src/index.ts'),
-        '@rhythm-archive/bms-player': resolve(__dirname, '../bms-player/src/index.ts'),
-        '@rhythm-archive/bms-editor': resolve(__dirname, '../bms-editor/src/index.ts'),
+        // Dev: resolve workspace deps to source so HMR picks up changes without rebuild
+        '@rhythm-archive/bms-core': resolve(__dirname, 'vendor/bms-core/src/index.ts'),
+        '@rhythm-archive/bms-player': resolve(__dirname, 'vendor/bms-player/src/index.ts'),
+        '@rhythm-archive/bms-editor': resolve(__dirname, 'vendor/bms-editor/src/index.ts'),
       },
     },
     optimizeDeps: {

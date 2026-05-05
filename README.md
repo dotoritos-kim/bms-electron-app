@@ -26,37 +26,31 @@
 - **Node.js** 20.x (CI 기준)
 - **npm** 10+
 - **Windows 10/11** (배포 타겟; 개발은 macOS/Linux에서도 가능)
-- **sibling 저장소 체크아웃** — 같은 부모 폴더에 다음과 같이 배치되어 있어야 합니다.
-
-```
-parent/
-├── bms-core/
-├── bms-player/
-├── bms-editor/
-└── bms-electron-app/   ← 이 저장소
-```
-
-`package.json`이 `file:../bms-core` 등의 로컬 경로 의존성으로 sibling 패키지를 참조하기 때문입니다.
+- **Git submodule 지원** — sibling 패키지(`bms-core`, `bms-player`, `bms-editor`)는 `vendor/` 하위에 submodule로 포함되며 npm workspaces로 연결됩니다.
 
 ## 빠른 시작
 
 ```bash
-# sibling 저장소 클론
-git clone https://github.com/dotoritos-kim/bms-core.git
-git clone https://github.com/dotoritos-kim/bms-player.git
-git clone https://github.com/dotoritos-kim/bms-editor.git
-git clone https://github.com/dotoritos-kim/bms-electron-app.git
+# 저장소 클론 (submodule 포함)
+git clone --recurse-submodules https://github.com/dotoritos-kim/bms-electron-app.git
+cd bms-electron-app
 
-# sibling 패키지 빌드 (각 디렉터리에서)
-cd bms-core    && npm ci --legacy-peer-deps && npm run build && cd ..
-cd bms-player  && npm ci --legacy-peer-deps && npm run build && cd ..
-cd bms-editor  && npm ci --legacy-peer-deps && npm run build && cd ..
+# 이미 clone한 경우라면
+# git submodule update --init --recursive
+
+# 워크스페이스 전체 의존성 설치 (root + vendor/*)
+npm ci --legacy-peer-deps
+
+# sibling 패키지 빌드 (npm workspaces)
+npm run build --workspace=@rhythm-archive/bms-core
+npm run build --workspace=@rhythm-archive/bms-player
+npm run build --workspace=@rhythm-archive/bms-editor
 
 # 앱 실행
-cd bms-electron-app
-npm ci
 npm run dev
 ```
+
+> 개발 중에는 `electron.vite.config.ts`의 별칭이 `vendor/<pkg>/src/index.ts`를 직접 가리키므로, sibling 패키지를 매번 다시 빌드하지 않아도 HMR이 동작합니다. 단, `npm run package`로 배포 빌드를 만들 때는 위 sibling 빌드가 선행되어야 합니다.
 
 ## npm 스크립트
 
@@ -80,42 +74,39 @@ npm run dev
 
 ```
 bms-electron-app/
-├── src/
+├── src/                       # 앱 본체 (main / preload / renderer / shared)
 │   ├── main/                  # Electron Main 프로세스
 │   │   ├── index.ts           # 앱 부트, BrowserWindow 생성
 │   │   ├── menu.ts            # 애플리케이션 메뉴
 │   │   └── ipc/               # IPC 핸들러 (file / audio / handle)
 │   ├── preload/               # contextBridge — window.api 노출
-│   │   ├── index.ts
-│   │   └── index.d.ts
 │   ├── renderer/              # React 19 + Vite 렌더러
-│   │   ├── App.tsx            # 라우트(home / player / editor) + 세션 복원
-│   │   ├── main.tsx
-│   │   ├── index.html
+│   │   ├── App.tsx
 │   │   ├── routes/            # Home / Player / Editor
-│   │   ├── components/        # Layout, Dialog, Toast, Waveform, ...
-│   │   ├── stores/            # Zustand 스토어 (editorStore)
-│   │   ├── hooks/, lib/, workers/
+│   │   ├── components/, stores/, hooks/, lib/, workers/
 │   │   └── global.css         # Tailwind v4 entry
 │   └── shared/
 │       └── ipc-contract.ts    # main ↔ renderer IPC 타입 계약
-├── scripts/
-│   ├── dev.js                 # ELECTRON_RUN_AS_NODE 정리 + electron-vite dev
-│   └── generate-test-fixtures.ts
+├── vendor/                    # Git submodule (npm workspace)
+│   ├── bms-core/              # 파서 / 도메인 모델 / 오디오 엔진 코어
+│   ├── bms-player/            # 플레이어 UI 및 노트 렌더링
+│   └── bms-editor/            # 채보 에디터
+├── scripts/                   # dev.js, generate-test-fixtures.ts ...
 ├── tests/                     # Vitest + Playwright
 ├── docs/                      # QA 전략 / 변경 이력 / 프롬프트 기록
-├── electron.vite.config.ts    # main / preload / renderer 빌드 설정
+├── electron.vite.config.ts
+├── .gitmodules                # vendor/* submodule URL 정의
 ├── playwright.config.ts
 ├── stryker.config.mjs
 ├── vitest.config.ts
-└── package.json
+└── package.json               # npm workspaces 루트
 ```
 
 ### 아키텍처 메모
 
 - **Main ↔ Renderer 계약**은 [src/shared/ipc-contract.ts](src/shared/ipc-contract.ts)에 단일 진실 공급원으로 정의되며, preload에서 `window.api`로 노출됩니다 (`contextIsolation: true`, `nodeIntegration: false`).
 - **렌더러는 React 19 + Tailwind v4 + Zustand + react-three/fiber** 조합을 사용합니다.
-- **개발 모드 별칭**: `electron.vite.config.ts`에서 `@rhythm-archive/bms-*`를 sibling 저장소 `src/index.ts`로 직접 별칭 처리하여, sibling 패키지를 다시 빌드하지 않고도 HMR이 동작합니다.
+- **개발 모드 별칭**: `electron.vite.config.ts`에서 `@rhythm-archive/bms-*`를 `vendor/<pkg>/src/index.ts`로 직접 별칭 처리하여, sibling 패키지를 다시 빌드하지 않고도 HMR이 동작합니다.
 - **세션 영속화**는 `lib/sessionStorage.ts`에서 처리하며, 마지막 라우트와 파일 경로를 저장합니다.
 
 ## 빌드 & 배포
@@ -138,10 +129,11 @@ npm run package     # NSIS 설치 파일 + Portable 빌드 → dist/
 
 `v*` 태그를 푸시하거나 [Release workflow](.github/workflows/release.yml)를 수동 실행하면 다음이 자동으로 진행됩니다.
 
-1. `bms-core`, `bms-player`, `bms-editor` sibling 저장소 체크아웃
-2. 각 sibling 패키지 빌드
-3. `bms-electron-app` 빌드 + `electron-builder --win --publish always`
-4. NSIS / Portable 인스톨러를 GitHub Releases에 첨부 + 워크플로 아티팩트로도 업로드
+1. `bms-electron-app` 체크아웃 (submodule 재귀 포함)
+2. `npm ci`로 워크스페이스 전체 의존성 설치
+3. `npm run build --workspace=...`로 sibling 패키지 빌드
+4. `bms-electron-app` 빌드 + `electron-builder --win --publish always`
+5. NSIS / Portable 인스톨러를 GitHub Releases에 첨부 + 워크플로 아티팩트로도 업로드
 
 릴리스 절차:
 
@@ -153,7 +145,7 @@ npm version patch    # or minor / major
 git push --follow-tags
 ```
 
-태그가 푸시되면 [release.yml](.github/workflows/release.yml)이 자동 트리거되며, sibling 저장소 권한이 필요한 경우 `SIBLING_REPO_TOKEN` secret이 사용됩니다 (없으면 `GITHUB_TOKEN`로 폴백).
+태그가 푸시되면 [release.yml](.github/workflows/release.yml)이 자동 트리거되며, submodule이 비공개 저장소에 있는 경우 `SIBLING_REPO_TOKEN` secret이 사용됩니다 (없으면 `GITHUB_TOKEN`로 폴백).
 
 ## 테스트 전략
 
@@ -166,7 +158,9 @@ git push --follow-tags
 
 ## 라이선스
 
-본 저장소의 라이선스 정책은 별도로 명시되지 않은 경우 sibling 저장소(`bms-core` 등)의 라이선스를 따릅니다. 사용 전 각 저장소의 LICENSE를 확인하세요.
+[MIT License](LICENSE) — Copyright (c) 2026 dotoritos-kim
+
+`vendor/` 하위 sibling 패키지(`bms-core`, `bms-player`, `bms-editor`)도 모두 MIT 라이선스이며, 각 저장소의 `LICENSE` 파일에 동일한 저작권 표기가 포함되어 있습니다.
 
 ## 관련 문서
 

@@ -10,13 +10,27 @@ jobs:
   unit-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SIBLING_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: package-lock.json
 
-      - run: npm ci
+      - name: Install workspaces (root + vendor/*)
+        run: npm ci --legacy-peer-deps
+
+      - name: Build sibling packages
+        run: |
+          npm run build --workspace=@rhythm-archive/bms-core
+          npm run build --workspace=@rhythm-archive/bms-player
+          npm run build --workspace=@rhythm-archive/bms-editor
+
       - run: npm run test -- tests/unit tests/integration tests/compatibility
       - run: npm run test:coverage -- tests/unit tests/integration tests/compatibility
 
@@ -30,13 +44,27 @@ jobs:
     runs-on: windows-latest
     needs: unit-test
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.SIBLING_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: package-lock.json
 
-      - run: npm ci
+      - name: Install workspaces (root + vendor/*)
+        run: npm ci --legacy-peer-deps
+
+      - name: Build sibling packages
+        run: |
+          npm run build --workspace=@rhythm-archive/bms-core
+          npm run build --workspace=@rhythm-archive/bms-player
+          npm run build --workspace=@rhythm-archive/bms-editor
+
       - run: npx playwright install --with-deps
       - run: npm run build
       - run: npm run test:e2e

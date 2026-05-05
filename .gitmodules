@@ -1,0 +1,9 @@
+[submodule "vendor/bms-core"]
+	path = vendor/bms-core
+	url = https://github.com/dotoritos-kim/bms-core.git
+[submodule "vendor/bms-player"]
+	path = vendor/bms-player
+	url = https://github.com/dotoritos-kim/bms-player.git
+[submodule "vendor/bms-editor"]
+	path = vendor/bms-editor
+	url = https://github.com/dotoritos-kim/bms-editor.git

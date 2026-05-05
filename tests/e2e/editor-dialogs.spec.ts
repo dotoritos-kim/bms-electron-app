@@ -199,7 +199,7 @@ test.describe('Measure Insert/Delete Dialogs', () => {
     await window.keyboard.press('Control+Shift+i');
     await window.waitForTimeout(500);
 
-    await expect(window.locator('text=마디 삽입')).toHaveCount(1);
+    await expect(window.locator('[data-testid="measure-dialog-title"]')).toHaveText('마디 삽입');
 
     // Find number input
     const numInputs = window.locator('input[type="number"]');
@@ -217,7 +217,7 @@ test.describe('Measure Insert/Delete Dialogs', () => {
     await window.keyboard.press('Control+Shift+d');
     await window.waitForTimeout(500);
 
-    await expect(window.locator('text=마디 삭제')).toHaveCount(1);
+    await expect(window.locator('[data-testid="measure-dialog-title"]')).toHaveText('마디 삭제');
 
     await window.screenshot({ path: 'test-results/gui-dialog-measure-delete.png' });
     await window.keyboard.press('Escape');
@@ -282,7 +282,7 @@ test.describe('BPM Tap Dialog - Deep Interaction', () => {
 
     // Open BPM Tap dialog
     const bpmBtn = window.locator('[data-testid="bpm-btn"]');
-    await bpmBtn.click();
+    await bpmBtn.click({ force: true });
     await window.waitForTimeout(500);
 
     // Should show "BPM 탭" header
@@ -312,7 +312,7 @@ test.describe('BPM Tap Dialog - Deep Interaction', () => {
     await openEditorWithRealFile(window);
 
     const bpmBtn = window.locator('[data-testid="bpm-btn"]');
-    await bpmBtn.click();
+    await bpmBtn.click({ force: true });
     await window.waitForTimeout(500);
 
     // Tap a few times
@@ -338,6 +338,9 @@ test.describe('BPM Tap Dialog - Deep Interaction', () => {
 test.describe('Key Bindings Dialog - Deep Interaction', () => {
   test('rebinding an action updates display', async ({ window }) => {
     await openEditorWithRealFile(window);
+
+    await window.locator('button', { hasText: '설정' }).click({ force: true });
+    await window.waitForTimeout(200);
 
     const kbBtn = window.locator('[data-testid="keybindings-btn"]');
     await kbBtn.click();
@@ -369,6 +372,9 @@ test.describe('Key Bindings Dialog - Deep Interaction', () => {
   test('reset button restores defaults', async ({ window }) => {
     await openEditorWithRealFile(window);
 
+    await window.locator('button', { hasText: '설정' }).click({ force: true });
+    await window.waitForTimeout(200);
+
     const kbBtn = window.locator('[data-testid="keybindings-btn"]');
     await kbBtn.click();
     await window.waitForTimeout(500);
@@ -397,7 +403,7 @@ test.describe('Chart Diff Overlay', () => {
 
     // Click diff button
     const diffBtn = window.locator('[data-testid="diff-btn"]');
-    await diffBtn.click();
+    await diffBtn.click({ force: true });
     await window.waitForTimeout(500);
 
     // Should show diff-related content

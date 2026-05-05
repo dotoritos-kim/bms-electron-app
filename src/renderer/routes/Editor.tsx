@@ -1436,6 +1436,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           <Save className="h-3.5 w-3.5" />
           {hasUnsavedChanges ? '저장 (Ctrl+S)' : '저장됨'}
         </button>
+        {hasUnsavedChanges && (
+          <span data-testid="modified-indicator" className="text-xs text-orange-400 font-medium">
+            수정 중
+          </span>
+        )}
         <div className="flex-1" />
 
         {/* === 마디 삽입/삭제 — 헤더에 직접 노출 === */}
@@ -2128,7 +2133,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         title={activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
         className="border border-zinc-700 p-4 w-80"
       >
-        <h3 className="text-sm font-semibold text-zinc-200 mb-3">
+        <h3 data-testid="measure-dialog-title" className="text-sm font-semibold text-zinc-200 mb-3">
           {activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
         </h3>
 

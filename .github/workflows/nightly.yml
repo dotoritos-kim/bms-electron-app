@@ -7,7 +7,15 @@ on:
 
 jobs:
   mutation-test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - src/renderer/stores/editorStore.ts
+          - src/renderer/lib/autoChart.ts
+          - src/renderer/lib/keyBindings.ts
+          - src/main/ipc/file.ts
     steps:
       - name: Checkout (with submodules)
         uses: actions/checkout@v4
@@ -30,12 +38,21 @@ jobs:
           npm run build --workspace=@rhythm-archive/bms-player
           npm run build --workspace=@rhythm-archive/bms-editor
 
-      - run: npm run test:mutation
+      - name: Restore Stryker incremental cache
+        uses: actions/cache@v4
+        with:
+          path: .stryker-tmp
+          key: stryker-${{ runner.os }}-${{ strategy.job-index }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', 'tests/**/*.ts', 'tests/**/*.tsx') }}
+          restore-keys: |
+            stryker-${{ runner.os }}-${{ strategy.job-index }}-
+            stryker-${{ runner.os }}-
+
+      - run: npx stryker run --mutate "${{ matrix.target }}"
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: mutation-report
+          name: mutation-report-${{ strategy.job-index }}
           path: reports/mutation/
 
   compatibility-test:

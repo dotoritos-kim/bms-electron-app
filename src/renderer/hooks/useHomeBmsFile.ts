@@ -64,7 +64,9 @@ export function useHomeBmsFile() {
     try {
       const uint8 = await window.api.file.readBms(filePath);
       // IPC returns Uint8Array; extract the underlying ArrayBuffer for transfer
-      buffer = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength);
+      // ArrayBufferLike includes SharedArrayBuffer; cast to ArrayBuffer because
+      // file IPC always uses transferable ArrayBuffer (Node Buffer / fs read).
+      buffer = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength) as ArrayBuffer;
     } catch (err) {
       // Guard: if a newer request already started, discard this error
       if (reqId !== requestIdRef.current) return;

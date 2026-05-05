@@ -92,6 +92,8 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
           positioning: chart.positioning,
           spacing: chart.spacing,
           barLines: chart.barLines,
+          // IIDX EX-style judgment window — default to ±20ms PGREAT / ±50ms GREAT
+          expertJudgmentWindow: [0.020, 0.050],
         };
 
         if (cancelled) return;

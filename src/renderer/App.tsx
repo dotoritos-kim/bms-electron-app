@@ -122,7 +122,7 @@ export function App() {
   // Expose dev helpers for automated testing (Puppeteer)
   // Using refs to avoid stale closures — the functions always use current setters
   useEffect(() => {
-    const w = window as Record<string, unknown>;
+    const w = window as unknown as Record<string, unknown>;
     w.__DEV_OPEN_FILE__ = (path: string, name: string, folderPath: string) => {
       setCurrentFile({ path, name, folderPath });
     };

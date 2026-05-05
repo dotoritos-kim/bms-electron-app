@@ -344,7 +344,7 @@ interface EditorState {
   redo: () => void;
 
   // Notes
-  addNote: (note: Omit<EditableBMSNote, 'id'>) => void;
+  addNote: (note: Omit<EditableBMSNote, 'id' | 'tick'>) => void;
   deleteNotes: (noteIds: string[]) => void;
   moveNotes: (noteIds: string[], delta: { beat?: number; columnDelta?: number }, laneIds: string[]) => void;
   selectNotes: (noteIds: string[], additive?: boolean) => void;
@@ -768,7 +768,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const lnLength = curEndTick !== undefined ? curEndTick - curTick : undefined;
       const newEndTick = lnLength !== undefined ? newTick + lnLength : undefined;
       let newColumn = n.column;
-      if (delta.columnDelta && laneIds.length > 0) {
+      if (delta.columnDelta && laneIds.length > 0 && n.column !== undefined) {
         const currentIndex = laneIds.indexOf(n.column);
         if (currentIndex >= 0) {
           const idx = Math.max(0, Math.min(laneIds.length - 1, currentIndex + delta.columnDelta));
@@ -1039,7 +1039,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     s.pushUndo('Mirror notes');
     set({
       notes: s.notes.map((n) => {
-        if (!s.selectedNotes.has(n.id)) return n;
+        if (!s.selectedNotes.has(n.id) || n.column === undefined) return n;
         const idx = laneIds.indexOf(n.column);
         if (idx < 0) return n;
         return { ...n, column: laneIds[laneIds.length - 1 - idx] };
@@ -1088,7 +1088,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     laneIds.forEach((id, i) => mapping.set(id, shuffled[i]));
     set({
       notes: s.notes.map((n) => {
-        if (!s.selectedNotes.has(n.id)) return n;
+        if (!s.selectedNotes.has(n.id) || n.column === undefined) return n;
         const newCol = mapping.get(n.column);
         return newCol ? { ...n, column: newCol } : n;
       }),
@@ -1769,7 +1769,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   selectionToPatternData: (laneIds) => {
     const s = get();
     if (s.selectedNotes.size === 0) return null;
-    const selected = s.notes.filter((n) => s.selectedNotes.has(n.id));
+    // Pattern requires concrete column + noteType — drop notes lacking either
+    const selected = s.notes.filter(
+      (n): n is typeof n & { column: string; noteType: NonNullable<typeof n.noteType> } =>
+        s.selectedNotes.has(n.id) && typeof n.column === 'string' && n.noteType !== undefined,
+    );
     if (selected.length === 0) return null;
     const minBeat = Math.min(...selected.map((n) => n.beat));
     const maxBeat = Math.max(...selected.map((n) => n.endBeat ?? n.beat));

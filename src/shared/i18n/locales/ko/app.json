@@ -132,6 +132,7 @@
     "infoSelection": "선택",
     "viewportTooltip": "전체 오디오 내 현재 뷰포트 위치",
     "autoDetectNoResults": "감지된 구간이 없습니다. 감도 슬라이더를 올려 다시 시도해보세요.",
+    "autoDetectSuccess_one": "{{count}}개 구간이 감지되었습니다.",
     "autoDetectSuccess_other": "{{count}}개 구간이 감지되었습니다."
   }
 }

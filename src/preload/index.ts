@@ -69,6 +69,10 @@ const api = {
     readBatch: (bmsFilePath: string, keysoundMap: Record<string, string>) =>
       invoke('audio:readBatch', bmsFilePath, keysoundMap),
   },
+  locale: {
+    getInitial: () => invoke('locale:getInitial'),
+    set: (locale: import('../shared/ipc-contract').SupportedLocale) => invoke('locale:set', locale),
+  },
   on,
 };
 

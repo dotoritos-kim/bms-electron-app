@@ -851,7 +851,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       // Keysound filter (includes additionalKeysounds)
       if (filter.keysounds && filter.keysounds.length > 0) {
         const hasMatch = filter.keysounds.includes(n.keysound) ||
-          n.additionalKeysounds?.some((ak) => filter.keysounds!.includes(ak.keysound));
+          n.additionalKeysounds?.some((ak: { keysound: string }) => filter.keysounds!.includes(ak.keysound));
         if (!hasMatch) return false;
       }
       return true;
@@ -1712,8 +1712,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         keysound = toId;
         changed = true;
       }
-      if (n.additionalKeysounds?.some((ak) => ak.keysound === fromId)) {
-        additionalKeysounds = n.additionalKeysounds.map((ak) =>
+      if (n.additionalKeysounds?.some((ak: { keysound: string }) => ak.keysound === fromId)) {
+        additionalKeysounds = n.additionalKeysounds.map((ak: { keysound: string }) =>
           ak.keysound === fromId ? { ...ak, keysound: toId } : ak
         );
         changed = true;

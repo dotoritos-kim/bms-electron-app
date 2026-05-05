@@ -32,7 +32,11 @@ module.exports = {
     },
   },
   create(context) {
-    const filename = context.getFilename().replace(/\\/g, '/');
+    // ESLint v9+ flat config uses context.filename; v8 uses context.getFilename()
+    const rawFilename = typeof context.filename === 'string'
+      ? context.filename
+      : (typeof context.getFilename === 'function' ? context.getFilename() : '');
+    const filename = rawFilename.replace(/\\/g, '/');
     if (ALLOW_PATH.test(filename)) {
       return {};
     }

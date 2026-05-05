@@ -1569,7 +1569,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 onDeleteUnused={handleDeleteUnused}
                 highlightKeysound={highlightKeysound}
                 onHighlightKeysound={store.setHighlightKeysound}
-                onSelectBgmNotes={(keysoundId) => store.selectByFilter({ keysounds: [keysoundId], noteTypes: ['bgm'] })}
+                onSelectBgmNotes={(keysoundId: string) => store.selectByFilter({ keysounds: [keysoundId], noteTypes: ['bgm'] })}
               />
             ) : (
               <PatternLibraryPanel
@@ -1624,11 +1624,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             snapEnabled={snapEnabled}
             onSnapToggle={store.toggleSnap}
             layerConfig={layerConfig}
-            onLayerVisibleToggle={(layer) => store.setLayerVisible(layer as any, !layerConfig[layer as keyof typeof layerConfig].visible)}
-            onLayerLockToggle={(layer) => store.setLayerLocked(layer as any, !layerConfig[layer as keyof typeof layerConfig].locked)}
+            onLayerVisibleToggle={(layer: string) => store.setLayerVisible(layer as any, !layerConfig[layer as keyof typeof layerConfig].visible)}
+            onLayerLockToggle={(layer: string) => store.setLayerLocked(layer as any, !layerConfig[layer as keyof typeof layerConfig].locked)}
             onZoomIn={() => zoomControlRef.current?.zoomIn()}
             onZoomOut={() => zoomControlRef.current?.zoomOut()}
-            onZoomPreset={(s) => zoomControlRef.current?.zoomTo(s)}
+            onZoomPreset={(s: number) => zoomControlRef.current?.zoomTo(s)}
             onZoomFit={() => zoomControlRef.current?.fitToChart()}
             currentBeatScale={currentBeatScale}
           />
@@ -2391,7 +2391,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           notes={notes}
           keyMode={keyMode}
           wavDefinitions={wavDefinitions}
-          onSelectNotes={(ids) => store.selectNotes(ids)}
+          onSelectNotes={(ids: string[]) => store.selectNotes(ids)}
           onNavigate={store.setCurrentBeat}
         />
       )}

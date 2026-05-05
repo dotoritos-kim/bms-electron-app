@@ -1,6 +1,6 @@
 {
   "name": "bms-electron-app",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "BMS Desktop - Rhythm game player and chart editor",
   "main": "./out/main/index.js",
   "scripts": {
@@ -61,6 +61,11 @@
   "build": {
     "appId": "net.dotoritos.bms-desktop",
     "productName": "BMS Desktop",
+    "publish": {
+      "provider": "github",
+      "owner": "dotoritos-kim",
+      "repo": "bms-electron-app"
+    },
     "win": {
       "target": [
         "nsis",

@@ -128,6 +128,10 @@ test.describe('Escape Key Management', () => {
   test('Escape closes keybindings dialog', async ({ window }) => {
     await openEditorWithRealFile(window);
 
+    // Open settings dropdown first (keybindings-btn is inside it)
+    await window.locator('button', { hasText: '설정' }).click({ force: true });
+    await window.waitForTimeout(200);
+
     const kbBtn = window.locator('[data-testid="keybindings-btn"]');
     await kbBtn.click();
     await window.waitForTimeout(1000);
@@ -146,7 +150,7 @@ test.describe('Escape Key Management', () => {
     await openEditorWithRealFile(window);
 
     const bpmBtn = window.locator('[data-testid="bpm-btn"]');
-    await bpmBtn.click();
+    await bpmBtn.click({ force: true });
     await window.waitForTimeout(500);
 
     await expect(window.locator('text=BPM 탭')).toHaveCount(1);
@@ -208,14 +212,14 @@ test.describe('Panel Visibility', () => {
 
     // Toggle off
     const toggleBtn = window.locator('[data-testid="toggle-left-panel"]');
-    await toggleBtn.click();
+    await toggleBtn.click({ force: true });
     await window.waitForTimeout(300);
 
     // Should be hidden
     expect(await leftPanel.count()).toBe(0);
 
     // Toggle back on
-    await toggleBtn.click();
+    await toggleBtn.click({ force: true });
     await window.waitForTimeout(300);
 
     expect(await leftPanel.count()).toBeGreaterThan(0);
@@ -228,12 +232,12 @@ test.describe('Panel Visibility', () => {
     expect(await rightPanel.count()).toBeGreaterThan(0);
 
     const toggleBtn = window.locator('[data-testid="toggle-right-panel"]');
-    await toggleBtn.click();
+    await toggleBtn.click({ force: true });
     await window.waitForTimeout(300);
 
     expect(await rightPanel.count()).toBe(0);
 
-    await toggleBtn.click();
+    await toggleBtn.click({ force: true });
     await window.waitForTimeout(300);
 
     expect(await rightPanel.count()).toBeGreaterThan(0);

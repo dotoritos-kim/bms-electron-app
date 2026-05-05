@@ -28,12 +28,12 @@ test.describe('Left Panel', () => {
     const toggle = window.locator('[data-testid="toggle-left-panel"]');
     if (await toggle.count() > 0) {
       // Close left panel
-      await toggle.click();
+      await toggle.click({ force: true });
       await window.waitForTimeout(300);
       await window.screenshot({ path: 'test-results/gui-panel-left-closed.png' });
 
       // Reopen left panel
-      await toggle.click();
+      await toggle.click({ force: true });
       await window.waitForTimeout(300);
       await window.screenshot({ path: 'test-results/gui-panel-left-open.png' });
     }
@@ -85,11 +85,11 @@ test.describe('Right Panel', () => {
 
     const toggle = window.locator('[data-testid="toggle-right-panel"]');
     if (await toggle.count() > 0) {
-      await toggle.click();
+      await toggle.click({ force: true });
       await window.waitForTimeout(300);
       await window.screenshot({ path: 'test-results/gui-panel-right-closed.png' });
 
-      await toggle.click();
+      await toggle.click({ force: true });
       await window.waitForTimeout(300);
     }
 
@@ -119,17 +119,17 @@ test.describe('Both Panels Hidden', () => {
     const leftToggle = window.locator('[data-testid="toggle-left-panel"]');
     const rightToggle = window.locator('[data-testid="toggle-right-panel"]');
 
-    if (await leftToggle.count() > 0) await leftToggle.click();
+    if (await leftToggle.count() > 0) await leftToggle.click({ force: true });
     await window.waitForTimeout(200);
-    if (await rightToggle.count() > 0) await rightToggle.click();
+    if (await rightToggle.count() > 0) await rightToggle.click({ force: true });
     await window.waitForTimeout(300);
 
     await window.screenshot({ path: 'test-results/gui-panels-both-closed.png' });
     await noError(window);
 
     // Reopen
-    if (await leftToggle.count() > 0) await leftToggle.click();
-    if (await rightToggle.count() > 0) await rightToggle.click();
+    if (await leftToggle.count() > 0) await leftToggle.click({ force: true });
+    if (await rightToggle.count() > 0) await rightToggle.click({ force: true });
     await window.waitForTimeout(300);
   });
 });

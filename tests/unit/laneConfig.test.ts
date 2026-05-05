@@ -4,8 +4,8 @@
  */
 import { generateLaneConfig, getLaneIds, getDpSplitIndex } from '@rhythm-archive/bms-editor';
 // getLaneBackground is not exported from package index, import directly
-import { getLaneBackground } from '../../../bms-editor/src/chart/laneConfig';
-import type { KeyMode } from '../../../bms-editor/src/chart/NoteChartViewer';
+import { getLaneBackground } from '../../vendor/bms-editor/src/chart/laneConfig';
+import type { KeyMode } from '../../vendor/bms-editor/src/chart/NoteChartViewer';
 
 describe('generateLaneConfig', () => {
   const EXPECTED: Record<

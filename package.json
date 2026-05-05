@@ -2,7 +2,18 @@
   "name": "bms-electron-app",
   "version": "0.1.2",
   "description": "BMS Desktop - Rhythm game player and chart editor",
+  "license": "MIT",
+  "author": "dotoritos-kim",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotoritos-kim/bms-electron-app.git"
+  },
   "main": "./out/main/index.js",
+  "workspaces": [
+    "vendor/bms-core",
+    "vendor/bms-player",
+    "vendor/bms-editor"
+  ],
   "scripts": {
     "dev": "node scripts/dev.js",
     "build": "electron-vite build",
@@ -22,9 +33,9 @@
     "@epic-web/invariant": "^1.0.0",
     "@react-three/drei": "^10.0.0",
     "@react-three/fiber": "^9.5.0",
-    "@rhythm-archive/bms-core": "file:../bms-core",
-    "@rhythm-archive/bms-editor": "file:../bms-editor",
-    "@rhythm-archive/bms-player": "file:../bms-player",
+    "@rhythm-archive/bms-core": "*",
+    "@rhythm-archive/bms-editor": "*",
+    "@rhythm-archive/bms-player": "*",
     "electron-store": "^10.0.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.460.0",
@@ -40,6 +51,7 @@
     "@stryker-mutator/core": "^9.6.0",
     "@stryker-mutator/vitest-runner": "^9.6.0",
     "@tailwindcss/vite": "^4.1.0",
+    "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/lodash": "^4.17.0",

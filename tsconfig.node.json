@@ -5,6 +5,8 @@
     "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

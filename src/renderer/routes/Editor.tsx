@@ -1037,12 +1037,13 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   // Auto-load audio effect (must be after loadAudio definition)
   loadAudioRef.current = loadAudio;
   useEffect(() => {
-    if (!chart || autoLoadedRef.current) return;
+    if (!chart || autoLoadedRef.current) return undefined;
     if (Object.keys(chart.keysounds).length > 0) {
       autoLoadedRef.current = true;
       const timer = setTimeout(() => loadAudioRef.current?.(), 100);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [chart]);
 
   const handleSeekRef = useRef<(s: number) => void>(() => {});

@@ -1,0 +1,34 @@
+{
+  "judgment": {
+    "pgreat": "PGREAT",
+    "great": "GREAT",
+    "good": "GOOD",
+    "bad": "BAD",
+    "poor": "POOR",
+    "miss": "MISS",
+    "early": "빠름",
+    "late": "느림"
+  },
+  "gauge": {
+    "cleared": "클리어",
+    "failed": "실패"
+  },
+  "hud": {
+    "bpm": "BPM",
+    "score": "점수",
+    "combo": "콤보",
+    "accuracy": "정확도"
+  },
+  "errors": {
+    "audioLoadFailed": "오디오를 불러오지 못했어요",
+    "decodeFailed": "오디오 디코드 실패",
+    "keysoundMissing": "키음 누락: {{name}}"
+  },
+  "state": {
+    "ready": "준비됨",
+    "playing": "재생 중",
+    "paused": "일시 정지",
+    "completed": "완료",
+    "failed": "실패"
+  }
+}

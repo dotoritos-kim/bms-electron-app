@@ -1,0 +1,28 @@
+{
+  "audioSlicer": {
+    "addMarkerButton": "",
+    "autoDetectButton": "",
+    "autoDetectNoResults": "",
+    "autoDetectSuccess_one": "",
+    "autoDetectSuccess_other": "",
+    "clearMarkersButton": "",
+    "emptyFormats": "",
+    "emptyTitle": "",
+    "infoChannels": "",
+    "infoLength": "",
+    "infoSampleRate": "",
+    "infoSelection": "",
+    "infoView": "",
+    "loading": "",
+    "markerCountSummary": "",
+    "openButton": "",
+    "playButton": "",
+    "playSelectionButton": "",
+    "sensitivityLabel": "",
+    "sliceAndSaveButton": "",
+    "slicingButton": "",
+    "stopButton": "",
+    "title": "",
+    "viewportTooltip": ""
+  }
+}

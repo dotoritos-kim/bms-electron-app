@@ -27,7 +27,9 @@
     "test:compat": "vitest run tests/compatibility/",
     "test:e2e": "playwright test",
     "test:all": "vitest run && playwright test",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run",
+    "i18n:extract": "i18next",
+    "i18n:check": "i18next --fail-on-update"
   },
   "dependencies": {
     "@epic-web/invariant": "^1.0.0",
@@ -37,7 +39,10 @@
     "@rhythm-archive/bms-editor": "*",
     "@rhythm-archive/bms-player": "*",
     "electron-store": "^10.0.0",
+    "i18next": "^25.0.0",
+    "i18next-resources-to-backend": "^1.2.0",
     "lodash": "^4.17.21",
+    "react-i18next": "^15.6.0",
     "lucide-react": "^0.460.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -63,6 +68,7 @@
     "electron": "^33.4.11",
     "electron-builder": "^25.0.0",
     "electron-vite": "^3.1.0",
+    "i18next-parser": "^9.3.0",
     "jsdom": "^29.0.1",
     "puppeteer-core": "^24.40.0",
     "tailwindcss": "^4.1.0",

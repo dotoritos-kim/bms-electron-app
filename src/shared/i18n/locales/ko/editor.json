@@ -1,0 +1,209 @@
+{
+  "toolbar": {
+    "save": "저장",
+    "saved": "저장됨",
+    "undo": "실행 취소",
+    "redo": "다시 실행",
+    "zoomIn": "확대",
+    "zoomOut": "축소",
+    "zoomFit": "맞춤",
+    "keys": "키",
+    "snap": "스냅",
+    "play": "재생",
+    "stop": "정지",
+    "tools": {
+      "select": { "label": "선택", "description": "클릭/드래그로 노트를 선택합니다. Shift+클릭으로 추가 선택." },
+      "addNote": { "label": "추가", "description": "클릭한 위치에 새 노트를 배치합니다." },
+      "delete": { "label": "삭제", "description": "클릭한 노트를 삭제합니다." },
+      "move": { "label": "이동", "description": "선택한 노트를 드래그하거나 방향키로 이동합니다." },
+      "keysound": { "label": "키음", "description": "노트를 클릭하여 현재 키음을 할당합니다." },
+      "bpm": { "label": "BPM", "description": "클릭한 위치에 BPM 변경을 추가/편집합니다." },
+      "stop": { "label": "STOP", "description": "클릭한 위치에 STOP 이벤트를 추가/편집합니다." }
+    },
+    "labels": {
+      "thickness": "두께",
+      "thicknessTooltip": "노트 두께",
+      "thicknessValueTooltip": "노트 두께: {{value}}",
+      "zoom": "줌",
+      "zoomTooltip": "줌 배율",
+      "zoomScalePresetTooltip": "줌 배율 (클릭: 프리셋)",
+      "zoomFitTooltip": "차트 전체 보기",
+      "keyMode": "모드",
+      "keyModeTooltip": "키 모드",
+      "grid": "Grid:",
+      "customGridSnapTooltip": "커스텀 그리드 스냅",
+      "snapOn": "Snap ON",
+      "snapOff": "Snap OFF",
+      "snapToggleTooltip": "Snap to Grid: {{state}} (Shift 드래그=임시 해제)",
+      "snapStateOn": "ON",
+      "snapStateOff": "OFF",
+      "snapAriaOn": "그리드 스냅 켜짐",
+      "snapAriaOff": "그리드 스냅 꺼짐"
+    },
+    "layer": {
+      "ariaState": "{{layer}} 레이어 {{state}}{{lockSuffix}}",
+      "visible": "표시중",
+      "hidden": "숨김",
+      "lockedSuffix": " (잠금)",
+      "titleVisible": "visible",
+      "titleHidden": "hidden",
+      "titleLocked": " (locked)",
+      "contextHint": "좌클릭=가시성, 우클릭=잠금"
+    },
+    "actions": {
+      "undoAria": "실행 취소 (Ctrl+Z)",
+      "redoAria": "다시 실행 (Ctrl+Y)",
+      "copyAria": "복사 (Ctrl+C)",
+      "pasteAria": "붙여넣기 (Ctrl+V)",
+      "saveTooltip": "저장 (Ctrl+S)",
+      "zoomInAria": "확대",
+      "zoomInTooltip": "확대 (=)",
+      "zoomOutAria": "축소",
+      "zoomOutTooltip": "축소 (-)",
+      "zoomFitAria": "차트 전체 보기"
+    },
+    "presets": {
+      "overview": "Overview",
+      "work": "Work",
+      "detail": "Detail"
+    }
+  },
+  "panels": {
+    "keysound": {
+      "title": "키음",
+      "uploadButton": "업로드",
+      "uploadTooltip": "키음 파일 업로드",
+      "searchPlaceholder": "검색...",
+      "noSilent": "무음 / No Sound",
+      "noSearchResults": "검색 결과 없음",
+      "empty": "키음이 없습니다",
+      "countSummary": "{{count}}개 키음",
+      "filteredSummary": "({{count}}개 필터)",
+      "contextMenu": {
+        "findNotes": "이 키음 사용 노트 찾기",
+        "highlightOn": "차트에서 하이라이트",
+        "highlightOff": "하이라이트 해제",
+        "selectBgm": "이 키음 BGM 노트 선택",
+        "replace": "키음 일괄 교체...",
+        "deleteUnused": "미사용 키음 삭제"
+      },
+      "uploadDialog": {
+        "title": "키음 파일 업로드",
+        "confirm": "업로드",
+        "cancel": "취소",
+        "dropPrompt": "파일을 드래그하거나 클릭하여 선택",
+        "formatHint": "WAV, OGG, MP3 (개별 최대 10MB, 총 50MB)",
+        "fileCountSummary": "{{count}}개 파일 ({{size}})",
+        "commitMessage": "키음 파일 업로드 ({{count}}개)",
+        "uploadFailed": "업로드 실패",
+        "unsupportedFormat": "지원하지 않는 형식: {{name}} (WAV/OGG/MP3만 가능)",
+        "fileTooLarge": "파일 크기 초과: {{name}} (최대 10MB)",
+        "totalTooLarge": "총 업로드 크기가 50MB를 초과합니다",
+        "duplicateWavId": "WAV ID 중복: {{id}}"
+      }
+    },
+    "header": {
+      "title": "차트 정보",
+      "titleField": "제목",
+      "artistField": "아티스트",
+      "bpmField": "BPM",
+      "genreField": "장르",
+      "tabs": {
+        "basic": "기본",
+        "custom": "커스텀",
+        "wav": "WAV",
+        "bmp": "BMP",
+        "raw": "Raw"
+      },
+      "fields": {
+        "title": "제목",
+        "subtitle": "부제목",
+        "artist": "아티스트",
+        "subartist": "부 아티스트",
+        "genre": "장르",
+        "level": "레벨",
+        "difficulty": "난이도",
+        "rank": "판정"
+      },
+      "common": {
+        "searchPlaceholder": "검색...",
+        "noSearchResults": "검색 결과 없음",
+        "empty": "항목 없음",
+        "deleteTooltip": "삭제",
+        "valuePlaceholder": "값",
+        "rawHelp": "모든 헤더를 직접 편집. 적용 시 현재 내용으로 교체됩니다.",
+        "applyButton": "적용"
+      }
+    },
+    "minimap": {
+      "title": "미니맵",
+      "navigationTooltip": "클릭/드래그하여 이동"
+    },
+    "noteInfo": {
+      "title": "노트 정보",
+      "empty": "노트를 선택하면 정보가 표시됩니다",
+      "multiTitle": "선택 요약",
+      "labels": {
+        "selection": "선택",
+        "type": "타입",
+        "column": "컬럼",
+        "beatRange": "비트 범위",
+        "keysound": "키음",
+        "layer": "레이어",
+        "position": "위치",
+        "beat": "비트",
+        "measure": "마디",
+        "grid": "그리드",
+        "timing": "타이밍",
+        "playTime": "재생 시점",
+        "channel": "채널",
+        "longNote": "롱노트",
+        "endBeat": "종료 비트",
+        "length": "길이",
+        "endTime": "종료 시점"
+      },
+      "values": {
+        "notesCount": "{{count}}개 노트",
+        "uniqueKeysoundsCount": "{{count}}개 고유",
+        "gridAligned": "1/{{snap}} 정렬",
+        "gridUnaligned": "비정렬",
+        "silentKeysound": "00 (무음)"
+      },
+      "tooltips": {
+        "deleteLayer": "레이어 삭제",
+        "addLayer": "키음 {{id}} 레이어 추가"
+      }
+    },
+    "statusBar": {
+      "beat": "박자",
+      "time": "시간",
+      "notes": "노트",
+      "currentPositionTooltip": "현재 위치 (마디·박자)",
+      "gridSnapTooltip": "그리드 스냅",
+      "selectedNotesTooltip": "선택된 노트",
+      "totalNotesTooltip": "총 노트 수",
+      "noteHeightTooltip": "노트 두께",
+      "audioReadyTooltip": "오디오 준비됨",
+      "audioMissingTooltip": "오디오 미로드",
+      "measureLabel": "마디",
+      "beatLabel": "박",
+      "selectedCount": "{{count}}개 선택",
+      "noSelection": "선택 없음",
+      "totalCount": "총 {{count}}개",
+      "audioOn": "오디오",
+      "audioOff": "음소거"
+    },
+    "noteSearch": {
+      "title": "노트 찾기",
+      "placeholder": "검색...",
+      "noResults": "결과 없음"
+    }
+  },
+  "contextMenu": {
+    "cut": "잘라내기",
+    "copy": "복사",
+    "paste": "붙여넣기",
+    "delete": "삭제",
+    "selectAll": "모두 선택"
+  }
+}

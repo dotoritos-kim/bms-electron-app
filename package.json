@@ -1,6 +1,6 @@
 {
   "name": "bms-electron-app",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "BMS Desktop - Rhythm game player and chart editor",
   "main": "./out/main/index.js",
   "scripts": {

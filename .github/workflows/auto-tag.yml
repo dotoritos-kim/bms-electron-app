@@ -6,7 +6,6 @@ on:
       - ship/v1.0-complete
       - main
       - master
-      - refactor/stage-2-strict-returns
     paths:
       - 'package.json'
   workflow_dispatch:
@@ -28,7 +27,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # PAT required: GITHUB_TOKEN-pushed tags do not trigger release.yml
+          token: ${{ secrets.SIBLING_REPO_TOKEN }}
 
       - name: Read version from package.json
         id: pkg

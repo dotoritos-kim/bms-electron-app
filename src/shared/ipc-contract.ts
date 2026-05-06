@@ -14,6 +14,8 @@
  *   3. Expose it through `window.api` in preload using the typed `invoke` helper.
  */
 
+export type SupportedLocale = 'ko' | 'en' | 'ja' | 'zh' | 'es' | 'de' | 'ru';
+
 export interface BmsFileInfo {
   name: string;
   path: string;
@@ -103,6 +105,10 @@ export interface IpcInvokeMap {
     in: [bmsFilePath: string, keysoundMap: Record<string, string>];
     out: AudioReadBatchResult;
   };
+
+  // locale
+  'locale:getInitial': { in: []; out: SupportedLocale };
+  'locale:set': { in: [locale: SupportedLocale]; out: boolean };
 }
 
 /**
@@ -115,6 +121,7 @@ export interface IpcSendMap {
   'menu:openFolder': [];
   'menu:save': [];
   'menu:saveAs': [];
+  'locale:changed': [locale: SupportedLocale];
 }
 
 export type IpcInvokeChannel = keyof IpcInvokeMap;
@@ -129,6 +136,7 @@ export const ALLOWED_RECV_CHANNELS: readonly IpcSendChannel[] = [
   'menu:openFolder',
   'menu:save',
   'menu:saveAs',
+  'locale:changed',
 ] as const;
 
 export function isAllowedRecvChannel(channel: string): channel is IpcSendChannel {

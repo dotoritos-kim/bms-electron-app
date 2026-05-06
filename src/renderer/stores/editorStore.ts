@@ -8,6 +8,7 @@ import type {
   NoteType,
 } from '@rhythm-archive/bms-core';
 import type { EditorTool, SelectedNoteType, GridSnap, KeyMode } from '@rhythm-archive/bms-editor';
+import { getLaneIds } from '@rhythm-archive/bms-editor';
 import type { PatternTemplate, PatternNote } from '../lib/patternTemplates';
 import { createBeatConverter, beatToMF44 } from '../lib/beatConverter';
 import type { BeatConverter, MeasureFraction } from '../lib/beatConverter';
@@ -850,7 +851,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       // Keysound filter (includes additionalKeysounds)
       if (filter.keysounds && filter.keysounds.length > 0) {
         const hasMatch = filter.keysounds.includes(n.keysound) ||
-          n.additionalKeysounds?.some((ak) => filter.keysounds!.includes(ak.keysound));
+          n.additionalKeysounds?.some((ak: { keysound: string }) => filter.keysounds!.includes(ak.keysound));
         if (!hasMatch) return false;
       }
       return true;
@@ -1579,7 +1580,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setSelectedNoteType: (type) => set({ selectedNoteType: type }),
   setCurrentKeysound: (keysound) => set({ currentKeysound: keysound }),
   setCurrentBeat: (beat) => set({ currentBeat: beat }),
-  setKeyMode: (keyMode) => set({ keyMode }),
+  setKeyMode: (keyMode) => {
+    const s = get();
+    if (s.keyMode === keyMode) { set({ keyMode }); return; }
+    const newLaneIds = new Set(getLaneIds(keyMode));
+    let orphanCount = 0;
+    for (const n of s.notes) {
+      if (n.noteType === 'bgm') continue;
+      if (n.column && !newLaneIds.has(n.column)) orphanCount++;
+    }
+    set({ keyMode });
+    if (orphanCount > 0) {
+      set({
+        toast: {
+          message: `${keyMode} 모드에 없는 레인의 노트 ${orphanCount}개가 숨겨졌습니다. (데이터는 보존됨)`,
+          type: 'error',
+        },
+      });
+    }
+  },
   setHasUnsavedChanges: (value) => set({ hasUnsavedChanges: value }),
   setInputDialog: (dialog) => set({ inputDialog: dialog }),
   toggleLeftPanel: () => set((s) => ({ showLeftPanel: !s.showLeftPanel })),
@@ -1693,8 +1712,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         keysound = toId;
         changed = true;
       }
-      if (n.additionalKeysounds?.some((ak) => ak.keysound === fromId)) {
-        additionalKeysounds = n.additionalKeysounds.map((ak) =>
+      if (n.additionalKeysounds?.some((ak: { keysound: string }) => ak.keysound === fromId)) {
+        additionalKeysounds = n.additionalKeysounds.map((ak: { keysound: string }) =>
           ak.keysound === fromId ? { ...ak, keysound: toId } : ak
         );
         changed = true;

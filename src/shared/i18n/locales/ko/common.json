@@ -1,0 +1,29 @@
+{
+  "actions": {
+    "ok": "확인",
+    "cancel": "취소",
+    "save": "저장",
+    "saveAs": "다른 이름으로 저장",
+    "open": "열기",
+    "close": "닫기",
+    "delete": "삭제",
+    "discard": "변경 취소",
+    "retry": "다시 시도",
+    "back": "뒤로",
+    "next": "다음",
+    "dismiss": "알림 닫기"
+  },
+  "language": {
+    "label": "언어",
+    "current": "현재 언어: {{name}}",
+    "changeTo": "{{name}}(으)로 변경",
+    "changing": "언어 바꾸는 중...",
+    "changed": "언어를 {{name}}(으)로 변경했어요",
+    "loadFailed": "{{name}} 언어 데이터를 불러오지 못했어요. 이전 언어를 유지합니다."
+  },
+  "status": {
+    "saved": "저장됨",
+    "saving": "저장 중...",
+    "modified": "변경됨"
+  }
+}

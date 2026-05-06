@@ -1,13 +1,15 @@
 import { Menu, BrowserWindow } from 'electron';
 import { sendToRenderer } from './ipc/handle';
+import { t } from './i18n/menu';
+import type { SupportedLocale } from '../shared/ipc-contract';
 
-export function createMenu(): void {
+export function createMenu(locale: SupportedLocale = 'en'): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     {
-      label: 'File',
+      label: t(locale, 'menu.file'),
       submenu: [
         {
-          label: 'Open File...',
+          label: t(locale, 'menu.openFile'),
           accelerator: 'CmdOrCtrl+O',
           click: () => {
             const win = BrowserWindow.getFocusedWindow();
@@ -15,7 +17,7 @@ export function createMenu(): void {
           },
         },
         {
-          label: 'Open Folder...',
+          label: t(locale, 'menu.openFolder'),
           accelerator: 'CmdOrCtrl+Shift+O',
           click: () => {
             const win = BrowserWindow.getFocusedWindow();
@@ -24,7 +26,7 @@ export function createMenu(): void {
         },
         { type: 'separator' },
         {
-          label: 'Save',
+          label: t(locale, 'menu.save'),
           accelerator: 'CmdOrCtrl+S',
           click: () => {
             const win = BrowserWindow.getFocusedWindow();
@@ -32,7 +34,7 @@ export function createMenu(): void {
           },
         },
         {
-          label: 'Save As...',
+          label: t(locale, 'menu.saveAs'),
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => {
             const win = BrowserWindow.getFocusedWindow();
@@ -40,33 +42,33 @@ export function createMenu(): void {
           },
         },
         { type: 'separator' },
-        { role: 'quit' },
+        { role: 'quit', label: t(locale, 'menu.quit') },
       ],
     },
     {
-      label: 'Edit',
+      label: t(locale, 'menu.edit'),
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
+        { role: 'undo', label: t(locale, 'menu.undo') },
+        { role: 'redo', label: t(locale, 'menu.redo') },
         { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectAll' },
+        { role: 'cut', label: t(locale, 'menu.cut') },
+        { role: 'copy', label: t(locale, 'menu.copy') },
+        { role: 'paste', label: t(locale, 'menu.paste') },
+        { role: 'selectAll', label: t(locale, 'menu.selectAll') },
       ],
     },
     {
-      label: 'View',
+      label: t(locale, 'menu.view'),
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
+        { role: 'reload', label: t(locale, 'menu.reload') },
+        { role: 'forceReload', label: t(locale, 'menu.forceReload') },
+        { role: 'toggleDevTools', label: t(locale, 'menu.toggleDevTools') },
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { role: 'resetZoom', label: t(locale, 'menu.resetZoom') },
+        { role: 'zoomIn', label: t(locale, 'menu.zoomIn') },
+        { role: 'zoomOut', label: t(locale, 'menu.zoomOut') },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
+        { role: 'togglefullscreen', label: t(locale, 'menu.toggleFullScreen') },
       ],
     },
   ];

@@ -1,0 +1,138 @@
+{
+  "navigation": {
+    "leaveTitle": "화면 이동",
+    "saveBeforeLeave": "저장하지 않은 변경 사항이 있습니다. 저장 후 이동할까요?",
+    "discardLabel": "저장 안 함",
+    "saveAndLeaveLabel": "저장 후 이동",
+    "leaveLabel": "나가기"
+  },
+  "errors": {
+    "renderingTitle": "렌더링 오류",
+    "goHome": "홈으로"
+  },
+  "dialogs": {
+    "bpmTap": {
+      "title": "BPM 탭",
+      "tapButton": "탭 (Space)",
+      "resetButton": "리셋",
+      "applyButton": "적용",
+      "resetIndicator": "리셋됨",
+      "tapsCount": "BPM ({{count}} taps)"
+    },
+    "noteColor": {
+      "title": "노트 색상 설정",
+      "description": "노트 타입별 색상을 변경합니다. 색상 칸을 클릭하여 색을 선택하세요.",
+      "swatchTooltip": "{{label}} 색상 선택",
+      "resetTooltip": "기본값으로 초기화",
+      "customBadge": "커스텀",
+      "resetAllButton": "전체 초기화",
+      "applyButton": "적용",
+      "fields": {
+        "playable": { "label": "플레이어블 노트", "description": "일반 노트 (레인 색상 오버라이드)" },
+        "invisible": { "label": "인비저블 노트", "description": "보이지 않는 노트" },
+        "landmine": { "label": "지뢰 노트", "description": "레인에 닿으면 판정 감소" },
+        "bgm": { "label": "BGM 노트", "description": "배경음 노트" },
+        "selection": { "label": "선택 하이라이트", "description": "선택된 노트 외곽선" },
+        "background": { "label": "캔버스 배경", "description": "에디터 캔버스 배경색" }
+      }
+    },
+    "keyBindings": {
+      "title": "키 바인딩 설정",
+      "conflictBadge": "충돌",
+      "conflictSummary": "{{count}}개 항목 키 충돌",
+      "listening": "키 입력 대기...",
+      "resetDefaults": "기본값 복원",
+      "saveButton": "저장"
+    },
+    "patternLibrary": {
+      "panelTitle": "패턴 라이브러리",
+      "searchPlaceholder": "검색...",
+      "saveSelectionButton": "선택 노트를 패턴으로 저장",
+      "noSearchResults": "검색 결과 없음",
+      "empty": "패턴 없음",
+      "applyTooltip": "클릭하여 현재 위치에 적용\n{{count}}개 노트, {{beats}}비트",
+      "patternStats": "{{count}}노트 · {{beats}}비트",
+      "deleteTooltip": "삭제",
+      "saveDialog": {
+        "title": "패턴 저장",
+        "namePlaceholder": "패턴 이름",
+        "tagsPlaceholder": "태그 (쉼표 구분)"
+      }
+    },
+    "autoChart": {
+      "title": "AI 차트 생성",
+      "tabs": {
+        "generate": "오디오 → 차트 생성",
+        "suggest": "패턴 제안"
+      },
+      "audioSection": "오디오 소스",
+      "audioLoading": "로딩...",
+      "audioLoaded": "로드됨 ({{duration}}s)",
+      "audioOpenButton": "오디오 파일 열기",
+      "difficultyLabel": "난이도",
+      "lnRatioLabel": "LN 비율",
+      "gridSnapToggle": "그리드 스냅",
+      "scratchToggle": "스크래치 포함",
+      "generateButton": "차트 생성",
+      "suggestExplanation": "기존 노트 패턴을 분석하여 다음 마디의 노트를 제안합니다. 현재 차트에 {{count}}개 노트가 있습니다.",
+      "suggestCountLabel": "생성할 노트 수",
+      "suggestButton": "패턴 제안 생성",
+      "minNotesWarning": "최소 4개 이상의 노트가 필요합니다",
+      "noOnsetsWarning": "감지된 온셋이 없습니다. 오디오 볼륨이 너무 낮거나 무음일 수 있습니다. 난이도를 낮추면 감도가 올라갑니다.",
+      "previewLabel": "미리보기 ({{count}}개 노트)",
+      "generatedSummary": "{{count}}개 노트 생성됨",
+      "applyButton": "적용"
+    },
+    "midiMapping": {
+      "title": "MIDI 설정",
+      "deviceSection": "장치",
+      "devicePlaceholder": "장치 선택...",
+      "disconnect": "해제",
+      "connect": "연결",
+      "noDevices": "MIDI 장치가 감지되지 않습니다",
+      "lastInput": "마지막 입력:",
+      "recordingSection": "레코딩 모드",
+      "modeOff": "끄기",
+      "modeStep": "스텝",
+      "modeRealtime": "실시간",
+      "modeStepHelp": "스텝: MIDI 입력 → 현재 위치에 노트 배치 후 자동 전진",
+      "modeRealtimeHelp": "실시간: 재생 중 MIDI 입력 → 재생 위치에 배치",
+      "modeOffHelp": "MIDI 레코딩 비활성화",
+      "presetSection": "프리셋",
+      "laneSection": "레인 매핑",
+      "unmapped": "미설정",
+      "waiting": "대기중...",
+      "closeButton": "닫기"
+    }
+  },
+  "stats": {
+    "measures": "마디",
+    "duration": "재생 시간"
+  },
+  "audioSlicer": {
+    "title": "오디오 슬라이서",
+    "openButton": "오디오 열기",
+    "loading": "로딩...",
+    "stopButton": "정지",
+    "playButton": "재생",
+    "playSelectionButton": "선택 구간 재생",
+    "addMarkerButton": "마커 추가",
+    "clearMarkersButton": "마커 초기화",
+    "autoDetectButton": "자동 감지",
+    "sensitivityLabel": "감도",
+    "markerCountSummary": "{{markerCount}}개 마커 → {{sliceCount}}개 슬라이스",
+    "slicingButton": "슬라이스 중...",
+    "sliceAndSaveButton": "슬라이스 & 저장",
+    "emptyTitle": "오디오 파일을 열어 시작하세요",
+    "emptyFormats": "WAV, MP3, OGG, FLAC 지원",
+    "infoLength": "길이",
+    "infoSampleRate": "샘플레이트",
+    "infoChannels": "채널",
+    "infoView": "뷰",
+    "infoSelection": "선택",
+    "viewportTooltip": "전체 오디오 내 현재 뷰포트 위치",
+    "autoDetectNoResults": "감지된 구간이 없습니다. 감도 슬라이더를 올려 다시 시도해보세요.",
+    "autoDetectSuccess_one": "{{count}}개 구간이 감지되었습니다.",
+    "autoDetectSuccess_other": "{{count}}개 구간이 감지되었습니다."
+  }
+}

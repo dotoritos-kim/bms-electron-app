@@ -13,6 +13,7 @@ import type {
   BmsFileInfo,
   IpcSendChannel,
   IpcSendMap,
+  SupportedLocale,
 } from '../shared/ipc-contract';
 
 export type { BmsFileInfo };
@@ -42,6 +43,10 @@ export interface ElectronAPI {
       bmsFilePath: string,
       keysoundMap: Record<string, string>,
     ) => Promise<{ results: Record<string, ArrayBuffer>; errors: Record<string, string> }>;
+  };
+  locale: {
+    getInitial: () => Promise<SupportedLocale>;
+    set: (locale: SupportedLocale) => Promise<boolean>;
   };
   /**
    * Subscribe to a typed main → renderer channel.

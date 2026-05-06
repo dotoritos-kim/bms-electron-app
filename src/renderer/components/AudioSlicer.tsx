@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { X, Upload, Scissors, Play, Square, ZoomIn, ZoomOut, Wand2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function getDirname(filePath: string): string {
   const sep = filePath.includes('\\') ? '\\' : '/';
@@ -82,8 +83,10 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   const [slicing, setSlicing] = useState(false);
   const [onsetThreshold, setOnsetThreshold] = useState(0.15);
   // isDragging removed — use isDraggingRef only to avoid toolbar re-render flicker
-  const [autoSliceMsg, setAutoSliceMsg] = useState<string | null>(null);
-  const draggingMarkerRef = useRef<number | null>(null); // index of marker being dragged
+  const [autoSliceMsgType, setAutoSliceMsgType] = useState<'warning' | 'success' | null>(null);
+  const [autoSliceCount, setAutoSliceCount] = useState(0);
+  const draggingMarkerRef = useRef<number | null>(null);
+  const { t } = useTranslation('app');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -164,10 +167,12 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     const channelData = audioBuffer.getChannelData(0);
     const onsets = detectOnsets(channelData, audioBuffer.sampleRate, onsetThreshold);
     if (onsets.length === 0) {
-      setAutoSliceMsg('감지된 구간이 없습니다. 감도 슬라이더를 올려 다시 시도해보세요.');
+      setAutoSliceMsgType('warning');
+      setAutoSliceCount(0);
     } else {
-      setMarkers(onsets.map((t, i) => ({ time: t, label: `${i + 1}` })));
-      setAutoSliceMsg(`${onsets.length}개 구간이 감지되었습니다.`);
+      setMarkers(onsets.map((ts, i) => ({ time: ts, label: `${i + 1}` })));
+      setAutoSliceMsgType('success');
+      setAutoSliceCount(onsets.length);
     }
   }, [audioBuffer, onsetThreshold]);
 
@@ -484,7 +489,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800 shrink-0">
         <h2 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
           <Scissors className="h-4 w-4" />
-          오디오 슬라이서
+          {t('audioSlicer.title')}
         </h2>
         {fileName && <span className="text-xs text-zinc-500">{fileName}</span>}
         <div className="flex-1" />
@@ -501,14 +506,14 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
           className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 transition-colors"
         >
           <Upload className="h-3.5 w-3.5" />
-          {loading ? '로딩...' : '오디오 열기'}
+          {loading ? t('audioSlicer.loading') : t('audioSlicer.openButton')}
         </button>
         {audioBuffer && (
           <>
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handlePlay} className={`flex items-center gap-1 px-2 py-1.5 rounded text-zinc-300 ${isPlaying ? 'bg-red-900/50 hover:bg-red-900/70 ring-1 ring-red-500/50' : 'bg-zinc-800 hover:bg-zinc-700'}`}>
               {isPlaying ? <Square className="h-3.5 w-3.5 text-red-400" /> : <Play className="h-3.5 w-3.5 text-green-400" />}
-              {isPlaying ? '정지' : (selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.01) ? '선택 구간 재생' : '재생'}
+              {isPlaying ? t('audioSlicer.stopButton') : (selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.01) ? t('audioSlicer.playSelectionButton') : t('audioSlicer.playButton')}
               {isPlaying && <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
             </button>
             <div className="w-px h-4 bg-zinc-700" />
@@ -520,10 +525,10 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
             </button>
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handleAddMarker} disabled={selStart === null} className="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 rounded text-zinc-300">
-              마커 추가
+              {t('audioSlicer.addMarkerButton')}
             </button>
             <button onClick={() => setMarkers([])} className="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300">
-              마커 초기화
+              {t('audioSlicer.clearMarkersButton')}
             </button>
             <div className="w-px h-4 bg-zinc-700" />
             <button
@@ -531,10 +536,10 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
               className="flex items-center gap-1 px-2 py-1.5 bg-orange-900/50 hover:bg-orange-900/70 rounded text-orange-300"
             >
               <Wand2 className="h-3.5 w-3.5" />
-              자동 감지
+              {t('audioSlicer.autoDetectButton')}
             </button>
             <label className="flex items-center gap-1 text-zinc-500">
-              감도:
+              {t('audioSlicer.sensitivityLabel')}:
               <input
                 type="range"
                 min={0.005}
@@ -557,20 +562,20 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
                 className="w-14 px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-300 font-mono text-center"
               />
             </label>
-            {autoSliceMsg && (
-              <span className={`text-xs px-2 py-1 rounded font-medium ${autoSliceMsg.startsWith('감지된') ? 'text-yellow-300 bg-yellow-800/60 border border-yellow-600/50 animate-pulse' : 'text-green-400 bg-green-950/40'}`}>
-                {autoSliceMsg}
+            {autoSliceMsgType && (
+              <span className={`text-xs px-2 py-1 rounded font-medium ${autoSliceMsgType === 'warning' ? 'text-yellow-300 bg-yellow-800/60 border border-yellow-600/50 animate-pulse' : 'text-green-400 bg-green-950/40'}`}>
+                {autoSliceMsgType === 'warning' ? t('audioSlicer.autoDetectNoResults') : t('audioSlicer.autoDetectSuccess', { count: autoSliceCount })}
               </span>
             )}
             <div className="flex-1" />
-            <span className="text-zinc-500">{markers.length}개 마커 → {markers.length + 1}개 슬라이스</span>
+            <span className="text-zinc-500">{t('audioSlicer.markerCountSummary', { markerCount: markers.length, sliceCount: markers.length + 1 })}</span>
             <button
               onClick={handleSliceAndSave}
               disabled={markers.length === 0 || slicing}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded transition-colors"
             >
               <Scissors className="h-3.5 w-3.5" />
-              {slicing ? '슬라이스 중...' : '슬라이스 & 저장'}
+              {slicing ? t('audioSlicer.slicingButton') : t('audioSlicer.sliceAndSaveButton')}
             </button>
           </>
         )}
@@ -595,8 +600,8 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
           <div className="flex items-center justify-center h-full text-zinc-600">
             <div className="text-center">
               <Scissors className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>오디오 파일을 열어 시작하세요</p>
-              <p className="text-xs mt-1">WAV, MP3, OGG, FLAC 지원</p>
+              <p>{t('audioSlicer.emptyTitle')}</p>
+              <p className="text-xs mt-1">{t('audioSlicer.emptyFormats')}</p>
             </div>
           </div>
         )}
@@ -605,19 +610,19 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       {/* Info bar */}
       {audioBuffer && (
         <div className="flex items-center gap-4 px-4 py-1.5 border-t border-zinc-800 text-xs text-zinc-500 shrink-0">
-          <span>길이: {audioBuffer.duration.toFixed(2)}s</span>
-          <span>샘플레이트: {audioBuffer.sampleRate}Hz</span>
-          <span>채널: {audioBuffer.numberOfChannels}</span>
-          <span>뷰: {viewStart.toFixed(1)}s - {(viewStart + viewDuration).toFixed(1)}s</span>
+          <span>{t('audioSlicer.infoLength')}: {audioBuffer.duration.toFixed(2)}s</span>
+          <span>{t('audioSlicer.infoSampleRate')}: {audioBuffer.sampleRate}Hz</span>
+          <span>{t('audioSlicer.infoChannels')}: {audioBuffer.numberOfChannels}</span>
+          <span>{t('audioSlicer.infoView')}: {viewStart.toFixed(1)}s - {(viewStart + viewDuration).toFixed(1)}s</span>
           {selStart !== null && selEnd !== null && (
             <span className="text-blue-400">
-              선택: {Math.min(selStart, selEnd).toFixed(3)}s - {Math.max(selStart, selEnd).toFixed(3)}s
+              {t('audioSlicer.infoSelection')}: {Math.min(selStart, selEnd).toFixed(3)}s - {Math.max(selStart, selEnd).toFixed(3)}s
               ({Math.abs(selEnd - selStart).toFixed(3)}s)
             </span>
           )}
           {/* Mini overview bar showing viewport position within full audio */}
           <div className="flex-1" />
-          <div className="w-32 h-2 bg-zinc-800 rounded-full relative overflow-hidden" title="전체 오디오 내 현재 뷰포트 위치">
+          <div className="w-32 h-2 bg-zinc-800 rounded-full relative overflow-hidden" title={t('audioSlicer.viewportTooltip')}>
             <div
               className="absolute top-0 h-full bg-blue-500/50 rounded-full"
               style={{

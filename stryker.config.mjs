@@ -21,4 +21,9 @@ export default {
   },
   concurrency: 4,
   timeoutMS: 60000,
+  incremental: true,
+  incrementalFile: '.stryker-tmp/incremental.json',
+  coverageAnalysis: 'perTest',
+  disableTypeChecks: true,
+  ignoreStatic: true,
 };

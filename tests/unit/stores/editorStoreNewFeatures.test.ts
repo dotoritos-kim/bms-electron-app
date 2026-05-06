@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useEditorStore } from '../../../src/renderer/stores/editorStore';
+import { getLaneIds } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
 
 const store = () => useEditorStore.getState();
@@ -381,5 +382,66 @@ describe('MinLnLength', () => {
     expect(store().minLnLength).toBe(0.0625); // minimum
     act().setMinLnLength(100);
     expect(store().minLnLength).toBe(4); // maximum
+  });
+});
+
+// ============================================================
+// setKeyMode — orphan note detection
+// ============================================================
+describe('setKeyMode orphan detection', () => {
+  function seedWithKeyMode(notes: EditableBMSNote[], keyMode = '7K') {
+    useEditorStore.setState({ notes, nextNoteId: notes.length + 1, keyMode: keyMode as never, toast: null });
+  }
+
+  it('no toast when all notes fit in new mode lanes', () => {
+    // 7K→5K: columns 1-5 are valid in both
+    seedWithKeyMode([mockNote({ id: 'a', column: '1' }), mockNote({ id: 'b', column: '3' })]);
+    act().setKeyMode('5K');
+    expect(store().keyMode).toBe('5K');
+    expect(store().toast).toBeNull();
+  });
+
+  it('shows error toast when switching hides playable notes', () => {
+    // 7K→4K: column 3 absent in 4K
+    seedWithKeyMode([mockNote({ id: 'a', column: '1' }), mockNote({ id: 'b', column: '3' })]);
+    act().setKeyMode('4K');
+    expect(store().keyMode).toBe('4K');
+    expect(store().toast?.type).toBe('error');
+    expect(store().toast?.message).toContain('1');
+  });
+
+  it('counts invisible and landmine orphans, excludes bgm', () => {
+    // 7K→6K: column 4 absent in 6K
+    seedWithKeyMode([
+      mockNote({ id: 'p', column: '4', noteType: 'playable' }),
+      mockNote({ id: 'i', column: '4', noteType: 'invisible' }),
+      mockNote({ id: 'l', column: '4', noteType: 'landmine' }),
+      mockNote({ id: 'b', column: '4', noteType: 'bgm' }),
+    ]);
+    act().setKeyMode('6K');
+    expect(store().toast?.message).toContain('3');
+  });
+
+  it('preserves orphan note data after mode switch', () => {
+    seedWithKeyMode([mockNote({ id: 'orphan', column: '3' })]);
+    act().setKeyMode('4K');
+    act().setKeyMode('7K');
+    expect(store().notes.find((n) => n.id === 'orphan')?.column).toBe('3');
+  });
+
+  it('no toast when same mode is set again', () => {
+    seedWithKeyMode([mockNote({ id: 'a', column: '3' })], '7K');
+    act().setKeyMode('7K');
+    expect(store().toast).toBeNull();
+  });
+
+  const skipCases: Array<[string, string, string, string]> = [
+    ['4K', '7K', '3', '4K skips col 3'],
+    ['6K', '7K', '4', '6K skips col 4'],
+  ];
+  it.each(skipCases)('%s skips col — switching from %s with note on col %s shows toast', (to, from, col) => {
+    seedWithKeyMode([mockNote({ column: col })], from);
+    act().setKeyMode(to as never);
+    expect(store().toast?.type).toBe('error');
   });
 });

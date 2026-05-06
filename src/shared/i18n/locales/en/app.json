@@ -1,0 +1,138 @@
+{
+  "navigation": {
+    "leaveTitle": "Leave page",
+    "saveBeforeLeave": "You have unsaved changes. Save before leaving?",
+    "discardLabel": "Don't save",
+    "saveAndLeaveLabel": "Save and leave",
+    "leaveLabel": "Leave"
+  },
+  "errors": {
+    "renderingTitle": "Rendering Error",
+    "goHome": "Go Home"
+  },
+  "dialogs": {
+    "bpmTap": {
+      "title": "BPM Tap",
+      "tapButton": "Tap (Space)",
+      "resetButton": "Reset",
+      "applyButton": "Apply",
+      "resetIndicator": "reset",
+      "tapsCount": "BPM ({{count}} taps)"
+    },
+    "noteColor": {
+      "title": "Note Colors",
+      "description": "Customize colors per note type. Click a swatch to pick a color.",
+      "swatchTooltip": "Pick color for {{label}}",
+      "resetTooltip": "Reset to default",
+      "customBadge": "custom",
+      "resetAllButton": "Reset All",
+      "applyButton": "Apply",
+      "fields": {
+        "playable": { "label": "Playable note", "description": "Standard playable note (overrides lane color)" },
+        "invisible": { "label": "Invisible note", "description": "Notes that are not visible" },
+        "landmine": { "label": "Landmine note", "description": "Touching the lane reduces the gauge" },
+        "bgm": { "label": "BGM note", "description": "Background-music notes" },
+        "selection": { "label": "Selection highlight", "description": "Outline for selected notes" },
+        "background": { "label": "Canvas background", "description": "Editor canvas background color" }
+      }
+    },
+    "keyBindings": {
+      "title": "Key Bindings",
+      "conflictBadge": "conflict",
+      "conflictSummary": "{{count}} bindings conflict",
+      "listening": "Press a key...",
+      "resetDefaults": "Reset to defaults",
+      "saveButton": "Save"
+    },
+    "patternLibrary": {
+      "panelTitle": "Pattern Library",
+      "searchPlaceholder": "Search...",
+      "saveSelectionButton": "Save selected notes as pattern",
+      "noSearchResults": "No matches",
+      "empty": "No patterns",
+      "applyTooltip": "Click to apply at the current position\n{{count}} notes, {{beats}} beats",
+      "patternStats": "{{count}} notes · {{beats}} beats",
+      "deleteTooltip": "Delete",
+      "saveDialog": {
+        "title": "Save Pattern",
+        "namePlaceholder": "Pattern name",
+        "tagsPlaceholder": "Tags (comma-separated)"
+      }
+    },
+    "autoChart": {
+      "title": "AI Chart Generator",
+      "tabs": {
+        "generate": "Audio → chart",
+        "suggest": "Suggest pattern"
+      },
+      "audioSection": "Audio source",
+      "audioLoading": "Loading...",
+      "audioLoaded": "Loaded ({{duration}}s)",
+      "audioOpenButton": "Open audio file",
+      "difficultyLabel": "Difficulty",
+      "lnRatioLabel": "LN ratio",
+      "gridSnapToggle": "Grid snap",
+      "scratchToggle": "Include scratch",
+      "generateButton": "Generate chart",
+      "suggestExplanation": "Analyse existing notes and propose the next phrase. The current chart contains {{count}} notes.",
+      "suggestCountLabel": "Notes to generate",
+      "suggestButton": "Suggest pattern",
+      "minNotesWarning": "At least 4 notes are required",
+      "noOnsetsWarning": "No onsets detected. The audio may be too quiet or silent. Lowering the difficulty raises sensitivity.",
+      "previewLabel": "Preview ({{count}} notes)",
+      "generatedSummary": "{{count}} notes generated",
+      "applyButton": "Apply"
+    },
+    "midiMapping": {
+      "title": "MIDI Settings",
+      "deviceSection": "Device",
+      "devicePlaceholder": "Select device...",
+      "disconnect": "Disconnect",
+      "connect": "Connect",
+      "noDevices": "No MIDI devices detected",
+      "lastInput": "Last input:",
+      "recordingSection": "Recording mode",
+      "modeOff": "Off",
+      "modeStep": "Step",
+      "modeRealtime": "Realtime",
+      "modeStepHelp": "Step: each MIDI input places a note at the cursor and advances",
+      "modeRealtimeHelp": "Realtime: MIDI input during playback is placed at the playhead",
+      "modeOffHelp": "MIDI recording disabled",
+      "presetSection": "Preset",
+      "laneSection": "Lane mapping",
+      "unmapped": "unset",
+      "waiting": "waiting...",
+      "closeButton": "Close"
+    }
+  },
+  "stats": {
+    "measures": "Measures",
+    "duration": "Duration"
+  },
+  "audioSlicer": {
+    "title": "Audio Slicer",
+    "openButton": "Open audio",
+    "loading": "Loading...",
+    "stopButton": "Stop",
+    "playButton": "Play",
+    "playSelectionButton": "Play selection",
+    "addMarkerButton": "Add marker",
+    "clearMarkersButton": "Clear markers",
+    "autoDetectButton": "Auto detect",
+    "sensitivityLabel": "Sensitivity",
+    "markerCountSummary": "{{markerCount}} markers → {{sliceCount}} slices",
+    "slicingButton": "Slicing...",
+    "sliceAndSaveButton": "Slice & Save",
+    "emptyTitle": "Open an audio file to start",
+    "emptyFormats": "Supports WAV, MP3, OGG, FLAC",
+    "infoLength": "Length",
+    "infoSampleRate": "Sample rate",
+    "infoChannels": "Channels",
+    "infoView": "View",
+    "infoSelection": "Selection",
+    "viewportTooltip": "Viewport position within the full audio",
+    "autoDetectNoResults": "No onsets detected. Try raising the sensitivity slider.",
+    "autoDetectSuccess_one": "{{count}} segment detected.",
+    "autoDetectSuccess_other": "{{count}} segments detected."
+  }
+}

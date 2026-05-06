@@ -114,7 +114,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
           currentFolderPath,
           fileMap,
           worker,
-          (type, payload) => {
+          (type: string, payload: unknown) => {
             if (type === 'PROGRESS') {
               const p = payload as { loadedCount: number; total: number };
               setAudioProgress({ loaded: p.loadedCount, total: p.total });

@@ -53,6 +53,9 @@ beforeEach(() => {
 
 // --- Tier A modes ---
 const TIER_A: { mode: KeyMode; hasScratch: boolean; description: string }[] = [
+  { mode: '4K', hasScratch: true, description: 'BMS 4K (SC+1,2,4,5+FZ — skips col 3)' },
+  { mode: '5K', hasScratch: true, description: 'BMS 5K (SC+1-5+FZ)' },
+  { mode: '6K', hasScratch: true, description: 'BMS 6K (SC+1,2,3,5,6,7+FZ — skips col 4)' },
   { mode: '7K', hasScratch: true, description: 'IIDX SP (SC+1-7+FZ)' },
   { mode: '9K', hasScratch: false, description: 'PMS/Keyboard (1-9, no SC)' },
   { mode: '14K', hasScratch: true, description: 'IIDX DP (SC+1-7+FZ+8-14+FZ2+SC2)' },
@@ -476,6 +479,134 @@ describe('Transform Operations - Multi-Mode', () => {
       selectAll();
       act().mirrorNotes(laneIds9K);
       expect(store().notes[0].column).toBe('9');
+    });
+  });
+
+  // --- Policy: 4K/5K/6K full-positional mirror (same policy as 7K) ---
+  // 4K: SC(0),1(1),2(2),4(3),5(4),FZ(5)           — col 3 absent by spec
+  // 5K: SC(0),1(1),2(2),3(3),4(4),5(5),FZ(6)
+  // 6K: SC(0),1(1),2(2),3(3),5(4),6(5),7(6),FZ(7) — col 4 absent by spec
+
+  describe('4K-specific mirror (SC+1,2,4,5+FZ — skips col 3)', () => {
+    const laneIds4K = getLaneIds('4K'); // ['SC','1','2','4','5','FZ']
+
+    it('SC mirrors to FZ', () => {
+      seedNotes([mockNote({ column: 'SC' })]);
+      selectAll();
+      act().mirrorNotes(laneIds4K);
+      expect(store().notes[0].column).toBe('FZ');
+    });
+
+    it('FZ mirrors to SC', () => {
+      seedNotes([mockNote({ column: 'FZ' })]);
+      selectAll();
+      act().mirrorNotes(laneIds4K);
+      expect(store().notes[0].column).toBe('SC');
+    });
+
+    it('column 1 mirrors to column 5', () => {
+      seedNotes([mockNote({ column: '1' })]);
+      selectAll();
+      act().mirrorNotes(laneIds4K);
+      expect(store().notes[0].column).toBe('5');
+    });
+
+    it('column 2 mirrors to column 4', () => {
+      seedNotes([mockNote({ column: '2' })]);
+      selectAll();
+      act().mirrorNotes(laneIds4K);
+      expect(store().notes[0].column).toBe('4');
+    });
+
+    it('full mirror: SC,1,2,4,5,FZ → FZ,5,4,2,1,SC', () => {
+      const notes = laneIds4K.map((col, i) => mockNote({ id: `f4_${i}`, column: col, beat: i }));
+      seedNotes(notes);
+      selectAll();
+      act().mirrorNotes(laneIds4K);
+      const sorted = [...store().notes].sort(
+        (a, b) => notes.findIndex((n) => n.id === a.id) - notes.findIndex((n) => n.id === b.id)
+      );
+      expect(sorted.map((n) => n.column)).toEqual(['FZ', '5', '4', '2', '1', 'SC']);
+    });
+  });
+
+  describe('5K-specific mirror (SC+1-5+FZ)', () => {
+    const laneIds5K = getLaneIds('5K'); // ['SC','1','2','3','4','5','FZ']
+
+    it('SC mirrors to FZ', () => {
+      seedNotes([mockNote({ column: 'SC' })]);
+      selectAll();
+      act().mirrorNotes(laneIds5K);
+      expect(store().notes[0].column).toBe('FZ');
+    });
+
+    it('column 1 mirrors to column 5', () => {
+      seedNotes([mockNote({ column: '1' })]);
+      selectAll();
+      act().mirrorNotes(laneIds5K);
+      expect(store().notes[0].column).toBe('5');
+    });
+
+    it('center column 3 stays in place', () => {
+      seedNotes([mockNote({ column: '3' })]);
+      selectAll();
+      act().mirrorNotes(laneIds5K);
+      expect(store().notes[0].column).toBe('3');
+    });
+
+    it('full mirror: SC,1,2,3,4,5,FZ → FZ,5,4,3,2,1,SC', () => {
+      const notes = laneIds5K.map((col, i) => mockNote({ id: `f5_${i}`, column: col, beat: i }));
+      seedNotes(notes);
+      selectAll();
+      act().mirrorNotes(laneIds5K);
+      const sorted = [...store().notes].sort(
+        (a, b) => notes.findIndex((n) => n.id === a.id) - notes.findIndex((n) => n.id === b.id)
+      );
+      expect(sorted.map((n) => n.column)).toEqual(['FZ', '5', '4', '3', '2', '1', 'SC']);
+    });
+  });
+
+  describe('6K-specific mirror (SC+1,2,3,5,6,7+FZ — skips col 4)', () => {
+    const laneIds6K = getLaneIds('6K'); // ['SC','1','2','3','5','6','7','FZ']
+
+    it('SC mirrors to FZ', () => {
+      seedNotes([mockNote({ column: 'SC' })]);
+      selectAll();
+      act().mirrorNotes(laneIds6K);
+      expect(store().notes[0].column).toBe('FZ');
+    });
+
+    it('column 1 mirrors to column 7', () => {
+      seedNotes([mockNote({ column: '1' })]);
+      selectAll();
+      act().mirrorNotes(laneIds6K);
+      expect(store().notes[0].column).toBe('7');
+    });
+
+    it('column 3 mirrors to column 5 (across absent col 4)', () => {
+      seedNotes([mockNote({ column: '3' })]);
+      selectAll();
+      act().mirrorNotes(laneIds6K);
+      // index 3 → mirrored index 4 → '5'
+      expect(store().notes[0].column).toBe('5');
+    });
+
+    it('column 5 mirrors to column 3', () => {
+      seedNotes([mockNote({ column: '5' })]);
+      selectAll();
+      act().mirrorNotes(laneIds6K);
+      expect(store().notes[0].column).toBe('3');
+    });
+
+    it('full mirror: SC,1,2,3,5,6,7,FZ → FZ,7,6,5,3,2,1,SC', () => {
+      const notes = laneIds6K.map((col, i) => mockNote({ id: `f6_${i}`, column: col, beat: i }));
+      seedNotes(notes);
+      selectAll();
+      act().mirrorNotes(laneIds6K);
+      const sorted = [...store().notes].sort(
+        (a, b) => notes.findIndex((n) => n.id === a.id) - notes.findIndex((n) => n.id === b.id)
+      );
+      expect(sorted.map((n) => n.column)).toEqual(['FZ', '7', '6', '5', '3', '2', '1', 'SC']);
     });
   });
 });

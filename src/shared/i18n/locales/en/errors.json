@@ -1,0 +1,16 @@
+{
+  "file": {
+    "readFailed": "Failed to read file: {{path}}",
+    "saveFailed": "Failed to save file: {{path}}",
+    "notFound": "File not found: {{path}}",
+    "decodeFailed": "Could not detect file encoding"
+  },
+  "audio": {
+    "loadFailed": "Failed to load audio: {{name}}",
+    "decodeFailed": "Failed to decode audio: {{name}}"
+  },
+  "locale": {
+    "namespaceLoadFailed": "Failed to load translations",
+    "persistFailed": "Failed to save language preference. It may reset on next launch."
+  }
+}

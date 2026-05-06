@@ -1,0 +1,30 @@
+{
+  "panels": {
+    "beatKeysound": {
+      "current": "",
+      "empty": "",
+      "title": "",
+      "tooltip": ""
+    },
+    "bgmManager": {
+      "channelStats": "",
+      "clickToSelect": "",
+      "muteOff": "",
+      "muteOn": "",
+      "soloOff": "",
+      "soloOn": "",
+      "title_one": "",
+      "title_few": "",
+      "title_many": "",
+      "title_other": ""
+    }
+  },
+  "store": {
+    "orphanNotes_one": "",
+    "orphanNotes_few": "",
+    "orphanNotes_many": "",
+    "orphanNotes_other": "",
+    "removeUnusedKeysounds": "",
+    "replaceKeysound": ""
+  }
+}

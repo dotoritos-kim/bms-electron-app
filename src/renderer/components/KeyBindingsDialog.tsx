@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { AccessibleDialog } from './AccessibleDialog';
 import type { KeyBinding, KeyAction } from '../lib/keyBindings';
@@ -19,6 +20,7 @@ interface KeyBindingsDialogProps {
 }
 
 export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }: KeyBindingsDialogProps) {
+  const { t } = useTranslation(['app', 'common']);
   const [editingAction, setEditingAction] = useState<KeyAction | null>(null);
   const [localBindings, setLocalBindings] = useState<KeyBinding[]>(bindings);
   const listeningRef = useRef(false);
@@ -84,9 +86,9 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
   }, []);
 
   return (
-    <AccessibleDialog open={open} onClose={onClose} title="키 바인딩 설정" className="border border-zinc-700 w-[480px] max-h-[80vh] flex flex-col">
+    <AccessibleDialog open={open} onClose={onClose} title={t('dialogs.keyBindings.title')} className="border border-zinc-700 w-[480px] max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
-          <h2 className="text-sm font-semibold text-zinc-200">키 바인딩 설정</h2>
+          <h2 className="text-sm font-semibold text-zinc-200">{t('dialogs.keyBindings.title')}</h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-zinc-800 text-zinc-400">
             <X className="h-4 w-4" />
           </button>
@@ -113,7 +115,7 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
                     >
                       <span className={`text-xs ${hasConflict ? 'text-red-400' : isModified ? 'text-yellow-300' : 'text-zinc-300'}`}>
                         {ACTION_LABELS[action]}
-                        {hasConflict && <span className="ml-1 text-xs text-red-500">충돌</span>}
+                        {hasConflict && <span className="ml-1 text-xs text-red-500">{t('dialogs.keyBindings.conflictBadge')}</span>}
                       </span>
                       <button
                         onClick={() => handleStartEdit(action)}
@@ -125,7 +127,7 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
                               : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700'
                         }`}
                       >
-                        {isEditing ? '키 입력 대기...' : keyComboToDisplay(binding?.key || '')}
+                        {isEditing ? t('dialogs.keyBindings.listening') : keyComboToDisplay(binding?.key || '')}
                       </button>
                     </div>
                   );
@@ -141,10 +143,10 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
               onClick={handleReset}
               className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
             >
-              기본값 복원
+              {t('dialogs.keyBindings.resetDefaults')}
             </button>
             {conflictActions.size > 0 && (
-              <span className="text-xs text-red-400">{conflictActions.size}개 항목 키 충돌</span>
+              <span className="text-xs text-red-400">{t('dialogs.keyBindings.conflictSummary', { count: conflictActions.size })}</span>
             )}
           </div>
           <div className="flex gap-2">
@@ -152,13 +154,13 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
               onClick={onClose}
               className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
             >
-              취소
+              {t('common:actions.cancel')}
             </button>
             <button
               onClick={handleSave}
               className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
             >
-              저장
+              {t('dialogs.keyBindings.saveButton')}
             </button>
           </div>
         </div>

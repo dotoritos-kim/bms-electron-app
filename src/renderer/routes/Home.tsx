@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FolderOpen, File, FilePlus, Play, Edit, Music, RefreshCw, Pin, PinOff, X, Clock } from 'lucide-react';
 import type { CurrentFile } from '../App';
 import { useHomeBmsFile } from '../hooks/useHomeBmsFile';
@@ -30,6 +31,7 @@ const KEY_MODE_OPTIONS: { value: KeyModeOption; label: string }[] = [
 ];
 
 export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
+  const { t } = useTranslation(['app', 'common']);
   const [folderPath, setFolderPath] = useState<string | null>(null);
   const [files, setFiles] = useState<BmsFileEntry[]>([]);
   const [scanning, setScanning] = useState(false);
@@ -209,7 +211,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
             <>
               <div className="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-800 flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                최근 파일
+                {t('home.recentFiles')}
               </div>
               {recentFiles.map((rf) => (
                 <div
@@ -230,14 +232,14 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                     <button
                       onClick={(e) => { e.stopPropagation(); setRecentFiles(togglePinRecentFile(rf.path)); }}
                       className="p-1.5 rounded hover:bg-zinc-700 text-zinc-400"
-                      title={rf.pinned ? '고정 해제' : '고정'}
+                      title={rf.pinned ? t('home.unpinFile') : t('home.pinFile')}
                     >
                       {rf.pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setRecentFiles(removeRecentFile(rf.path)); }}
                       className="p-1.5 rounded hover:bg-zinc-700 text-zinc-400"
-                      title="목록에서 제거"
+                      title={t('home.removeFromList')}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -297,7 +299,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
               <p className="text-lg text-zinc-400 mb-4">{chart.songInfo.artist}</p>
             )}
             <div className="grid grid-cols-3 gap-3 mb-4">
-              <StatCard label="키 모드" value={chart.keyMode} />
+              <StatCard label={t('home.stats.keyMode')} value={chart.keyMode} />
               <StatCard
                 label="BPM"
                 value={
@@ -306,15 +308,15 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                     : `${chart.bpm.min} - ${chart.bpm.max}`
                 }
               />
-              <StatCard label="총 노트" value={phase === 'ready' ? chart.stats.total.toString() : '...'} loading={phase === 'phase1'} />
-              <StatCard label="롱노트" value={phase === 'ready' ? chart.stats.longNotes.toString() : '...'} loading={phase === 'phase1'} />
-              <StatCard label="스크래치" value={phase === 'ready' ? chart.stats.scratch.toString() : '...'} loading={phase === 'phase1'} />
-              <StatCard label="키음" value={phase === 'ready' ? Object.keys(chart.keysounds).length.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label={t('home.stats.totalNotes')} value={phase === 'ready' ? chart.stats.total.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label={t('home.stats.longNotes')} value={phase === 'ready' ? chart.stats.longNotes.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label={t('home.stats.scratch')} value={phase === 'ready' ? chart.stats.scratch.toString() : '...'} loading={phase === 'phase1'} />
+              <StatCard label={t('home.stats.keysounds')} value={phase === 'ready' ? Object.keys(chart.keysounds).length.toString() : '...'} loading={phase === 'phase1'} />
             </div>
             {phase === 'ready' && (chart.stats.landmines > 0 || chart.stats.invisible > 0) && (
               <div className="flex gap-4 mb-4 text-xs text-zinc-500">
-                {chart.stats.landmines > 0 && <span>지뢰: {chart.stats.landmines}</span>}
-                {chart.stats.invisible > 0 && <span>인비저블: {chart.stats.invisible}</span>}
+                {chart.stats.landmines > 0 && <span>{t('home.stats.landmines')}: {chart.stats.landmines}</span>}
+                {chart.stats.invisible > 0 && <span>{t('home.stats.invisible')}: {chart.stats.invisible}</span>}
               </div>
             )}
             <div className="flex gap-3">
@@ -335,8 +337,8 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
             </div>
             {(chart.songInfo?.genre || currentFile) && (
               <div className="mt-4 space-y-1 text-xs text-zinc-500">
-                {chart.songInfo?.genre && <div>장르: {chart.songInfo.genre}</div>}
-                <div className="truncate" title={currentFile.path}>파일: {currentFile.name}</div>
+                {chart.songInfo?.genre && <div>{t('home.meta.genre')}: {chart.songInfo.genre}</div>}
+                <div className="truncate" title={currentFile.path}>{t('home.meta.file')}: {currentFile.name}</div>
                 <div className="truncate text-zinc-600" title={currentFile.folderPath}>{currentFile.folderPath}</div>
               </div>
             )}
@@ -348,11 +350,11 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
       {showNewDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowNewDialog(false)}>
           <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-5 w-96 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-zinc-200 mb-4">새 BMS 파일 만들기</h3>
+            <h3 className="text-lg font-semibold text-zinc-200 mb-4">{t('home.newFile.title')}</h3>
             <form onSubmit={(e) => { e.preventDefault(); handleNewFile(); }}>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-zinc-400 mb-1 block">제목</label>
+                  <label className="text-xs text-zinc-400 mb-1 block">{t('home.newFile.titleField')}</label>
                   <input
                     ref={titleInputRef}
                     type="text"
@@ -363,7 +365,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-400 mb-1 block">아티스트</label>
+                  <label className="text-xs text-zinc-400 mb-1 block">{t('home.newFile.artistField')}</label>
                   <input
                     type="text"
                     value={newArtist}
@@ -386,7 +388,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="text-xs text-zinc-400 mb-1 block">키 모드</label>
+                    <label className="text-xs text-zinc-400 mb-1 block">{t('home.newFile.keyModeField')}</label>
                     <select
                       value={newKeyMode}
                       onChange={(e) => setNewKeyMode(e.target.value as KeyModeOption)}
@@ -405,14 +407,14 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                   onClick={() => setShowNewDialog(false)}
                   className="px-4 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
                 >
-                  취소
+                  {t('common:actions.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
                   className="px-4 py-1.5 text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded transition-colors"
                 >
-                  {creating ? '생성 중...' : '만들기'}
+                  {creating ? t('home.newFile.creating') : t('home.newFile.createButton')}
                 </button>
               </div>
             </form>

@@ -23,5 +23,88 @@
     "stopButton": "",
     "title": "",
     "viewportTooltip": ""
+  },
+  "dialogs": {
+    "bpmTap": {
+      "applyButton": "",
+      "resetButton": "",
+      "resetIndicator": "",
+      "tapButton": "",
+      "tapsCount_other": "",
+      "title": ""
+    },
+    "keyBindings": {
+      "conflictBadge": "",
+      "conflictSummary_other": "",
+      "listening": "",
+      "resetDefaults": "",
+      "saveButton": "",
+      "title": ""
+    },
+    "midiMapping": {
+      "closeButton": "",
+      "connect": "",
+      "devicePlaceholder": "",
+      "deviceSection": "",
+      "disconnect": "",
+      "laneSection": "",
+      "lastInput": "",
+      "modeOff": "",
+      "modeOffHelp": "",
+      "modeRealtime": "",
+      "modeRealtimeHelp": "",
+      "modeStep": "",
+      "modeStepHelp": "",
+      "noDevices": "",
+      "presetSection": "",
+      "recordingSection": "",
+      "title": "",
+      "unmapped": "",
+      "waiting": ""
+    }
+  },
+  "errors": {
+    "goHome": ""
+  },
+  "home": {
+    "meta": {
+      "file": "",
+      "genre": ""
+    },
+    "newFile": {
+      "artistField": "",
+      "createButton": "",
+      "creating": "",
+      "keyModeField": "",
+      "title": "",
+      "titleField": ""
+    },
+    "pinFile": "",
+    "recentFiles": "",
+    "removeFromList": "",
+    "stats": {
+      "invisible": "",
+      "keyMode": "",
+      "keysounds": "",
+      "landmines": "",
+      "longNotes": "",
+      "scratch": "",
+      "totalNotes": ""
+    },
+    "unpinFile": ""
+  },
+  "navigation": {
+    "discardLabel": "",
+    "leaveLabel": "",
+    "leaveTitle": "",
+    "saveAndLeaveLabel": ""
+  },
+  "player": {
+    "exitConfirm": "",
+    "keyBindingsHint": ""
+  },
+  "stats": {
+    "duration": "",
+    "measures": ""
   }
 }

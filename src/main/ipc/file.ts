@@ -149,7 +149,7 @@ export function registerFileIpc(): void {
 
     try {
       const result = await dialog.showOpenDialog(win, {
-        title: '키음 파일 가져오기',
+        title: '키음 파일 가져오기', // eslint-disable-line local/no-hardcoded-korean
         filters: [
           { name: 'Audio Files', extensions: ['wav', 'ogg', 'mp3', 'flac'] },
           { name: 'All Files', extensions: ['*'] },
@@ -225,7 +225,7 @@ export function registerFileIpc(): void {
 
       try {
         const result = await dialog.showSaveDialog(win, {
-          title: '새 BMS 파일 만들기',
+          title: '새 BMS 파일 만들기', // eslint-disable-line local/no-hardcoded-korean
           defaultPath: `${opts.title || 'untitled'}.bms`,
           filters: [
             { name: 'BMS Files', extensions: ['bms', 'bme', 'bml'] },
@@ -283,7 +283,7 @@ export function registerFileIpc(): void {
 
     try {
       const result = await dialog.showOpenDialog(win, {
-        title: '오디오 파일 열기',
+        title: '오디오 파일 열기', // eslint-disable-line local/no-hardcoded-korean
         filters: [
           { name: 'Audio Files', extensions: ['wav', 'mp3', 'ogg', 'flac', 'm4a'] },
           { name: 'All Files', extensions: ['*'] },

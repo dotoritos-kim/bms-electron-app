@@ -1,138 +1,191 @@
 {
-  "navigation": {
-    "leaveTitle": "화면 이동",
-    "saveBeforeLeave": "저장하지 않은 변경 사항이 있습니다. 저장 후 이동할까요?",
-    "discardLabel": "저장 안 함",
-    "saveAndLeaveLabel": "저장 후 이동",
-    "leaveLabel": "나가기"
-  },
-  "errors": {
-    "renderingTitle": "렌더링 오류",
-    "goHome": "홈으로"
+  "audioSlicer": {
+    "addMarkerButton": "마커 추가",
+    "autoDetectButton": "자동 감지",
+    "autoDetectNoResults": "감지된 구간이 없습니다. 감도 슬라이더를 올려 다시 시도해보세요.",
+    "autoDetectSuccess_one": "{{count}}개 구간이 감지되었습니다.",
+    "autoDetectSuccess_other": "{{count}}개 구간이 감지되었습니다.",
+    "clearMarkersButton": "마커 초기화",
+    "emptyFormats": "WAV, MP3, OGG, FLAC 지원",
+    "emptyTitle": "오디오 파일을 열어 시작하세요",
+    "infoChannels": "채널",
+    "infoLength": "길이",
+    "infoSampleRate": "샘플레이트",
+    "infoSelection": "선택",
+    "infoView": "뷰",
+    "loading": "로딩...",
+    "markerCountSummary": "{{markerCount}}개 마커 → {{sliceCount}}개 슬라이스",
+    "openButton": "오디오 열기",
+    "playButton": "재생",
+    "playSelectionButton": "선택 구간 재생",
+    "sensitivityLabel": "감도",
+    "sliceAndSaveButton": "슬라이스 & 저장",
+    "slicingButton": "슬라이스 중...",
+    "stopButton": "정지",
+    "title": "오디오 슬라이서",
+    "viewportTooltip": "전체 오디오 내 현재 뷰포트 위치"
   },
   "dialogs": {
-    "bpmTap": {
-      "title": "BPM 탭",
-      "tapButton": "탭 (Space)",
-      "resetButton": "리셋",
-      "applyButton": "적용",
-      "resetIndicator": "리셋됨",
-      "tapsCount": "BPM ({{count}} taps)"
-    },
-    "noteColor": {
-      "title": "노트 색상 설정",
-      "description": "노트 타입별 색상을 변경합니다. 색상 칸을 클릭하여 색을 선택하세요.",
-      "swatchTooltip": "{{label}} 색상 선택",
-      "resetTooltip": "기본값으로 초기화",
-      "customBadge": "커스텀",
-      "resetAllButton": "전체 초기화",
-      "applyButton": "적용",
-      "fields": {
-        "playable": { "label": "플레이어블 노트", "description": "일반 노트 (레인 색상 오버라이드)" },
-        "invisible": { "label": "인비저블 노트", "description": "보이지 않는 노트" },
-        "landmine": { "label": "지뢰 노트", "description": "레인에 닿으면 판정 감소" },
-        "bgm": { "label": "BGM 노트", "description": "배경음 노트" },
-        "selection": { "label": "선택 하이라이트", "description": "선택된 노트 외곽선" },
-        "background": { "label": "캔버스 배경", "description": "에디터 캔버스 배경색" }
-      }
-    },
-    "keyBindings": {
-      "title": "키 바인딩 설정",
-      "conflictBadge": "충돌",
-      "conflictSummary": "{{count}}개 항목 키 충돌",
-      "listening": "키 입력 대기...",
-      "resetDefaults": "기본값 복원",
-      "saveButton": "저장"
-    },
-    "patternLibrary": {
-      "panelTitle": "패턴 라이브러리",
-      "searchPlaceholder": "검색...",
-      "saveSelectionButton": "선택 노트를 패턴으로 저장",
-      "noSearchResults": "검색 결과 없음",
-      "empty": "패턴 없음",
-      "applyTooltip": "클릭하여 현재 위치에 적용\n{{count}}개 노트, {{beats}}비트",
-      "patternStats": "{{count}}노트 · {{beats}}비트",
-      "deleteTooltip": "삭제",
-      "saveDialog": {
-        "title": "패턴 저장",
-        "namePlaceholder": "패턴 이름",
-        "tagsPlaceholder": "태그 (쉼표 구분)"
-      }
-    },
     "autoChart": {
-      "title": "AI 차트 생성",
+      "applyButton": "적용",
+      "audioLoaded": "로드됨 ({{duration}}s)",
+      "audioLoading": "로딩...",
+      "audioOpenButton": "오디오 파일 열기",
+      "audioSection": "오디오 소스",
+      "difficultyLabel": "난이도",
+      "generateButton": "차트 생성",
+      "generatedSummary": "{{count}}개 노트 생성됨",
+      "gridSnapToggle": "그리드 스냅",
+      "lnRatioLabel": "LN 비율",
+      "minNotesWarning": "최소 4개 이상의 노트가 필요합니다",
+      "noOnsetsWarning": "감지된 온셋이 없습니다. 오디오 볼륨이 너무 낮거나 무음일 수 있습니다. 난이도를 낮추면 감도가 올라갑니다.",
+      "previewLabel": "미리보기 ({{count}}개 노트)",
+      "scratchToggle": "스크래치 포함",
+      "suggestButton": "패턴 제안 생성",
+      "suggestCountLabel": "생성할 노트 수",
+      "suggestExplanation": "기존 노트 패턴을 분석하여 다음 마디의 노트를 제안합니다. 현재 차트에 {{count}}개 노트가 있습니다.",
       "tabs": {
         "generate": "오디오 → 차트 생성",
         "suggest": "패턴 제안"
       },
-      "audioSection": "오디오 소스",
-      "audioLoading": "로딩...",
-      "audioLoaded": "로드됨 ({{duration}}s)",
-      "audioOpenButton": "오디오 파일 열기",
-      "difficultyLabel": "난이도",
-      "lnRatioLabel": "LN 비율",
-      "gridSnapToggle": "그리드 스냅",
-      "scratchToggle": "스크래치 포함",
-      "generateButton": "차트 생성",
-      "suggestExplanation": "기존 노트 패턴을 분석하여 다음 마디의 노트를 제안합니다. 현재 차트에 {{count}}개 노트가 있습니다.",
-      "suggestCountLabel": "생성할 노트 수",
-      "suggestButton": "패턴 제안 생성",
-      "minNotesWarning": "최소 4개 이상의 노트가 필요합니다",
-      "noOnsetsWarning": "감지된 온셋이 없습니다. 오디오 볼륨이 너무 낮거나 무음일 수 있습니다. 난이도를 낮추면 감도가 올라갑니다.",
-      "previewLabel": "미리보기 ({{count}}개 노트)",
-      "generatedSummary": "{{count}}개 노트 생성됨",
-      "applyButton": "적용"
+      "title": "AI 차트 생성"
+    },
+    "bpmTap": {
+      "applyButton": "적용",
+      "resetButton": "리셋",
+      "resetIndicator": "리셋됨",
+      "tapButton": "탭 (Space)",
+      "tapsCount": "BPM ({{count}} taps)",
+      "tapsCount_one": "BPM ({{count}} tap)",
+      "tapsCount_other": "BPM ({{count}} taps)",
+      "title": "BPM 탭"
+    },
+    "keyBindings": {
+      "conflictBadge": "충돌",
+      "conflictSummary": "{{count}}개 항목 키 충돌",
+      "conflictSummary_one": "{{count}}개 항목 키 충돌",
+      "conflictSummary_other": "{{count}}개 항목 키 충돌",
+      "listening": "키 입력 대기...",
+      "resetDefaults": "기본값 복원",
+      "saveButton": "저장",
+      "title": "키 바인딩 설정"
     },
     "midiMapping": {
-      "title": "MIDI 설정",
-      "deviceSection": "장치",
-      "devicePlaceholder": "장치 선택...",
-      "disconnect": "해제",
+      "closeButton": "닫기",
       "connect": "연결",
-      "noDevices": "MIDI 장치가 감지되지 않습니다",
-      "lastInput": "마지막 입력:",
-      "recordingSection": "레코딩 모드",
-      "modeOff": "끄기",
-      "modeStep": "스텝",
-      "modeRealtime": "실시간",
-      "modeStepHelp": "스텝: MIDI 입력 → 현재 위치에 노트 배치 후 자동 전진",
-      "modeRealtimeHelp": "실시간: 재생 중 MIDI 입력 → 재생 위치에 배치",
-      "modeOffHelp": "MIDI 레코딩 비활성화",
-      "presetSection": "프리셋",
+      "devicePlaceholder": "장치 선택...",
+      "deviceSection": "장치",
+      "disconnect": "해제",
       "laneSection": "레인 매핑",
+      "lastInput": "마지막 입력:",
+      "modeOff": "끄기",
+      "modeOffHelp": "MIDI 레코딩 비활성화",
+      "modeRealtime": "실시간",
+      "modeRealtimeHelp": "실시간: 재생 중 MIDI 입력 → 재생 위치에 배치",
+      "modeStep": "스텝",
+      "modeStepHelp": "스텝: MIDI 입력 → 현재 위치에 노트 배치 후 자동 전진",
+      "noDevices": "MIDI 장치가 감지되지 않습니다",
+      "presetSection": "프리셋",
+      "recordingSection": "레코딩 모드",
+      "title": "MIDI 설정",
       "unmapped": "미설정",
-      "waiting": "대기중...",
-      "closeButton": "닫기"
+      "waiting": "대기중..."
+    },
+    "noteColor": {
+      "applyButton": "적용",
+      "customBadge": "커스텀",
+      "description": "노트 타입별 색상을 변경합니다. 색상 칸을 클릭하여 색을 선택하세요.",
+      "fields": {
+        "background": {
+          "description": "에디터 캔버스 배경색",
+          "label": "캔버스 배경"
+        },
+        "bgm": {
+          "description": "배경음 노트",
+          "label": "BGM 노트"
+        },
+        "invisible": {
+          "description": "보이지 않는 노트",
+          "label": "인비저블 노트"
+        },
+        "landmine": {
+          "description": "레인에 닿으면 판정 감소",
+          "label": "지뢰 노트"
+        },
+        "playable": {
+          "description": "일반 노트 (레인 색상 오버라이드)",
+          "label": "플레이어블 노트"
+        },
+        "selection": {
+          "description": "선택된 노트 외곽선",
+          "label": "선택 하이라이트"
+        }
+      },
+      "resetAllButton": "전체 초기화",
+      "resetTooltip": "기본값으로 초기화",
+      "swatchTooltip": "{{label}} 색상 선택",
+      "title": "노트 색상 설정"
+    },
+    "patternLibrary": {
+      "applyTooltip": "클릭하여 현재 위치에 적용\n{{count}}개 노트, {{beats}}비트",
+      "deleteTooltip": "삭제",
+      "empty": "패턴 없음",
+      "noSearchResults": "검색 결과 없음",
+      "panelTitle": "패턴 라이브러리",
+      "patternStats": "{{count}}노트 · {{beats}}비트",
+      "saveDialog": {
+        "namePlaceholder": "패턴 이름",
+        "tagsPlaceholder": "태그 (쉼표 구분)",
+        "title": "패턴 저장"
+      },
+      "saveSelectionButton": "선택 노트를 패턴으로 저장",
+      "searchPlaceholder": "검색..."
     }
   },
-  "stats": {
-    "measures": "마디",
-    "duration": "재생 시간"
+  "errors": {
+    "goHome": "홈으로",
+    "renderingTitle": "렌더링 오류"
   },
-  "audioSlicer": {
-    "title": "오디오 슬라이서",
-    "openButton": "오디오 열기",
-    "loading": "로딩...",
-    "stopButton": "정지",
-    "playButton": "재생",
-    "playSelectionButton": "선택 구간 재생",
-    "addMarkerButton": "마커 추가",
-    "clearMarkersButton": "마커 초기화",
-    "autoDetectButton": "자동 감지",
-    "sensitivityLabel": "감도",
-    "markerCountSummary": "{{markerCount}}개 마커 → {{sliceCount}}개 슬라이스",
-    "slicingButton": "슬라이스 중...",
-    "sliceAndSaveButton": "슬라이스 & 저장",
-    "emptyTitle": "오디오 파일을 열어 시작하세요",
-    "emptyFormats": "WAV, MP3, OGG, FLAC 지원",
-    "infoLength": "길이",
-    "infoSampleRate": "샘플레이트",
-    "infoChannels": "채널",
-    "infoView": "뷰",
-    "infoSelection": "선택",
-    "viewportTooltip": "전체 오디오 내 현재 뷰포트 위치",
-    "autoDetectNoResults": "감지된 구간이 없습니다. 감도 슬라이더를 올려 다시 시도해보세요.",
-    "autoDetectSuccess_one": "{{count}}개 구간이 감지되었습니다.",
-    "autoDetectSuccess_other": "{{count}}개 구간이 감지되었습니다."
+  "home": {
+    "meta": {
+      "file": "파일",
+      "genre": "장르"
+    },
+    "newFile": {
+      "artistField": "아티스트",
+      "createButton": "생성",
+      "creating": "생성 중...",
+      "keyModeField": "키모드",
+      "title": "새 BMS 파일",
+      "titleField": "제목"
+    },
+    "pinFile": "고정",
+    "recentFiles": "최근 파일",
+    "removeFromList": "목록에서 제거",
+    "stats": {
+      "invisible": "안 보이는 노트",
+      "keyMode": "키모드",
+      "keysounds": "키사운드",
+      "landmines": "지뢰",
+      "longNotes": "롱노트",
+      "scratch": "스크래치",
+      "totalNotes": "전체 노트"
+    },
+    "unpinFile": "고정 해제"
+  },
+  "navigation": {
+    "discardLabel": "저장 안 함",
+    "leaveLabel": "나가기",
+    "leaveTitle": "화면 이동",
+    "saveAndLeaveLabel": "저장 후 이동",
+    "saveBeforeLeave": "저장하지 않은 변경 사항이 있습니다. 저장 후 이동할까요?"
+  },
+  "player": {
+    "exitConfirm": "게임 플레이 중입니다. 나가시겠습니까?",
+    "keyBindingsHint": "키 설정은 편집 화면 > 도구 > 키 바인딩 설정에서 변경할 수 있습니다"
+  },
+  "stats": {
+    "duration": "재생 시간",
+    "measures": "마디"
   }
 }

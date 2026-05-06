@@ -1,209 +1,253 @@
 {
-  "toolbar": {
-    "save": "Save",
-    "saved": "Saved",
-    "undo": "Undo",
-    "redo": "Redo",
-    "zoomIn": "Zoom In",
-    "zoomOut": "Zoom Out",
-    "zoomFit": "Fit",
-    "keys": "Keys",
-    "snap": "Snap",
-    "play": "Play",
-    "stop": "Stop",
-    "tools": {
-      "select": { "label": "Select", "description": "Click or drag to select notes. Shift-click to extend selection." },
-      "addNote": { "label": "Add", "description": "Place a new note at the click location." },
-      "delete": { "label": "Delete", "description": "Delete the clicked note." },
-      "move": { "label": "Move", "description": "Drag the selected notes or use arrow keys to move them." },
-      "keysound": { "label": "Keysound", "description": "Click a note to assign the current keysound." },
-      "bpm": { "label": "BPM", "description": "Add or edit a BPM change at the click position." },
-      "stop": { "label": "STOP", "description": "Add or edit a STOP event at the click position." }
+  "contextMenu": {
+    "copy": "Copy",
+    "cut": "Cut",
+    "delete": "Delete",
+    "paste": "Paste",
+    "selectAll": "Select All"
+  },
+  "panels": {
+    "beatKeysound": {
+      "current": "◀ now",
+      "empty": "No keysounds near current position",
+      "title": "Keysound Timeline",
+      "tooltip": "Keysounds near the current position, in chronological order. Click to preview."
     },
+    "bgmManager": {
+      "channelStats": "{{notes}} notes, {{keysounds}} keysounds",
+      "clickToSelect": "Click: select",
+      "muteOff": "Unmute",
+      "muteOn": "Mute this channel",
+      "soloOff": "Unsolo",
+      "soloOn": "Solo this channel",
+      "title": "BGM Manager ({{count}})",
+      "title_one": "BGM Manager ({{count}})",
+      "title_other": "BGM Manager ({{count}})"
+    },
+    "header": {
+      "artistField": "Artist",
+      "bpmField": "BPM",
+      "common": {
+        "applyButton": "Apply",
+        "deleteTooltip": "Delete",
+        "empty": "No entries",
+        "noSearchResults": "No matches",
+        "rawHelp": "Edit every header directly. Apply replaces all current values.",
+        "searchPlaceholder": "Search...",
+        "valuePlaceholder": "Value"
+      },
+      "fields": {
+        "artist": "Artist",
+        "difficulty": "Difficulty",
+        "genre": "Genre",
+        "level": "Level",
+        "rank": "Rank",
+        "subartist": "Sub-artist",
+        "subtitle": "Subtitle",
+        "title": "Title"
+      },
+      "genreField": "Genre",
+      "tabs": {
+        "basic": "Basic",
+        "bmp": "BMP",
+        "custom": "Custom",
+        "raw": "Raw",
+        "wav": "WAV"
+      },
+      "title": "Chart Info",
+      "titleField": "Title"
+    },
+    "keysound": {
+      "contextMenu": {
+        "deleteUnused": "Delete unused keysound",
+        "findNotes": "Find notes using this keysound",
+        "highlightOff": "Clear highlight",
+        "highlightOn": "Highlight in chart",
+        "replace": "Replace keysound...",
+        "selectBgm": "Select BGM notes for this keysound"
+      },
+      "countSummary": "{{count}} keysound(s)",
+      "empty": "No keysounds loaded",
+      "filteredSummary": "({{count}} filtered)",
+      "noSearchResults": "No matches",
+      "noSilent": "Silent / No Sound",
+      "searchPlaceholder": "Search...",
+      "title": "Keysounds",
+      "uploadButton": "Upload",
+      "uploadDialog": {
+        "cancel": "Cancel",
+        "commitMessage": "Upload keysound files ({{count}})",
+        "confirm": "Upload",
+        "dropPrompt": "Drag files here or click to choose",
+        "duplicateWavId": "Duplicate WAV ID: {{id}}",
+        "fileCountSummary": "{{count}} file(s) ({{size}})",
+        "fileTooLarge": "File too large: {{name}} (max 10MB)",
+        "formatHint": "WAV, OGG, MP3 (each up to 10MB, total 50MB)",
+        "title": "Upload Keysounds",
+        "totalTooLarge": "Total upload exceeds 50MB",
+        "unsupportedFormat": "Unsupported format: {{name}} (WAV/OGG/MP3 only)",
+        "uploadFailed": "Upload failed"
+      },
+      "uploadTooltip": "Upload keysound files"
+    },
+    "minimap": {
+      "navigationTooltip": "Click or drag to navigate",
+      "title": "Minimap"
+    },
+    "noteInfo": {
+      "empty": "Select a note to inspect",
+      "labels": {
+        "beat": "Beat",
+        "beatRange": "Beat range",
+        "channel": "Channel",
+        "column": "Column",
+        "endBeat": "End beat",
+        "endTime": "End time",
+        "grid": "Grid",
+        "keysound": "Keysound",
+        "layer": "Layers",
+        "length": "Length",
+        "longNote": "Long note",
+        "measure": "Measure",
+        "playTime": "Play time",
+        "position": "Position",
+        "selection": "Selection",
+        "timing": "Timing",
+        "type": "Type"
+      },
+      "multiTitle": "Selection Summary",
+      "title": "Note Info",
+      "tooltips": {
+        "addLayer": "Add keysound {{id}} as layer",
+        "deleteLayer": "Delete layer"
+      },
+      "values": {
+        "gridAligned": "Aligned to 1/{{snap}}",
+        "gridUnaligned": "Off grid",
+        "notesCount": "{{count}} note(s)",
+        "silentKeysound": "00 (silent)",
+        "uniqueKeysoundsCount": "{{count}} unique"
+      }
+    },
+    "noteSearch": {
+      "noResults": "No matches",
+      "placeholder": "Search...",
+      "title": "Find Note"
+    },
+    "statusBar": {
+      "audioMissingTooltip": "Audio not loaded",
+      "audioOff": "Muted",
+      "audioOn": "Audio",
+      "audioReadyTooltip": "Audio ready",
+      "beat": "Beat",
+      "beatLabel": "b",
+      "currentPositionTooltip": "Current position (measure / beat)",
+      "gridSnapTooltip": "Grid snap",
+      "measureLabel": "m",
+      "noSelection": "None selected",
+      "noteHeightTooltip": "Note height",
+      "notes": "Notes",
+      "selectedCount": "{{count}} selected",
+      "selectedNotesTooltip": "Selected notes",
+      "time": "Time",
+      "totalCount": "Total {{count}}",
+      "totalNotesTooltip": "Total notes"
+    }
+  },
+  "store": {
+    "orphanNotes": "{{count}} notes on lanes not in {{keyMode}} mode are now hidden. (Data is preserved)",
+    "orphanNotes_one": "",
+    "removeUnusedKeysounds": "Remove unused keysounds",
+    "replaceKeysound": "Replace keysound"
+  },
+  "toolbar": {
+    "actions": {
+      "copyAria": "Copy (Ctrl+C)",
+      "pasteAria": "Paste (Ctrl+V)",
+      "redoAria": "Redo (Ctrl+Y)",
+      "saveTooltip": "Save (Ctrl+S)",
+      "undoAria": "Undo (Ctrl+Z)",
+      "zoomFitAria": "Fit chart to view",
+      "zoomInAria": "Zoom in",
+      "zoomInTooltip": "Zoom in (=)",
+      "zoomOutAria": "Zoom out",
+      "zoomOutTooltip": "Zoom out (-)"
+    },
+    "keys": "Keys",
     "labels": {
+      "customGridSnapTooltip": "Custom grid snap",
+      "grid": "Grid:",
+      "keyMode": "Mode",
+      "keyModeTooltip": "Key mode",
+      "snapAriaOff": "Grid snap off",
+      "snapAriaOn": "Grid snap on",
+      "snapOff": "Snap OFF",
+      "snapOn": "Snap ON",
+      "snapStateOff": "OFF",
+      "snapStateOn": "ON",
+      "snapToggleTooltip": "Snap to Grid: {{state}} (Shift drag = temporarily off)",
       "thickness": "Thickness",
       "thicknessTooltip": "Note thickness",
       "thicknessValueTooltip": "Note thickness: {{value}}",
       "zoom": "Zoom",
-      "zoomTooltip": "Zoom factor",
-      "zoomScalePresetTooltip": "Zoom factor (click for presets)",
       "zoomFitTooltip": "Fit to chart",
-      "keyMode": "Mode",
-      "keyModeTooltip": "Key mode",
-      "grid": "Grid:",
-      "customGridSnapTooltip": "Custom grid snap",
-      "snapOn": "Snap ON",
-      "snapOff": "Snap OFF",
-      "snapToggleTooltip": "Snap to Grid: {{state}} (Shift drag = temporarily off)",
-      "snapStateOn": "ON",
-      "snapStateOff": "OFF",
-      "snapAriaOn": "Grid snap on",
-      "snapAriaOff": "Grid snap off"
+      "zoomScalePresetTooltip": "Zoom factor (click for presets)",
+      "zoomTooltip": "Zoom factor"
     },
     "layer": {
       "ariaState": "{{layer}} layer {{state}}{{lockSuffix}}",
-      "visible": "shown",
+      "contextHint": "Left click = visibility, right click = lock",
       "hidden": "hidden",
       "lockedSuffix": " (locked)",
-      "titleVisible": "visible",
       "titleHidden": "hidden",
       "titleLocked": " (locked)",
-      "contextHint": "Left click = visibility, right click = lock"
+      "titleVisible": "visible",
+      "visible": "shown"
     },
-    "actions": {
-      "undoAria": "Undo (Ctrl+Z)",
-      "redoAria": "Redo (Ctrl+Y)",
-      "copyAria": "Copy (Ctrl+C)",
-      "pasteAria": "Paste (Ctrl+V)",
-      "saveTooltip": "Save (Ctrl+S)",
-      "zoomInAria": "Zoom in",
-      "zoomInTooltip": "Zoom in (=)",
-      "zoomOutAria": "Zoom out",
-      "zoomOutTooltip": "Zoom out (-)",
-      "zoomFitAria": "Fit chart to view"
-    },
+    "play": "Play",
     "presets": {
+      "detail": "Detail",
       "overview": "Overview",
-      "work": "Work",
-      "detail": "Detail"
-    }
-  },
-  "panels": {
-    "keysound": {
-      "title": "Keysounds",
-      "uploadButton": "Upload",
-      "uploadTooltip": "Upload keysound files",
-      "searchPlaceholder": "Search...",
-      "noSilent": "Silent / No Sound",
-      "noSearchResults": "No matches",
-      "empty": "No keysounds loaded",
-      "countSummary": "{{count}} keysound(s)",
-      "filteredSummary": "({{count}} filtered)",
-      "contextMenu": {
-        "findNotes": "Find notes using this keysound",
-        "highlightOn": "Highlight in chart",
-        "highlightOff": "Clear highlight",
-        "selectBgm": "Select BGM notes for this keysound",
-        "replace": "Replace keysound...",
-        "deleteUnused": "Delete unused keysound"
+      "work": "Work"
+    },
+    "redo": "Redo",
+    "save": "Save",
+    "saved": "Saved",
+    "snap": "Snap",
+    "stop": "Stop",
+    "tools": {
+      "addNote": {
+        "description": "Place a new note at the click location.",
+        "label": "Add"
       },
-      "uploadDialog": {
-        "title": "Upload Keysounds",
-        "confirm": "Upload",
-        "cancel": "Cancel",
-        "dropPrompt": "Drag files here or click to choose",
-        "formatHint": "WAV, OGG, MP3 (each up to 10MB, total 50MB)",
-        "fileCountSummary": "{{count}} file(s) ({{size}})",
-        "commitMessage": "Upload keysound files ({{count}})",
-        "uploadFailed": "Upload failed",
-        "unsupportedFormat": "Unsupported format: {{name}} (WAV/OGG/MP3 only)",
-        "fileTooLarge": "File too large: {{name}} (max 10MB)",
-        "totalTooLarge": "Total upload exceeds 50MB",
-        "duplicateWavId": "Duplicate WAV ID: {{id}}"
+      "bpm": {
+        "description": "Add or edit a BPM change at the click position.",
+        "label": "BPM"
+      },
+      "delete": {
+        "description": "Delete the clicked note.",
+        "label": "Delete"
+      },
+      "keysound": {
+        "description": "Click a note to assign the current keysound.",
+        "label": "Keysound"
+      },
+      "move": {
+        "description": "Drag the selected notes or use arrow keys to move them.",
+        "label": "Move"
+      },
+      "select": {
+        "description": "Click or drag to select notes. Shift-click to extend selection.",
+        "label": "Select"
+      },
+      "stop": {
+        "description": "Add or edit a STOP event at the click position.",
+        "label": "STOP"
       }
     },
-    "header": {
-      "title": "Chart Info",
-      "titleField": "Title",
-      "artistField": "Artist",
-      "bpmField": "BPM",
-      "genreField": "Genre",
-      "tabs": {
-        "basic": "Basic",
-        "custom": "Custom",
-        "wav": "WAV",
-        "bmp": "BMP",
-        "raw": "Raw"
-      },
-      "fields": {
-        "title": "Title",
-        "subtitle": "Subtitle",
-        "artist": "Artist",
-        "subartist": "Sub-artist",
-        "genre": "Genre",
-        "level": "Level",
-        "difficulty": "Difficulty",
-        "rank": "Rank"
-      },
-      "common": {
-        "searchPlaceholder": "Search...",
-        "noSearchResults": "No matches",
-        "empty": "No entries",
-        "deleteTooltip": "Delete",
-        "valuePlaceholder": "Value",
-        "rawHelp": "Edit every header directly. Apply replaces all current values.",
-        "applyButton": "Apply"
-      }
-    },
-    "minimap": {
-      "title": "Minimap",
-      "navigationTooltip": "Click or drag to navigate"
-    },
-    "noteInfo": {
-      "title": "Note Info",
-      "empty": "Select a note to inspect",
-      "multiTitle": "Selection Summary",
-      "labels": {
-        "selection": "Selection",
-        "type": "Type",
-        "column": "Column",
-        "beatRange": "Beat range",
-        "keysound": "Keysound",
-        "layer": "Layers",
-        "position": "Position",
-        "beat": "Beat",
-        "measure": "Measure",
-        "grid": "Grid",
-        "timing": "Timing",
-        "playTime": "Play time",
-        "channel": "Channel",
-        "longNote": "Long note",
-        "endBeat": "End beat",
-        "length": "Length",
-        "endTime": "End time"
-      },
-      "values": {
-        "notesCount": "{{count}} note(s)",
-        "uniqueKeysoundsCount": "{{count}} unique",
-        "gridAligned": "Aligned to 1/{{snap}}",
-        "gridUnaligned": "Off grid",
-        "silentKeysound": "00 (silent)"
-      },
-      "tooltips": {
-        "deleteLayer": "Delete layer",
-        "addLayer": "Add keysound {{id}} as layer"
-      }
-    },
-    "statusBar": {
-      "beat": "Beat",
-      "time": "Time",
-      "notes": "Notes",
-      "currentPositionTooltip": "Current position (measure / beat)",
-      "gridSnapTooltip": "Grid snap",
-      "selectedNotesTooltip": "Selected notes",
-      "totalNotesTooltip": "Total notes",
-      "noteHeightTooltip": "Note height",
-      "audioReadyTooltip": "Audio ready",
-      "audioMissingTooltip": "Audio not loaded",
-      "measureLabel": "m",
-      "beatLabel": "b",
-      "selectedCount": "{{count}} selected",
-      "noSelection": "None selected",
-      "totalCount": "Total {{count}}",
-      "audioOn": "Audio",
-      "audioOff": "Muted"
-    },
-    "noteSearch": {
-      "title": "Find Note",
-      "placeholder": "Search...",
-      "noResults": "No matches"
-    }
-  },
-  "contextMenu": {
-    "cut": "Cut",
-    "copy": "Copy",
-    "paste": "Paste",
-    "delete": "Delete",
-    "selectAll": "Select All"
+    "undo": "Undo",
+    "zoomFit": "Fit",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out"
   }
 }

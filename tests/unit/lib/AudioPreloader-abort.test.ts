@@ -84,8 +84,8 @@ describe('AudioPreloader.abort()', () => {
     const preloader = new AudioPreloader('', { a: 'a.wav', b: 'b.wav' }, worker);
 
     // Manually populate audioDataMap with fake buffers (bypass loadAll)
-    (preloader as unknown as { audioDataMap: Map<string, ArrayBuffer> }).audioDataMap.set('a', new ArrayBuffer(8));
-    (preloader as unknown as { audioDataMap: Map<string, ArrayBuffer> }).audioDataMap.set('b', new ArrayBuffer(8));
+    (preloader as unknown as { fetchPipeline: { audioDataMap: Map<string, ArrayBuffer> } }).fetchPipeline.audioDataMap.set('a', new ArrayBuffer(8));
+    (preloader as unknown as { fetchPipeline: { audioDataMap: Map<string, ArrayBuffer> } }).fetchPipeline.audioDataMap.set('b', new ArrayBuffer(8));
 
     // Start decodeAll — it will hang waiting for mock decodeAudioData
     const decodePromise = preloader.decodeAll();
@@ -101,7 +101,7 @@ describe('AudioPreloader.abort()', () => {
     const worker = new MockAudioLoaderWorker() as unknown as Worker;
     const preloader = new AudioPreloader('', { x: 'x.wav' }, worker);
 
-    (preloader as unknown as { audioDataMap: Map<string, ArrayBuffer> }).audioDataMap.set('x', new ArrayBuffer(8));
+    (preloader as unknown as { fetchPipeline: { audioDataMap: Map<string, ArrayBuffer> } }).fetchPipeline.audioDataMap.set('x', new ArrayBuffer(8));
 
     preloader.abort(); // abort before decodeAll
 
@@ -117,7 +117,7 @@ describe('AudioPreloader.abort()', () => {
     const preloader = new AudioPreloader('', { c: 'c.wav' }, worker);
     const ctx = (preloader as unknown as { audioContext: MockAudioContext }).audioContext;
 
-    (preloader as unknown as { audioDataMap: Map<string, ArrayBuffer> }).audioDataMap.set('c', new ArrayBuffer(8));
+    (preloader as unknown as { fetchPipeline: { audioDataMap: Map<string, ArrayBuffer> } }).fetchPipeline.audioDataMap.set('c', new ArrayBuffer(8));
 
     // Start decode — hangs in pending
     const decodePromise = preloader.decodeAll();
@@ -130,8 +130,8 @@ describe('AudioPreloader.abort()', () => {
     ctx.resolveAllPending();
     await Promise.resolve(); // yield to micro-tasks
 
-    const audioBuffers = (preloader as unknown as { audioBuffers: Map<string, AudioBuffer> }).audioBuffers;
-    expect(audioBuffers.has('c')).toBe(false);
+    const store = (preloader as unknown as { store: { has: (k: string) => boolean } }).store;
+    expect(store.has('c')).toBe(false);
   });
 
   it('abort() is idempotent — calling twice does not throw', () => {

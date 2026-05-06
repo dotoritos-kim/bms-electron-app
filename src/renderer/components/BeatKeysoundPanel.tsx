@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Music, Headphones, Layers, ArrowRight, Trash2 } from 'lucide-react';
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
 
@@ -41,6 +42,7 @@ export function BeatKeysoundPanel({
   onToggleSolo,
   onToggleMute,
 }: BeatKeysoundPanelProps) {
+  const { t } = useTranslation('editor');
   const BEAT_RANGE = 0.125;
   const nearbyNotes = useMemo(() => {
     const grouped = new Map<string, { beat: number; playable: EditableBMSNote[]; bgm: EditableBMSNote[] }>();
@@ -66,9 +68,9 @@ export function BeatKeysoundPanel({
       <div className="px-3 py-2">
         <h3 className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5 mb-1">
           <Headphones className="h-3 w-3" />
-          키음 타임라인
+          {t('panels.beatKeysound.title')}
         </h3>
-        <div className="text-xs text-zinc-600">현재 위치 근처에 키음 없음</div>
+        <div className="text-xs text-zinc-600">{t('panels.beatKeysound.empty')}</div>
       </div>
     );
   }
@@ -77,7 +79,7 @@ export function BeatKeysoundPanel({
     <div className="px-3 py-2">
       <h3 className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5 mb-1.5">
         <Headphones className="h-3 w-3" />
-        <span title="현재 위치 근처의 키음을 시간순으로 표시합니다. 클릭하면 해당 키음을 선택합니다.">키음 타임라인</span>
+        <span title={t('panels.beatKeysound.tooltip')}>{t('panels.beatKeysound.title')}</span>
       </h3>
       <div className="space-y-1">
         {nearbyNotes.map((group) => {
@@ -94,7 +96,7 @@ export function BeatKeysoundPanel({
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="font-mono text-zinc-500">#{String(measure).padStart(3, '0')}:{frac}</span>
                 <span className="font-mono text-zinc-600">({group.beat.toFixed(2)})</span>
-                {isCurrent && <span className="text-blue-400 text-xs">◀ 현재</span>}
+                {isCurrent && <span className="text-blue-400 text-xs">{t('panels.beatKeysound.current')}</span>}
               </div>
               {group.playable.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-0.5">
@@ -138,7 +140,7 @@ export function BeatKeysoundPanel({
   );
 }
 
-/** BGM 채널별 그룹핑 + 일괄 작업 UI */
+/** BGM channel grouping + bulk operations UI */
 function BgmManagerSection({
   notes,
   wavDefinitions,
@@ -160,6 +162,7 @@ function BgmManagerSection({
   onToggleSolo?: (channel: number) => void;
   onToggleMute?: (channel: number) => void;
 }) {
+  const { t } = useTranslation('editor');
   const [expanded, setExpanded] = useState(true);
 
   const channelGroups = useMemo(() => {
@@ -189,7 +192,7 @@ function BgmManagerSection({
         className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 mb-1 w-full"
       >
         <Layers className="h-3 w-3" />
-        BGM 매니저 ({channelGroups.reduce((s, [, g]) => s + g.count, 0)}개)
+        {t('panels.bgmManager.title', { count: channelGroups.reduce((s, [, g]) => s + g.count, 0) })}
         <span className="text-zinc-600 ml-auto">{expanded ? '▼' : '▶'}</span>
       </button>
       {expanded && (
@@ -198,20 +201,20 @@ function BgmManagerSection({
             <div key={ch} className="bg-zinc-800/50 rounded px-2 py-1 text-xs">
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="font-semibold text-zinc-300">CH {ch}</span>
-                <span className="text-zinc-600">({group.count}개 노트, {group.keysounds.size}종 키음)</span>
+                <span className="text-zinc-600">({t('panels.bgmManager.channelStats', { notes: group.count, keysounds: group.keysounds.size })})</span>
                 <span className="ml-auto flex gap-0.5">
                   {onToggleSolo && (
                     <button
                       onClick={() => onToggleSolo(ch)}
                       className={`px-1 rounded font-bold ${bgmSoloChannel === ch ? 'bg-yellow-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                      title={bgmSoloChannel === ch ? '솔로 해제' : '이 채널만 솔로'}
+                      title={bgmSoloChannel === ch ? t('panels.bgmManager.soloOff') : t('panels.bgmManager.soloOn')}
                     >S</button>
                   )}
                   {onToggleMute && (
                     <button
                       onClick={() => onToggleMute(ch)}
                       className={`px-1 rounded font-bold ${bgmMutedChannels?.has(ch) ? 'bg-red-700 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                      title={bgmMutedChannels?.has(ch) ? '뮤트 해제' : '이 채널 뮤트'}
+                      title={bgmMutedChannels?.has(ch) ? t('panels.bgmManager.muteOff') : t('panels.bgmManager.muteOn')}
                     >M</button>
                   )}
                 </span>
@@ -222,7 +225,7 @@ function BgmManagerSection({
                     key={ks}
                     onClick={() => onSelectBgmNotes?.(ids)}
                     className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-purple-900/30 text-purple-300 hover:bg-purple-800/40 transition-colors"
-                    title={`${ks}: ${wavDefinitions.get(ks) || '?'} (${ids.length}개)\n클릭: 선택`}
+                    title={`${ks}: ${wavDefinitions.get(ks) || '?'} (${ids.length})\n${t('panels.bgmManager.clickToSelect')}`}
                   >
                     <span className="font-mono">{ks}</span>
                     <span className="text-purple-500">×{ids.length}</span>

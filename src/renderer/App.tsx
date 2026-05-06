@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Home } from './routes/Home';
 import { Player } from './routes/Player';
 import { Editor } from './routes/Editor';
@@ -61,6 +62,7 @@ export interface CurrentFile {
 }
 
 export function App() {
+  const { t } = useTranslation('app');
   // Restore last session
   const [route, setRoute] = useState<AppRoute>(() => {
     const session = loadSession();
@@ -196,14 +198,14 @@ export function App() {
             className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-80 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-sm font-semibold text-zinc-200 mb-2">화면 이동</h3>
+            <h3 className="text-sm font-semibold text-zinc-200 mb-2">{t('navigation.leaveTitle')}</h3>
             <p className="text-xs text-zinc-400 mb-4">{navConfirm.message}</p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setNavConfirm(null)}
                 className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
               >
-                취소
+                {t('common:actions.cancel')}
               </button>
               {navConfirm.onSave && (
                 <button
@@ -214,7 +216,7 @@ export function App() {
                   }}
                   className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
                 >
-                  저장 안 함
+                  {t('navigation.discardLabel')}
                 </button>
               )}
               <button
@@ -235,7 +237,7 @@ export function App() {
                 }}
                 className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
               >
-                {navConfirm.onSave ? '저장 후 이동' : '나가기'}
+                {navConfirm.onSave ? t('navigation.saveAndLeaveLabel') : t('navigation.leaveLabel')}
               </button>
             </div>
           </div>

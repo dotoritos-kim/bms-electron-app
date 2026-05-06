@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Plug, Unplug, Keyboard } from 'lucide-react';
 import { AccessibleDialog } from './AccessibleDialog';
 import type { MidiDevice, MidiMapping, MidiRecordingMode, MidiNoteEvent } from '../lib/midiInput';
@@ -43,6 +44,7 @@ export function MidiMappingDialog({
   onRecordingModeChange,
   onMidiNote,
 }: MidiMappingDialogProps) {
+  const { t } = useTranslation('app');
   const [devices, setDevices] = useState<MidiDevice[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
   const [connected, setConnected] = useState(isConnected());
@@ -118,11 +120,11 @@ export function MidiMappingDialog({
   }) : [];
 
   return (
-    <AccessibleDialog open={open} onClose={onClose} title="MIDI 설정" className="border border-zinc-700 w-[420px] max-h-[80vh] flex flex-col">
+    <AccessibleDialog open={open} onClose={onClose} title={t('dialogs.midiMapping.title')} className="border border-zinc-700 w-[420px] max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
           <h2 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
             <Keyboard className="h-4 w-4" />
-            MIDI 설정
+            {t('dialogs.midiMapping.title')}
           </h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-zinc-800 text-zinc-400">
             <X className="h-4 w-4" />
@@ -132,14 +134,14 @@ export function MidiMappingDialog({
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3 space-y-4">
           {/* Device selection */}
           <div>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">장치</h3>
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">{t('dialogs.midiMapping.deviceSection')}</h3>
             <div className="flex gap-2">
               <select
                 value={selectedDevice}
                 onChange={(e) => setSelectedDevice(e.target.value)}
                 className="flex-1 px-2 py-1.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
               >
-                <option value="">장치 선택...</option>
+                <option value="">{t('dialogs.midiMapping.devicePlaceholder')}</option>
                 {devices.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
@@ -147,7 +149,7 @@ export function MidiMappingDialog({
               {connected ? (
                 <button onClick={handleDisconnect} className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded flex items-center gap-1">
                   <Unplug className="h-3 w-3" />
-                  해제
+                  {t('dialogs.midiMapping.disconnect')}
                 </button>
               ) : (
                 <button
@@ -156,23 +158,23 @@ export function MidiMappingDialog({
                   className="px-3 py-1.5 text-xs bg-green-600/80 hover:bg-green-600 disabled:opacity-40 text-white rounded flex items-center gap-1"
                 >
                   <Plug className="h-3 w-3" />
-                  연결
+                  {t('dialogs.midiMapping.connect')}
                 </button>
               )}
             </div>
             {devices.length === 0 && (
-              <div className="text-xs text-zinc-600 mt-1">MIDI 장치가 감지되지 않습니다</div>
+              <div className="text-xs text-zinc-600 mt-1">{t('dialogs.midiMapping.noDevices')}</div>
             )}
             {lastNote !== null && (
               <div className="text-xs text-zinc-500 mt-1">
-                마지막 입력: <span className="text-blue-400 font-mono">{midiNoteName(lastNote)} ({lastNote})</span>
+                {t('dialogs.midiMapping.lastInput')} <span className="text-blue-400 font-mono">{midiNoteName(lastNote)} ({lastNote})</span>
               </div>
             )}
           </div>
 
           {/* Recording mode */}
           <div>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">레코딩 모드</h3>
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">{t('dialogs.midiMapping.recordingSection')}</h3>
             <div className="flex gap-1.5">
               {(['off', 'step', 'realtime'] as MidiRecordingMode[]).map((mode) => (
                 <button
@@ -184,21 +186,21 @@ export function MidiMappingDialog({
                       : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                   }`}
                 >
-                  {mode === 'off' ? '끄기' : mode === 'step' ? '스텝' : '실시간'}
+                  {mode === 'off' ? t('dialogs.midiMapping.modeOff') : mode === 'step' ? t('dialogs.midiMapping.modeStep') : t('dialogs.midiMapping.modeRealtime')}
                 </button>
               ))}
             </div>
             <div className="text-xs text-zinc-600 mt-1">
-              {recordingMode === 'step' && '스텝: MIDI 입력 → 현재 위치에 노트 배치 후 자동 전진'}
-              {recordingMode === 'realtime' && '실시간: 재생 중 MIDI 입력 → 재생 위치에 배치'}
-              {recordingMode === 'off' && 'MIDI 레코딩 비활성화'}
+              {recordingMode === 'step' && t('dialogs.midiMapping.modeStepHelp')}
+              {recordingMode === 'realtime' && t('dialogs.midiMapping.modeRealtimeHelp')}
+              {recordingMode === 'off' && t('dialogs.midiMapping.modeOffHelp')}
             </div>
           </div>
 
           {/* Presets */}
           <div>
             <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
-              프리셋 <span className="text-zinc-600 font-normal normal-case">({mapping.presetName})</span>
+              {t('dialogs.midiMapping.presetSection')} <span className="text-zinc-600 font-normal normal-case">({mapping.presetName})</span>
             </h3>
             <div className="flex gap-1.5">
               <button onClick={() => handlePreset('default')} className="flex-1 px-2 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded">Default</button>
@@ -209,7 +211,7 @@ export function MidiMappingDialog({
 
           {/* Lane mapping */}
           <div>
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">레인 매핑</h3>
+            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">{t('dialogs.midiMapping.laneSection')}</h3>
             <div className="space-y-0.5">
               {laneMappings.map(({ lane, mappedNote }) => (
                 <div
@@ -223,7 +225,7 @@ export function MidiMappingDialog({
                     {mappedNote !== null ? (
                       <span className="text-zinc-300">{midiNoteName(mappedNote)} ({mappedNote})</span>
                     ) : (
-                      '미설정'
+                      t('dialogs.midiMapping.unmapped')
                     )}
                   </span>
                   <button
@@ -234,7 +236,7 @@ export function MidiMappingDialog({
                         : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                     }`}
                   >
-                    {learnLane === lane ? '대기중...' : 'Learn'}
+                    {learnLane === lane ? t('dialogs.midiMapping.waiting') : 'Learn'}
                   </button>
                 </div>
               ))}
@@ -244,7 +246,7 @@ export function MidiMappingDialog({
 
         <div className="flex justify-end px-4 py-3 border-t border-zinc-800 shrink-0">
           <button onClick={onClose} className="px-4 py-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded transition-colors">
-            닫기
+            {t('dialogs.midiMapping.closeButton')}
           </button>
         </div>
     </AccessibleDialog>

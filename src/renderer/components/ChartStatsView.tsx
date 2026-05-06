@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
 
 interface ChartStatsViewProps {
@@ -8,6 +9,7 @@ interface ChartStatsViewProps {
 }
 
 export function ChartStatsView({ notes, bpm, totalBeats }: ChartStatsViewProps) {
+  const { t } = useTranslation('app');
   const stats = useMemo(() => {
     const playable = notes.filter((n) => n.noteType === 'playable').length;
     const invisible = notes.filter((n) => n.noteType === 'invisible').length;
@@ -34,8 +36,8 @@ export function ChartStatsView({ notes, bpm, totalBeats }: ChartStatsViewProps) 
       <div className="text-zinc-400">Invisible</div><div className="text-zinc-300 text-right">{stats.invisible}</div>
       <div className="text-zinc-400">Landmine</div><div className="text-zinc-300 text-right">{stats.landmine}</div>
       <div className="text-zinc-400">NPS</div><div className="text-zinc-300 text-right">{stats.nps.toFixed(1)}</div>
-      <div className="text-zinc-400">마디</div><div className="text-zinc-300 text-right">{stats.measures}</div>
-      <div className="text-zinc-400">재생 시간</div><div className="text-zinc-300 text-right">{fmt(stats.durationSec)}</div>
+      <div className="text-zinc-400">{t('stats.measures')}</div><div className="text-zinc-300 text-right">{stats.measures}</div>
+      <div className="text-zinc-400">{t('stats.duration')}</div><div className="text-zinc-300 text-right">{fmt(stats.durationSec)}</div>
     </div>
   );
 }

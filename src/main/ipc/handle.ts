@@ -14,7 +14,6 @@ export function handle<K extends IpcInvokeChannel>(
     ...args: IpcInvokeMap[K]['in']
   ) => Promise<IpcInvokeMap[K]['out']> | IpcInvokeMap[K]['out'],
 ): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bridging across the ipcMain.handle generic boundary; arguments are validated by the K-indexed types above.
   ipcMain.handle(channel, handler as (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown);
 }
 

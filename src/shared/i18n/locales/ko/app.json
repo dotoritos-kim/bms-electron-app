@@ -128,6 +128,26 @@
     },
     "patternLibrary": {
       "applyTooltip": "클릭하여 현재 위치에 적용\n{{count}}개 노트, {{beats}}비트",
+      "builtIn": {
+        "chord2": "2겹 동시",
+        "chord3": "3겹 동시",
+        "chord4": "4겹 동시",
+        "chordStream": "동시치기 스트림",
+        "jack16th": "16분 잭",
+        "jack8th": "8분 잭",
+        "jackDouble": "더블 잭",
+        "roll16th": "16분 롤",
+        "roll8th": "8분 롤",
+        "scratchPlusKey": "스크래치 + 키",
+        "scratchRepeat": "스크래치 연타",
+        "stairs16th": "16분 계단 (오름)",
+        "stairsAsc": "계단 (오름)",
+        "stairsDesc": "계단 (내림)",
+        "stream16th": "16분 스트림",
+        "stream8th": "8분 스트림",
+        "trill16th": "16분 트릴",
+        "trill32thBurst": "32분 트릴 버스트"
+      },
       "categories": {
         "chord": "동시치기",
         "custom": "사용자 정의",

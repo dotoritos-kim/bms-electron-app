@@ -5,7 +5,7 @@ import {
   loadUserPatterns,
   saveNewPattern,
   deleteUserPattern,
-  CATEGORY_LABELS,
+  resolveCategoryLabel,
   saveUserPatterns,
 } from '../../../src/renderer/lib/patternTemplates';
 import type { PatternTemplate, PatternCategory } from '../../../src/renderer/lib/patternTemplates';
@@ -32,7 +32,8 @@ describe('patternTemplates', () => {
       for (const p of getBuiltInPatterns()) {
         expect(p.id).toBeDefined();
         expect(typeof p.id).toBe('string');
-        expect(p.name).toBeDefined();
+        expect(p.nameKey).toBeDefined();
+        expect(typeof p.nameKey).toBe('string');
         expect(p.category).toBeDefined();
         expect(p.notes).toBeDefined();
         expect(Array.isArray(p.notes)).toBe(true);
@@ -57,7 +58,7 @@ describe('patternTemplates', () => {
     it('returns merged list with user patterns', () => {
       const userPattern: PatternTemplate = {
         id: 'user-test-1',
-        name: 'Test Pattern',
+        nameKey: 'Test Pattern',
         category: 'custom',
         tags: [],
         notes: [{ beatOffset: 0, columnIndex: 0, noteType: 'playable' }],
@@ -74,7 +75,7 @@ describe('patternTemplates', () => {
     it('built-in patterns come first', () => {
       const userPattern: PatternTemplate = {
         id: 'user-test-1',
-        name: 'Test Pattern',
+        nameKey: 'Test Pattern',
         category: 'custom',
         tags: [],
         notes: [],
@@ -114,7 +115,7 @@ describe('patternTemplates', () => {
     it('includes user patterns of same category', () => {
       const userPattern: PatternTemplate = {
         id: 'user-stairs-1',
-        name: 'Custom Stairs',
+        nameKey: 'Custom Stairs',
         category: 'stairs',
         tags: [],
         notes: [],
@@ -137,7 +138,7 @@ describe('patternTemplates', () => {
       const patterns: PatternTemplate[] = [
         {
           id: 'user-1',
-          name: 'Test',
+          nameKey: 'Test',
           category: 'custom',
           tags: [],
           notes: [],
@@ -161,7 +162,7 @@ describe('patternTemplates', () => {
   describe('saveNewPattern', () => {
     it('creates pattern with generated id starting with "user-"', () => {
       const result = saveNewPattern({
-        name: 'My Pattern',
+        nameKey: 'My Pattern',
         category: 'custom',
         tags: ['test'],
         notes: [{ beatOffset: 0, columnIndex: 0, noteType: 'playable' }],
@@ -173,7 +174,7 @@ describe('patternTemplates', () => {
 
     it('sets isBuiltIn to false', () => {
       const result = saveNewPattern({
-        name: 'My Pattern',
+        nameKey: 'My Pattern',
         category: 'custom',
         tags: [],
         notes: [],
@@ -185,7 +186,7 @@ describe('patternTemplates', () => {
 
     it('saves to localStorage', () => {
       saveNewPattern({
-        name: 'Saved Pattern',
+        nameKey: 'Saved Pattern',
         category: 'jack',
         tags: [],
         notes: [],
@@ -194,12 +195,12 @@ describe('patternTemplates', () => {
       });
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
       expect(stored).toHaveLength(1);
-      expect(stored[0].name).toBe('Saved Pattern');
+      expect(stored[0].nameKey).toBe('Saved Pattern');
     });
 
     it('subsequent getAllPatterns includes the saved pattern', () => {
       saveNewPattern({
-        name: 'Included Pattern',
+        nameKey: 'Included Pattern',
         category: 'custom',
         tags: [],
         notes: [],
@@ -208,7 +209,7 @@ describe('patternTemplates', () => {
       });
       const all = getAllPatterns();
       expect(all).toHaveLength(19);
-      expect(all.some((p) => p.name === 'Included Pattern')).toBe(true);
+      expect(all.some((p) => p.nameKey === 'Included Pattern')).toBe(true);
     });
   });
 
@@ -218,7 +219,7 @@ describe('patternTemplates', () => {
       const patterns: PatternTemplate[] = [
         {
           id: 'user-del-1',
-          name: 'Delete Me',
+          nameKey: 'Delete Me',
           category: 'custom',
           tags: [],
           notes: [],
@@ -228,7 +229,7 @@ describe('patternTemplates', () => {
         },
         {
           id: 'user-del-2',
-          name: 'Keep Me',
+          nameKey: 'Keep Me',
           category: 'custom',
           tags: [],
           notes: [],
@@ -250,7 +251,7 @@ describe('patternTemplates', () => {
     it('other patterns remain after deletion', () => {
       deleteUserPattern('user-del-1');
       const remaining = loadUserPatterns();
-      expect(remaining.some((p) => p.name === 'Keep Me')).toBe(true);
+      expect(remaining.some((p) => p.nameKey === 'Keep Me')).toBe(true);
     });
 
     it('deleting non-existent id is safe', () => {
@@ -260,21 +261,16 @@ describe('patternTemplates', () => {
     });
   });
 
-  describe('CATEGORY_LABELS', () => {
+  describe('resolveCategoryLabel', () => {
     const allCategories: PatternCategory[] = [
       'stairs', 'chord', 'jack', 'roll', 'trill', 'scratch', 'stream', 'custom',
     ];
 
-    it('has entry for all 8 categories', () => {
-      expect(Object.keys(CATEGORY_LABELS)).toHaveLength(8);
+    it('returns a non-empty string for all 8 categories', () => {
       for (const cat of allCategories) {
-        expect(CATEGORY_LABELS).toHaveProperty(cat);
-      }
-    });
-
-    it('all values are strings', () => {
-      for (const value of Object.values(CATEGORY_LABELS)) {
-        expect(typeof value).toBe('string');
+        const label = resolveCategoryLabel(cat);
+        expect(typeof label).toBe('string');
+        expect(label.length).toBeGreaterThan(0);
       }
     });
   });

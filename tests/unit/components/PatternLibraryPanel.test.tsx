@@ -8,7 +8,7 @@ import type { PatternTemplate, PatternCategory } from '../../../src/renderer/lib
 const mockPatterns: PatternTemplate[] = [
   {
     id: 'builtin-stairs-1',
-    name: 'Stairs Up',
+    nameKey: 'Stairs Up',
     category: 'stairs',
     tags: ['basic'],
     notes: [
@@ -21,7 +21,7 @@ const mockPatterns: PatternTemplate[] = [
   },
   {
     id: 'builtin-chord-1',
-    name: 'Basic Chord',
+    nameKey: 'Basic Chord',
     category: 'chord',
     tags: ['easy'],
     notes: [
@@ -34,7 +34,7 @@ const mockPatterns: PatternTemplate[] = [
   },
   {
     id: 'builtin-jack-1',
-    name: 'Jack Pattern',
+    nameKey: 'Jack Pattern',
     category: 'jack',
     tags: ['fast', 'jack'],
     notes: [
@@ -48,7 +48,7 @@ const mockPatterns: PatternTemplate[] = [
   },
   {
     id: 'builtin-roll-1',
-    name: 'Roll Pattern',
+    nameKey: 'Roll Pattern',
     category: 'roll',
     tags: ['roll'],
     notes: [
@@ -61,7 +61,7 @@ const mockPatterns: PatternTemplate[] = [
   },
   {
     id: 'user-1',
-    name: 'My Custom',
+    nameKey: 'My Custom',
     category: 'custom',
     tags: ['my', 'pattern'],
     notes: [{ beatOffset: 0, columnIndex: 0, noteType: 'playable' }],
@@ -86,16 +86,8 @@ const mockCategoryLabels: Record<PatternCategory, string> = {
 
 vi.mock('../../../src/renderer/lib/patternTemplates', () => ({
   getAllPatterns: vi.fn(() => mockPatterns),
-  CATEGORY_LABELS: {
-    stairs: '계단',
-    chord: '동시치기',
-    jack: '잭',
-    roll: '롤',
-    trill: '트릴',
-    scratch: '스크래치',
-    stream: '스트림',
-    custom: '사용자 정의',
-  },
+  resolvePatternName: vi.fn((p: PatternTemplate) => p.nameKey),
+  resolveCategoryLabel: vi.fn((cat: PatternCategory) => mockCategoryLabels[cat]),
   saveNewPattern: vi.fn(),
   deleteUserPattern: vi.fn(),
 }));
@@ -157,7 +149,7 @@ describe('PatternLibraryPanel', () => {
     expect(screen.getByText('선택 노트를 패턴으로 저장')).toBeInTheDocument();
   });
 
-  // 4. Renders category sections with CATEGORY_LABELS
+  // 4. Renders category sections via i18n category labels
   it('renders category labels for categories that have patterns', () => {
     renderPanel();
     // Categories with patterns in our mock: stairs, chord, jack, roll, custom

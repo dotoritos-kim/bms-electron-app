@@ -4,10 +4,15 @@ import { Layers, Trash2, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import type { PatternTemplate, PatternCategory } from '../lib/patternTemplates';
 import {
   getAllPatterns,
-  CATEGORY_LABELS,
+  resolveCategoryLabel,
+  resolvePatternName,
   saveNewPattern,
   deleteUserPattern,
 } from '../lib/patternTemplates';
+
+const ALL_CATEGORIES: PatternCategory[] = [
+  'stairs', 'chord', 'jack', 'roll', 'trill', 'scratch', 'stream', 'custom',
+];
 
 interface PatternLibraryPanelProps {
   onApplyPattern: (pattern: PatternTemplate) => void;
@@ -122,8 +127,8 @@ function SavePatternDialog({
             onChange={(e) => setCategory(e.target.value as PatternCategory)}
             className="w-full px-2 py-1.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
           >
-            {(Object.keys(CATEGORY_LABELS) as PatternCategory[]).map((key) => (
-              <option key={key} value={key}>{t(`dialogs.patternLibrary.categories.${key}`)}</option>
+            {ALL_CATEGORIES.map((key) => (
+              <option key={key} value={key}>{resolveCategoryLabel(key)}</option>
             ))}
           </select>
           <input
@@ -161,12 +166,17 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
     setPatterns(getAllPatterns());
   }, []);
 
+  const displayName = useCallback(
+    (pattern: PatternTemplate) => resolvePatternName(pattern),
+    [],
+  );
+
   const grouped = useMemo(() => {
     const lowerFilter = filter.toLowerCase();
     const filtered = lowerFilter
       ? patterns.filter(
           (p) =>
-            p.name.toLowerCase().includes(lowerFilter) ||
+            displayName(p).toLowerCase().includes(lowerFilter) ||
             p.tags.some((tag) => tag.toLowerCase().includes(lowerFilter)),
         )
       : patterns;
@@ -178,7 +188,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
       map.set(p.category, list);
     }
     return map;
-  }, [patterns, filter]);
+  }, [patterns, filter, displayName]);
 
   const toggleCategory = (cat: string) => {
     setExpandedCategories((prev) => {
@@ -200,7 +210,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
       const result = onSaveSelection();
       if (!result) return;
       saveNewPattern({
-        name,
+        nameKey: name,
         category,
         tags,
         notes: result.notes,
@@ -221,7 +231,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
     [refreshPatterns],
   );
 
-  const categories = Object.keys(CATEGORY_LABELS) as PatternCategory[];
+  const categories = ALL_CATEGORIES;
 
   return (
     <div className="flex flex-col h-full">
@@ -258,7 +268,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
                 className="w-full flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
               >
                 {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                {t(`dialogs.patternLibrary.categories.${cat}`)}
+                {resolveCategoryLabel(cat)}
                 <span className="text-zinc-600 ml-auto">{items.length}</span>
               </button>
               {isExpanded && (
@@ -272,7 +282,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
                     >
                       <PatternPreview pattern={pattern} />
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs text-zinc-200 truncate">{pattern.name}</div>
+                        <div className="text-xs text-zinc-200 truncate">{displayName(pattern)}</div>
                         <div className="text-xs text-zinc-400">
                           {t('dialogs.patternLibrary.patternStats', { count: pattern.notes.length, beats: pattern.beatLength })}
                         </div>

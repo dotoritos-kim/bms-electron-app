@@ -326,7 +326,7 @@ describe('Editor Workflow: Cross-module interactions', () => {
 
       const pattern: PatternTemplate = {
         id: 'test-stairs',
-        name: 'Test Stairs',
+        nameKey: 'Test Stairs',
         category: 'stairs',
         tags: ['test'],
         columnCount: 3,
@@ -391,7 +391,7 @@ describe('Editor Workflow: Cross-module interactions', () => {
 
       const pattern: PatternTemplate = {
         id: 'test-chord',
-        name: 'Test Chord',
+        nameKey: 'Test Chord',
         category: 'chord',
         tags: [],
         columnCount: 2,

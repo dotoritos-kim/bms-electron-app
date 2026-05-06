@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import type { NoteType } from '@rhythm-archive/bms-core';
 
 // --- Types ---
@@ -14,7 +15,12 @@ export interface PatternNote {
 
 export interface PatternTemplate {
   id: string;
-  name: string;
+  /**
+   * Display name. For built-ins this is an i18n key under
+   * `app:dialogs.patternLibrary.builtIn.*`; for user patterns it is the
+   * literal name they entered. `resolvePatternName` handles both cases.
+   */
+  nameKey: string;
   category: PatternCategory;
   tags: string[];
   notes: PatternNote[];
@@ -35,16 +41,16 @@ export type PatternCategory =
   | 'stream'
   | 'custom';
 
-export const CATEGORY_LABELS: Record<PatternCategory, string> = {
-  stairs: 'Stairs',
-  chord: 'Chord',
-  jack: 'Jack',
-  roll: 'Roll',
-  trill: 'Trill',
-  scratch: 'Scratch',
-  stream: 'Stream',
-  custom: 'Custom',
-};
+export const CATEGORY_KEYS: PatternCategory[] = [
+  'stairs',
+  'chord',
+  'jack',
+  'roll',
+  'trill',
+  'scratch',
+  'stream',
+  'custom',
+];
 
 // --- Built-in patterns ---
 
@@ -56,7 +62,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Stairs (ascending)
   {
     id: makeId('stairs', 1),
-    name: '계단 (오름)',
+    nameKey: 'dialogs.patternLibrary.builtIn.stairsAsc',
     category: 'stairs',
     tags: ['basic', '7key'],
     notes: [0, 1, 2, 3, 4, 5, 6].map((i) => ({
@@ -71,7 +77,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Stairs (descending)
   {
     id: makeId('stairs', 2),
-    name: '계단 (내림)',
+    nameKey: 'dialogs.patternLibrary.builtIn.stairsDesc',
     category: 'stairs',
     tags: ['basic', '7key'],
     notes: [0, 1, 2, 3, 4, 5, 6].map((i) => ({
@@ -86,7 +92,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Stairs (ascending, 16th)
   {
     id: makeId('stairs', 3),
-    name: '16분 계단 (오름)',
+    nameKey: 'dialogs.patternLibrary.builtIn.stairs16th',
     category: 'stairs',
     tags: ['fast', '7key'],
     notes: [0, 1, 2, 3, 4, 5, 6].map((i) => ({
@@ -101,7 +107,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Chord (2 notes)
   {
     id: makeId('chord', 1),
-    name: '2겹 동시',
+    nameKey: 'dialogs.patternLibrary.builtIn.chord2',
     category: 'chord',
     tags: ['basic'],
     notes: [
@@ -115,7 +121,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Chord (3 notes)
   {
     id: makeId('chord', 2),
-    name: '3겹 동시',
+    nameKey: 'dialogs.patternLibrary.builtIn.chord3',
     category: 'chord',
     tags: ['basic'],
     notes: [
@@ -130,7 +136,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Chord (4 notes)
   {
     id: makeId('chord', 3),
-    name: '4겹 동시',
+    nameKey: 'dialogs.patternLibrary.builtIn.chord4',
     category: 'chord',
     tags: ['dense'],
     notes: [
@@ -146,7 +152,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Chord stream (repeated 2-note chords)
   {
     id: makeId('chord', 4),
-    name: '동시치기 스트림',
+    nameKey: 'dialogs.patternLibrary.builtIn.chordStream',
     category: 'chord',
     tags: ['stream'],
     notes: [0, 1, 2, 3].flatMap((i) => [
@@ -160,7 +166,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Jack (same column rapid)
   {
     id: makeId('jack', 1),
-    name: '8분 잭',
+    nameKey: 'dialogs.patternLibrary.builtIn.jack8th',
     category: 'jack',
     tags: ['basic'],
     notes: [0, 1, 2, 3].map((i) => ({
@@ -175,7 +181,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Jack (16th)
   {
     id: makeId('jack', 2),
-    name: '16분 잭',
+    nameKey: 'dialogs.patternLibrary.builtIn.jack16th',
     category: 'jack',
     tags: ['fast'],
     notes: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({
@@ -190,7 +196,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Double jack
   {
     id: makeId('jack', 3),
-    name: '더블 잭',
+    nameKey: 'dialogs.patternLibrary.builtIn.jackDouble',
     category: 'jack',
     tags: ['dense'],
     notes: [0, 1, 2, 3].flatMap((i) => [
@@ -204,7 +210,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Roll (2-column alternating)
   {
     id: makeId('roll', 1),
-    name: '8분 롤',
+    nameKey: 'dialogs.patternLibrary.builtIn.roll8th',
     category: 'roll',
     tags: ['basic'],
     notes: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({
@@ -219,7 +225,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Roll (16th)
   {
     id: makeId('roll', 2),
-    name: '16분 롤',
+    nameKey: 'dialogs.patternLibrary.builtIn.roll16th',
     category: 'roll',
     tags: ['fast'],
     notes: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({
@@ -234,7 +240,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Trill (fast alternating)
   {
     id: makeId('trill', 1),
-    name: '16분 트릴',
+    nameKey: 'dialogs.patternLibrary.builtIn.trill16th',
     category: 'trill',
     tags: ['fast'],
     notes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((i) => ({
@@ -249,7 +255,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Trill (32nd burst)
   {
     id: makeId('trill', 2),
-    name: '32분 트릴 버스트',
+    nameKey: 'dialogs.patternLibrary.builtIn.trill32thBurst',
     category: 'trill',
     tags: ['burst'],
     notes: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({
@@ -264,7 +270,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Scratch pattern
   {
     id: makeId('scratch', 1),
-    name: '스크래치 연타',
+    nameKey: 'dialogs.patternLibrary.builtIn.scratchRepeat',
     category: 'scratch',
     tags: ['scratch'],
     notes: [0, 1, 2, 3].map((i) => ({
@@ -279,7 +285,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Scratch + keys
   {
     id: makeId('scratch', 2),
-    name: '스크래치 + 키',
+    nameKey: 'dialogs.patternLibrary.builtIn.scratchPlusKey',
     category: 'scratch',
     tags: ['mixed'],
     notes: [
@@ -297,7 +303,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Stream (continuous flowing notes)
   {
     id: makeId('stream', 1),
-    name: '8분 스트림',
+    nameKey: 'dialogs.patternLibrary.builtIn.stream8th',
     category: 'stream',
     tags: ['basic'],
     notes: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({
@@ -312,7 +318,7 @@ const BUILT_IN_PATTERNS: PatternTemplate[] = [
   // Dense stream (16th)
   {
     id: makeId('stream', 2),
-    name: '16분 스트림',
+    nameKey: 'dialogs.patternLibrary.builtIn.stream16th',
     category: 'stream',
     tags: ['fast'],
     notes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((i) => ({
@@ -375,4 +381,20 @@ export function deleteUserPattern(id: string): void {
 
 export function getBuiltInPatterns(): PatternTemplate[] {
   return BUILT_IN_PATTERNS;
+}
+
+// --- Display helpers ---
+
+const BUILT_IN_KEY_PREFIX = 'dialogs.patternLibrary.builtIn.';
+
+export function resolvePatternName(pattern: PatternTemplate): string {
+  if (pattern.isBuiltIn && pattern.nameKey.startsWith(BUILT_IN_KEY_PREFIX)) {
+    return i18next.t(pattern.nameKey, { ns: 'app', defaultValue: pattern.nameKey });
+  }
+  return pattern.nameKey;
+}
+
+export function resolveCategoryLabel(category: PatternCategory): string {
+  const key = `dialogs.patternLibrary.categories.${category}`;
+  return i18next.t(key, { ns: 'app', defaultValue: category });
 }

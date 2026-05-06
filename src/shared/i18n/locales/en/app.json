@@ -128,6 +128,26 @@
     },
     "patternLibrary": {
       "applyTooltip": "Click to apply at the current position\n{{count}} notes, {{beats}} beats",
+      "builtIn": {
+        "chord2": "2-note chord",
+        "chord3": "3-note chord",
+        "chord4": "4-note chord",
+        "chordStream": "Chord stream",
+        "jack16th": "16th jack",
+        "jack8th": "8th jack",
+        "jackDouble": "Double jack",
+        "roll16th": "16th roll",
+        "roll8th": "8th roll",
+        "scratchPlusKey": "Scratch + keys",
+        "scratchRepeat": "Scratch repeat",
+        "stairs16th": "16th stairs (asc)",
+        "stairsAsc": "Stairs (asc)",
+        "stairsDesc": "Stairs (desc)",
+        "stream16th": "16th stream",
+        "stream8th": "8th stream",
+        "trill16th": "16th trill",
+        "trill32thBurst": "32nd trill burst"
+      },
       "categories": {
         "chord": "Chord",
         "custom": "User defined",

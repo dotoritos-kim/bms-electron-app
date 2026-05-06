@@ -100,7 +100,7 @@ export function NoteColorDialog({ open, onClose, colors, onSetColor, onResetAll 
 
   useEffect(() => {
     if (open) setLocal(colors);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]);
 
   function handleChange(key: keyof NoteColorSettings, value: string | undefined) {
     setLocal((prev) => {

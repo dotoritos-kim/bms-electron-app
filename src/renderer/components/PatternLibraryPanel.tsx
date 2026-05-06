@@ -1,5 +1,6 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Layers, Trash2, Plus, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Layers, Trash2, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import type { PatternTemplate, PatternCategory } from '../lib/patternTemplates';
 import {
   getAllPatterns,
@@ -83,6 +84,7 @@ function SavePatternDialog({
   onSave: (name: string, category: PatternCategory, tags: string[]) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation(['app', 'common']);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<PatternCategory>('custom');
   const [tagStr, setTagStr] = useState('');
@@ -97,7 +99,7 @@ function SavePatternDialog({
     if (!name.trim()) return;
     const tags = tagStr
       .split(',')
-      .map((t) => t.trim())
+      .map((tag) => tag.trim())
       .filter(Boolean);
     onSave(name.trim(), category, tags);
   };
@@ -105,13 +107,13 @@ function SavePatternDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-72 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-sm font-semibold text-zinc-200 mb-3">패턴 저장</h3>
+        <h3 className="text-sm font-semibold text-zinc-200 mb-3">{t('dialogs.patternLibrary.saveDialog.title')}</h3>
         <form onSubmit={handleSubmit} className="space-y-2">
           <input
             ref={nameRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="패턴 이름"
+            placeholder={t('dialogs.patternLibrary.saveDialog.namePlaceholder')}
             className="w-full px-2 py-1.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
             onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
           />
@@ -120,26 +122,26 @@ function SavePatternDialog({
             onChange={(e) => setCategory(e.target.value as PatternCategory)}
             className="w-full px-2 py-1.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
           >
-            {(Object.entries(CATEGORY_LABELS) as [PatternCategory, string][]).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
+            {(Object.keys(CATEGORY_LABELS) as PatternCategory[]).map((key) => (
+              <option key={key} value={key}>{t(`dialogs.patternLibrary.categories.${key}`)}</option>
             ))}
           </select>
           <input
             value={tagStr}
             onChange={(e) => setTagStr(e.target.value)}
-            placeholder="태그 (쉼표 구분)"
+            placeholder={t('dialogs.patternLibrary.saveDialog.tagsPlaceholder')}
             className="w-full px-2 py-1.5 text-xs bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
           />
           <div className="flex justify-end gap-2 pt-1">
             <button type="button" onClick={onClose} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">
-              취소
+              {t('common:actions.cancel')}
             </button>
             <button
               type="submit"
               disabled={!name.trim()}
               className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded"
             >
-              저장
+              {t('common:actions.save')}
             </button>
           </div>
         </form>
@@ -149,6 +151,7 @@ function SavePatternDialog({
 }
 
 export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: PatternLibraryPanelProps) {
+  const { t } = useTranslation('app');
   const [patterns, setPatterns] = useState<PatternTemplate[]>(() => getAllPatterns());
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['stairs', 'chord', 'jack']));
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -164,7 +167,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
       ? patterns.filter(
           (p) =>
             p.name.toLowerCase().includes(lowerFilter) ||
-            p.tags.some((t) => t.toLowerCase().includes(lowerFilter)),
+            p.tags.some((tag) => tag.toLowerCase().includes(lowerFilter)),
         )
       : patterns;
 
@@ -225,12 +228,12 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
       <div className="px-3 py-2 border-b border-zinc-800 shrink-0">
         <h3 className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5 mb-1.5">
           <Layers className="h-3 w-3" />
-          패턴 라이브러리
+          {t('dialogs.patternLibrary.panelTitle')}
         </h3>
         <input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="검색..."
+          placeholder={t('dialogs.patternLibrary.searchPlaceholder')}
           className="w-full px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-200 focus:outline-none focus:border-blue-500"
         />
         <button
@@ -238,7 +241,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
           className="mt-1.5 w-full flex items-center justify-center gap-1 px-2 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded transition-colors"
         >
           <Plus className="h-3 w-3" />
-          선택 노트를 패턴으로 저장
+          {t('dialogs.patternLibrary.saveSelectionButton')}
         </button>
       </div>
 
@@ -255,7 +258,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
                 className="w-full flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
               >
                 {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                {CATEGORY_LABELS[cat]}
+                {t(`dialogs.patternLibrary.categories.${cat}`)}
                 <span className="text-zinc-600 ml-auto">{items.length}</span>
               </button>
               {isExpanded && (
@@ -265,13 +268,13 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
                       key={pattern.id}
                       className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-800/60 group cursor-pointer transition-colors"
                       onClick={() => onApplyPattern(pattern)}
-                      title={`클릭하여 현재 위치에 적용\n${pattern.notes.length}개 노트, ${pattern.beatLength}비트`}
+                      title={t('dialogs.patternLibrary.applyTooltip', { count: pattern.notes.length, beats: pattern.beatLength })}
                     >
                       <PatternPreview pattern={pattern} />
                       <div className="flex-1 min-w-0">
                         <div className="text-xs text-zinc-200 truncate">{pattern.name}</div>
                         <div className="text-xs text-zinc-400">
-                          {pattern.notes.length}노트 · {pattern.beatLength}비트
+                          {t('dialogs.patternLibrary.patternStats', { count: pattern.notes.length, beats: pattern.beatLength })}
                         </div>
                         {pattern.tags.length > 0 && (
                           <div className="flex flex-wrap gap-0.5 mt-0.5">
@@ -290,7 +293,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
                             handleDelete(pattern.id);
                           }}
                           className="p-1.5 rounded hover:bg-red-900/50 text-zinc-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                          title="삭제"
+                          title={t('dialogs.patternLibrary.deleteTooltip')}
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
@@ -304,7 +307,7 @@ export function PatternLibraryPanel({ onApplyPattern, onSaveSelection }: Pattern
         })}
         {grouped.size === 0 && (
           <div className="px-3 py-4 text-xs text-zinc-600 text-center">
-            {filter ? '검색 결과 없음' : '패턴 없음'}
+            {filter ? t('dialogs.patternLibrary.noSearchResults') : t('dialogs.patternLibrary.empty')}
           </div>
         )}
       </div>

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Wand2, Lightbulb } from 'lucide-react';
 import { AccessibleDialog } from './AccessibleDialog';
 import type { GeneratedNote, AutoChartOptions } from '../lib/autoChart';
@@ -38,6 +39,7 @@ export function AutoChartDialog({
   gridSnap,
   onApplyNotes,
 }: AutoChartDialogProps) {
+  const { t } = useTranslation(['app', 'common']);
   const [mode, setMode] = useState<Mode>('suggest');
   const [difficulty, setDifficulty] = useState(5);
   const [lnRatio, setLnRatio] = useState(0);
@@ -125,13 +127,19 @@ export function AutoChartDialog({
     onClose();
   }, [preview, onApplyNotes, onClose]);
 
+  const audioLabel = useMemo(() => {
+    if (loadingAudio) return t('dialogs.autoChart.audioLoading');
+    if (audioBuffer) return t('dialogs.autoChart.audioLoaded', { duration: audioBuffer.duration.toFixed(1) });
+    return t('dialogs.autoChart.audioOpenButton');
+  }, [loadingAudio, audioBuffer, t]);
+
   return (
-    <AccessibleDialog open={open} onClose={onClose} title="AI 차트 생성" className="border border-zinc-700 w-[520px] max-h-[85vh] flex flex-col">
+    <AccessibleDialog open={open} onClose={onClose} title={t('dialogs.autoChart.title')} className="border border-zinc-700 w-[520px] max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
           <h2 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
             <Wand2 className="h-4 w-4" />
-            AI 차트 생성
+            {t('dialogs.autoChart.title')}
           </h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-zinc-800 text-zinc-400">
             <X className="h-4 w-4" />
@@ -147,7 +155,7 @@ export function AutoChartDialog({
             }`}
           >
             <Wand2 className="h-3.5 w-3.5 inline mr-1" />
-            오디오 → 차트 생성
+            {t('dialogs.autoChart.tabs.generate')}
           </button>
           <button
             onClick={() => setMode('suggest')}
@@ -156,7 +164,7 @@ export function AutoChartDialog({
             }`}
           >
             <Lightbulb className="h-3.5 w-3.5 inline mr-1" />
-            패턴 제안
+            {t('dialogs.autoChart.tabs.suggest')}
           </button>
         </div>
 
@@ -166,20 +174,20 @@ export function AutoChartDialog({
             <>
               {/* Audio source */}
               <div>
-                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">오디오 소스</h3>
+                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">{t('dialogs.autoChart.audioSection')}</h3>
                 <button
                   onClick={handleLoadAudio}
                   disabled={loadingAudio}
                   className="px-3 py-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded transition-colors"
                 >
-                  {loadingAudio ? '로딩...' : audioBuffer ? `로드됨 (${audioBuffer.duration.toFixed(1)}s)` : '오디오 파일 열기'}
+                  {audioLabel}
                 </button>
               </div>
 
               {/* Difficulty */}
               <div>
                 <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
-                  난이도: <span className="text-zinc-300">{difficulty}</span>/12
+                  {t('dialogs.autoChart.difficultyLabel')}: <span className="text-zinc-300">{difficulty}</span>/12
                 </h3>
                 <input
                   type="range" min={1} max={12} value={difficulty}
@@ -191,7 +199,7 @@ export function AutoChartDialog({
               {/* LN Ratio */}
               <div>
                 <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
-                  LN 비율: <span className="text-zinc-300">{Math.round(lnRatio * 100)}%</span>
+                  {t('dialogs.autoChart.lnRatioLabel')}: <span className="text-zinc-300">{Math.round(lnRatio * 100)}%</span>
                 </h3>
                 <input
                   type="range" min={0} max={1} step={0.05} value={lnRatio}
@@ -204,11 +212,11 @@ export function AutoChartDialog({
               <div className="flex gap-4">
                 <label className="flex items-center gap-1.5 text-xs text-zinc-400">
                   <input type="checkbox" checked={quantize} onChange={(e) => setQuantize(e.target.checked)} className="accent-blue-500" />
-                  그리드 스냅
+                  {t('dialogs.autoChart.gridSnapToggle')}
                 </label>
                 <label className="flex items-center gap-1.5 text-xs text-zinc-400">
                   <input type="checkbox" checked={useScratch} onChange={(e) => setUseScratch(e.target.checked)} className="accent-blue-500" />
-                  스크래치 포함
+                  {t('dialogs.autoChart.scratchToggle')}
                 </label>
               </div>
 
@@ -218,20 +226,19 @@ export function AutoChartDialog({
                 className="w-full py-2 text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded transition-colors flex items-center justify-center gap-1.5"
               >
                 <Wand2 className="h-3.5 w-3.5" />
-                차트 생성
+                {t('dialogs.autoChart.generateButton')}
               </button>
             </>
           ) : (
             <>
               {/* Suggest mode */}
               <div className="text-xs text-zinc-400 bg-zinc-800/50 rounded p-2">
-                기존 노트 패턴을 분석하여 다음 마디의 노트를 제안합니다.
-                현재 차트에 {existingNotes.length}개 노트가 있습니다.
+                {t('dialogs.autoChart.suggestExplanation', { count: existingNotes.length })}
               </div>
 
               <div>
                 <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
-                  생성할 노트 수: <span className="text-zinc-300">{suggestCount}</span>
+                  {t('dialogs.autoChart.suggestCountLabel')}: <span className="text-zinc-300">{suggestCount}</span>
                 </h3>
                 <input
                   type="range" min={4} max={64} value={suggestCount}
@@ -246,10 +253,10 @@ export function AutoChartDialog({
                 className="w-full py-2 text-xs bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded transition-colors flex items-center justify-center gap-1.5"
               >
                 <Lightbulb className="h-3.5 w-3.5" />
-                패턴 제안 생성
+                {t('dialogs.autoChart.suggestButton')}
               </button>
               {existingNotes.length < 4 && (
-                <div className="text-xs text-yellow-500">최소 4개 이상의 노트가 필요합니다</div>
+                <div className="text-xs text-yellow-500">{t('dialogs.autoChart.minNotesWarning')}</div>
               )}
             </>
           )}
@@ -257,13 +264,13 @@ export function AutoChartDialog({
           {/* Preview */}
           {generateAttempted && preview.length === 0 && (
             <div className="text-xs text-yellow-500 bg-yellow-900/20 rounded p-2">
-              감지된 온셋이 없습니다. 오디오 볼륨이 너무 낮거나 무음일 수 있습니다. 난이도를 낮추면 감도가 올라갑니다.
+              {t('dialogs.autoChart.noOnsetsWarning')}
             </div>
           )}
           {preview.length > 0 && (
             <div>
               <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
-                미리보기 ({preview.length}개 노트)
+                {t('dialogs.autoChart.previewLabel', { count: preview.length })}
               </h3>
               <div className="bg-zinc-800/50 rounded p-2 max-h-40 overflow-y-auto">
                 <div className="grid grid-cols-8 gap-0.5 text-xs font-mono text-zinc-400">
@@ -289,21 +296,21 @@ export function AutoChartDialog({
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800 shrink-0">
           <div className="text-xs text-zinc-500">
-            {preview.length > 0 && `${preview.length}개 노트 생성됨`}
+            {preview.length > 0 && t('dialogs.autoChart.generatedSummary', { count: preview.length })}
           </div>
           <div className="flex gap-2">
             <button
               onClick={onClose}
               className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
             >
-              취소
+              {t('common:actions.cancel')}
             </button>
             <button
               onClick={handleApply}
               disabled={preview.length === 0}
               className="px-4 py-1.5 text-xs bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white rounded transition-colors"
             >
-              적용
+              {t('dialogs.autoChart.applyButton')}
             </button>
           </div>
         </div>

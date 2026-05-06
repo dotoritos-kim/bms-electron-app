@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccessibleDialog } from './AccessibleDialog';
 import { RotateCcw } from 'lucide-react';
 
@@ -20,13 +21,14 @@ interface ColorRowProps {
 }
 
 function ColorRow({ label, description, defaultColor, value, onChange }: ColorRowProps) {
+  const { t } = useTranslation('app');
   const active = value ?? defaultColor;
   const isCustom = !!value;
 
   return (
     <div className="flex items-center gap-3 py-2 px-3 rounded hover:bg-zinc-800/50 group">
       {/* Color swatch + picker */}
-      <label className="relative cursor-pointer shrink-0" title={`${label} 색상 선택`}>
+      <label className="relative cursor-pointer shrink-0" title={t('dialogs.noteColor.swatchTooltip', { label })}>
         <div
           className="w-7 h-7 rounded border border-zinc-600 group-hover:border-zinc-400 transition-colors"
           style={{ backgroundColor: active }}
@@ -44,7 +46,7 @@ function ColorRow({ label, description, defaultColor, value, onChange }: ColorRo
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-zinc-200">{label}</span>
           {isCustom && (
-            <span className="text-xs bg-blue-900/60 text-blue-300 px-1 py-0.5 rounded">커스텀</span>
+            <span className="text-xs bg-blue-900/60 text-blue-300 px-1 py-0.5 rounded">{t('dialogs.noteColor.customBadge')}</span>
           )}
         </div>
         <div className="text-xs text-zinc-500">{description}</div>
@@ -58,7 +60,7 @@ function ColorRow({ label, description, defaultColor, value, onChange }: ColorRo
         <button
           onClick={() => onChange(undefined)}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-300"
-          title="기본값으로 초기화"
+          title={t('dialogs.noteColor.resetTooltip')}
         >
           <RotateCcw className="h-3 w-3" />
         </button>
@@ -68,18 +70,13 @@ function ColorRow({ label, description, defaultColor, value, onChange }: ColorRo
   );
 }
 
-const COLOR_FIELDS: {
-  key: keyof NoteColorSettings;
-  label: string;
-  description: string;
-  defaultColor: string;
-}[] = [
-  { key: 'playable', label: '플레이어블 노트', description: '일반 노트 (레인 색상 오버라이드)', defaultColor: '#88aaff' },
-  { key: 'invisible', label: '인비저블 노트', description: '보이지 않는 노트', defaultColor: '#3a5499' },
-  { key: 'landmine', label: '지뢰 노트', description: '레인에 닿으면 판정 감소', defaultColor: '#ff4444' },
-  { key: 'bgm', label: 'BGM 노트', description: '배경음 노트', defaultColor: '#666666' },
-  { key: 'selection', label: '선택 하이라이트', description: '선택된 노트 외곽선', defaultColor: '#00ffff' },
-  { key: 'background', label: '캔버스 배경', description: '에디터 캔버스 배경색', defaultColor: '#0a0a1a' },
+const COLOR_FIELD_KEYS: { key: keyof NoteColorSettings; defaultColor: string }[] = [
+  { key: 'playable', defaultColor: '#88aaff' },
+  { key: 'invisible', defaultColor: '#3a5499' },
+  { key: 'landmine', defaultColor: '#ff4444' },
+  { key: 'bgm', defaultColor: '#666666' },
+  { key: 'selection', defaultColor: '#00ffff' },
+  { key: 'background', defaultColor: '#0a0a1a' },
 ];
 
 interface NoteColorDialogProps {
@@ -91,10 +88,16 @@ interface NoteColorDialogProps {
 }
 
 export function NoteColorDialog({ open, onClose, colors, onSetColor, onResetAll }: NoteColorDialogProps) {
-  // Local state for live preview without touching store until confirm
+  const { t } = useTranslation(['app', 'common']);
   const [local, setLocal] = useState<NoteColorSettings>({});
 
-  // Sync local state when dialog opens
+  const COLOR_FIELDS = COLOR_FIELD_KEYS.map(({ key, defaultColor }) => ({
+    key,
+    defaultColor,
+    label: t(`dialogs.noteColor.fields.${key}.label`),
+    description: t(`dialogs.noteColor.fields.${key}.description`),
+  }));
+
   useEffect(() => {
     if (open) setLocal(colors);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -112,7 +115,6 @@ export function NoteColorDialog({ open, onClose, colors, onSetColor, onResetAll 
   }
 
   function handleApply() {
-    // 초기화된 색상이 있으면 전체 리셋 후 재적용, 아니면 바로 적용
     const hasAnyClear = COLOR_FIELDS.some((f) => colors[f.key] !== undefined && local[f.key] === undefined);
     if (hasAnyClear) onResetAll();
     for (const field of COLOR_FIELDS) {
@@ -132,12 +134,12 @@ export function NoteColorDialog({ open, onClose, colors, onSetColor, onResetAll 
     <AccessibleDialog
       open={open}
       onClose={onClose}
-      title="노트 색상 설정"
+      title={t('dialogs.noteColor.title')}
       className="border border-zinc-700 w-[420px] flex flex-col"
     >
       <div className="px-4 pb-1 pt-1">
         <p className="text-xs text-zinc-400">
-          노트 타입별 색상을 변경합니다. 색상 칸을 클릭하여 색을 선택하세요.
+          {t('dialogs.noteColor.description')}
         </p>
       </div>
 
@@ -161,20 +163,20 @@ export function NoteColorDialog({ open, onClose, colors, onSetColor, onResetAll 
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <RotateCcw className="h-3 w-3" />
-          전체 초기화
+          {t('dialogs.noteColor.resetAllButton')}
         </button>
         <div className="flex gap-2">
           <button
             onClick={onClose}
             className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
           >
-            취소
+            {t('common:actions.cancel')}
           </button>
           <button
             onClick={handleApply}
             className="px-4 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors"
           >
-            적용
+            {t('dialogs.noteColor.applyButton')}
           </button>
         </div>
       </div>

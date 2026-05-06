@@ -36,14 +36,14 @@ export type PatternCategory =
   | 'custom';
 
 export const CATEGORY_LABELS: Record<PatternCategory, string> = {
-  stairs: '계단',
-  chord: '동시치기',
-  jack: '잭',
-  roll: '롤',
-  trill: '트릴',
-  scratch: '스크래치',
-  stream: '스트림',
-  custom: '사용자 정의',
+  stairs: 'Stairs',
+  chord: 'Chord',
+  jack: 'Jack',
+  roll: 'Roll',
+  trill: 'Trill',
+  scratch: 'Scratch',
+  stream: 'Stream',
+  custom: 'Custom',
 };
 
 // --- Built-in patterns ---

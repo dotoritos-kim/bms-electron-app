@@ -1,4 +1,11 @@
 {
+  "bms": {
+    "fileNotFound": "File not found. It may have been moved or deleted.",
+    "fileAccessDenied": "Cannot access file. Please check permissions.",
+    "fileBusy": "File is in use by another program.",
+    "fileReadFailed": "Failed to read file.",
+    "parseError": "An error occurred while parsing the BMS file."
+  },
   "file": {
     "readFailed": "Failed to read file: {{path}}",
     "saveFailed": "Failed to save file: {{path}}",

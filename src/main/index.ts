@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 import { registerFileIpc } from './ipc/file';
 import { registerAudioIpc } from './ipc/audio';
+import { registerLocaleIpc, resolveInitialLocale } from './ipc/locale';
 import { createMenu } from './menu';
 
 let mainWindow: BrowserWindow | null = null;
@@ -40,13 +41,15 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Register IPC handlers
   registerFileIpc();
   registerAudioIpc();
+  registerLocaleIpc();
 
-  // Create app menu
-  createMenu();
+  // Create app menu in the resolved locale
+  const initialLocale = await resolveInitialLocale();
+  createMenu(initialLocale);
 
   // Create window
   createWindow();

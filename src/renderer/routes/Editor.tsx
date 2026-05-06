@@ -644,7 +644,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
   const handleSaveSelectionAsPattern = useCallback(() => {
     const result = store.selectionToPatternData(laneIds);
-    return result ? { ...result, id: '', name: '', category: 'custom' as const, tags: [], isBuiltIn: false } : null;
+    return result ? { ...result, id: '', nameKey: '', category: 'custom' as const, tags: [], isBuiltIn: false } : null;
   }, [laneIds]);
 
   // --- MIDI note input ---

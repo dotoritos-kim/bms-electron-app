@@ -10,7 +10,10 @@ export const test = base.extend<{ electronApp: ElectronApplication; window: Page
     const appPath = resolve(__dirname, '../../out/main/index.js');
     const { ELECTRON_RUN_AS_NODE, ...cleanEnv } = process.env;
     const electronApp = await electron.launch({
-      args: [appPath],
+      // E2E selectors target Korean UI text (pre-i18n labels). Force
+      // app.getLocale() to 'ko' so the renderer boots Korean regardless of
+      // the runner's OS locale (CI uses en-US Windows).
+      args: [appPath, '--lang=ko'],
       env: {
         ...cleanEnv,
         NODE_ENV: 'test',

@@ -136,24 +136,32 @@ npm run package     # NSIS 설치 파일 + Portable 빌드 → dist/
 
 ### GitHub Releases 자동 배포
 
-`v*` 태그를 푸시하거나 [Release workflow](.github/workflows/release.yml)를 수동 실행하면 다음이 자동으로 진행됩니다.
+릴리즈는 [release-please](https://github.com/googleapis/release-please) 기반으로 완전 자동화되어 있습니다. 개발자는 수동으로 버전을 올리거나 태그를 푸시할 필요가 없습니다.
 
-1. `bms-core`, `bms-player`, `bms-editor` sibling 저장소 체크아웃
-2. 각 sibling 패키지 빌드
-3. `bms-electron-app` 빌드 + `electron-builder --win --publish always`
-4. NSIS / Portable 인스톨러를 GitHub Releases에 첨부 + 워크플로 아티팩트로도 업로드
+릴리스 흐름:
 
-릴리스 절차:
+1. PR이 default 브랜치에 머지되면 [release-please.yml](.github/workflows/release-please.yml)이 실행되어, [Conventional Commits](https://www.conventionalcommits.org/) 형식의 커밋(`feat:`, `fix:`, `perf:` 등)을 분석합니다.
+2. release-please가 **Release PR**을 자동 생성/업데이트합니다 — `package.json` 버전 bump + `CHANGELOG.md` 갱신을 포함합니다.
+3. Release PR을 머지하면 release-please가 GitHub Release와 `v*` 태그를 자동 생성합니다.
+4. 태그 생성으로 [release.yml](.github/workflows/release.yml)이 트리거되어 다음을 수행합니다.
+   - `bms-core`, `bms-player`, `bms-editor` sibling 저장소 체크아웃
+   - 각 sibling 패키지 빌드
+   - `bms-electron-app` 빌드 + `electron-builder --win --publish always`
+   - NSIS / Portable 인스톨러를 GitHub Releases에 첨부 + 워크플로 아티팩트로도 업로드
 
-```bash
-# 버전 갱신
-npm version patch    # or minor / major
+커밋 메시지 규칙:
 
-# 태그 푸시
-git push --follow-tags
-```
+| Prefix | 의미 | 버전 영향 |
+|--------|------|-----------|
+| `feat:` | 새 기능 | minor bump |
+| `fix:` | 버그 수정 | patch bump |
+| `perf:` | 성능 개선 | patch bump |
+| `feat!:` / `BREAKING CHANGE:` | 호환성 깨는 변경 | major bump (1.0.0 이후) |
+| `chore:` / `docs:` / `test:` / `ci:` / `build:` / `refactor:` | CHANGELOG 비공개 | bump 없음 |
 
-태그가 푸시되면 [release.yml](.github/workflows/release.yml)이 자동 트리거되며, sibling 저장소 권한이 필요한 경우 `SIBLING_REPO_TOKEN` secret이 사용됩니다 (없으면 `GITHUB_TOKEN`로 폴백).
+`SIBLING_REPO_TOKEN` secret은 release-please가 Release PR과 태그를 생성할 때, 그리고 `release.yml`이 sibling 저장소를 체크아웃할 때 사용됩니다. 부재 시 `GITHUB_TOKEN`로 폴백합니다.
+
+> 긴급 hotfix 등 수동으로 릴리즈를 강제할 경우, `release.yml`을 `workflow_dispatch`로 직접 실행해 기존 태그를 재배포할 수 있습니다.
 
 ## 테스트 전략
 

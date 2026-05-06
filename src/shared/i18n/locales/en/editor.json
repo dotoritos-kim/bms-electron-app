@@ -213,6 +213,197 @@
       "totalNotesTooltip": "Total notes"
     }
   },
+  "routes": {
+    "editor": {
+      "audioLoading": "Loading {{loaded}}/{{total}}",
+      "layerPanel": {
+        "hideTitle": "Hide",
+        "showTitle": "Show",
+        "hideAria": "Hide {{layer}}",
+        "showAria": "Show {{layer}}",
+        "lockTitle": "Lock",
+        "unlockTitle": "Unlock",
+        "lockAria": "Lock {{layer}}",
+        "unlockAria": "Unlock {{layer}}",
+        "opacityTitle": "Opacity {{percent}}%",
+        "labels": {
+          "playable": "Playable",
+          "invisible": "Invisible",
+          "landmine": "Landmine",
+          "bgm": "BGM"
+        }
+      },
+      "error": {
+        "cannotOpenTitle": "Cannot open file",
+        "fileCorrupt": "The file format may be invalid or the file may be corrupted.",
+        "filePath": "File path:",
+        "errorDetail": "Error detail:",
+        "copyErrorInfo": "Copy error info",
+        "retry": "Retry",
+        "openOtherFile": "Open other file",
+        "goHome": "Go home"
+      },
+      "header": {
+        "saveTitle": "Save (Ctrl+S)",
+        "saveBtnUnsaved": "Save (Ctrl+S)",
+        "saveBtnSaved": "Saved",
+        "modifiedIndicator": "Modified",
+        "insertMeasureTitle": "Insert measure (Ctrl+Shift+I)",
+        "deleteMeasureTitle": "Delete measure (Ctrl+Shift+D)",
+        "measureLabel": "measure",
+        "settingsTitle": "Settings menu",
+        "settingsLabel": "Settings",
+        "aiChartLabel": "AI Chart Generator",
+        "audioSlicerLabel": "Audio Slicer",
+        "midiSettingsLabel": "MIDI Settings",
+        "keyBindingsLabel": "Key Bindings",
+        "noteColorLabel": "Note Color Settings"
+      },
+      "leftPanel": {
+        "keysoundTab": "Keysounds",
+        "patternTab": "Patterns",
+        "openPanelTitle": "Open keysound panel"
+      },
+      "playback": {
+        "loadAudio": "Load audio",
+        "playPauseTitle": "Play / Pause (Space)",
+        "stopTitle": "Stop",
+        "clearLoopTitle": "Clear loop (\\)",
+        "speedPresetTitle": "Speed preset",
+        "muteTitle": "Mute",
+        "unmuteTitle": "Unmute",
+        "volumeTitle": "Volume: {{percent}}%",
+        "bpmTapTitle": "BPM tap",
+        "playTestTitle": "Play test (F5)",
+        "keysoundPanelTitle": "Keysound panel",
+        "infoPanelTitle": "Info panel",
+        "minimapTitle": "Minimap",
+        "diffTitle": "Toggle diff view (Ctrl+D)"
+      },
+      "canvas": {
+        "ariaLabel": "BMS chart editor",
+        "keysoundIndicator": "Keysound: {{id}}{{name}}",
+        "silentKeysound": " (silent)"
+      },
+      "minimap": {
+        "dockToSidebar": "Dock to sidebar",
+        "dockToSidebarAria": "Dock minimap to sidebar",
+        "closePopout": "Close popout (return to inline)",
+        "closePopoutAria": "Close minimap popout",
+        "popoutTitle": "Detach minimap (draggable)"
+      },
+      "rightPanel": {
+        "openPanelTitle": "Open info panel",
+        "timelineSection": "Keysound Timeline",
+        "statsSection": "Stats",
+        "layersSection": "Layers",
+        "resetLayers": "Reset",
+        "resetLayersTitle": "Reset layer config",
+        "chartInfoSection": "Chart Info",
+        "titleLabel": "Title",
+        "artistLabel": "Artist"
+      },
+      "statusBar": {
+        "midiStep": "Step",
+        "midiRealtime": "Realtime",
+        "estimatedDifficulty": "Est. difficulty:"
+      },
+      "inputDialog": {
+        "bpmAdd": "Add BPM",
+        "bpmEdit": "Edit BPM",
+        "stopAdd": "Add STOP",
+        "stopEdit": "Edit STOP",
+        "timeSig": "Measure {{measure}} time signature",
+        "stopHint": "192 = 1 beat, enter 0 to delete",
+        "timeSigHint": "1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8",
+        "cancel": "Cancel",
+        "confirm": "OK"
+      },
+      "backConfirm": {
+        "title": "Unsaved changes",
+        "body": "You have unsaved changes. Leave without saving?",
+        "cancel": "Cancel",
+        "discard": "Don't save",
+        "saveAndLeave": "Save and leave"
+      },
+      "measureDialog": {
+        "insertTitle": "Insert measure",
+        "deleteTitle": "Delete measure",
+        "insertBefore": "Insert before measure {{measure}}",
+        "currentMeasureLabel": "(current measure)",
+        "insertAfter": "Insert after measure {{measure}}",
+        "deleteCurrent": "Delete measure {{measure}}",
+        "dividerLabel": "Manual input",
+        "measurePlaceholder": "Measure number",
+        "cancel": "Cancel",
+        "insert": "Insert",
+        "delete": "Delete"
+      },
+      "autoSaveRecovery": {
+        "title": "Auto-save recovery",
+        "body": "Auto-save data from a previous session was found. Recover it?",
+        "ignore": "Ignore",
+        "recover": "Recover"
+      },
+      "bookmarkDialog": {
+        "editTitle": "Edit bookmark",
+        "addTitle": "Add bookmark",
+        "measureBookmark": "Measure #{{measure}} bookmark",
+        "renamePrompt": "Change or delete the bookmark name.",
+        "addPrompt": "Enter a bookmark name.",
+        "namePlaceholder": "Bookmark name",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "save": "Save",
+        "add": "Add"
+      },
+      "clipboardHistory": {
+        "title": "Clipboard History",
+        "hint": "Select an entry to copy those notes to the clipboard.",
+        "noteCount": "{{count}} notes",
+        "currentLabel": "current",
+        "noKeysounds": "No keysounds",
+        "close": "Close"
+      },
+      "playTest": {
+        "label": "Play test",
+        "returnToEditor": "Return to editor (Esc)"
+      },
+      "diff": {
+        "title": "Diff View",
+        "close": "Close (Esc)"
+      },
+      "replaceKeysound": {
+        "sourceLabel": "Source:",
+        "noteCount": "— {{count}} notes",
+        "targetPrompt": "Select target keysound:",
+        "cancel": "Cancel"
+      },
+      "keysoundNoNotes": "No notes use this keysound",
+      "deleteUnusedConfirm": "This keysound is used by {{count}} note(s).\nDeleting it will replace those notes with silent (00).\n\nDelete anyway?",
+      "createGroupPrompt": "Group name:",
+      "navGuardMessage": "You have unsaved changes. Leave anyway?",
+      "copyErrorTemplate": "File: {{path}}\nError: {{error}}",
+      "replaceKeysoundTitle": "Replace Keysound",
+      "toast": {
+        "notesGenerated": "{{count}} notes generated",
+        "slicesSaved": "{{count}} slices saved",
+        "keysoundReplaced": "Replaced keysound {{from}} → {{to}} on {{count}} notes (Ctrl+Z to undo)",
+        "keysoundDeleted": "Keysound {{id}} deleted (Ctrl+Z to undo)",
+        "keysoundsImported": "{{count}} keysounds imported",
+        "keysoundImportFailed": "Keysound import failed",
+        "undefinedWavWarning": "Warning: {{count}} undefined WAV reference(s) ({{ids}})",
+        "highResWarning": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
+        "saved": "Saved",
+        "saveFailed": "Save failed: {{message}}",
+        "savedAs": "Saved as",
+        "undoAction": "Undo: {{description}}",
+        "redoAction": "Redo: {{description}}",
+        "pasteDropped": "{{count}} note(s) outside key mode range excluded",
+        "pasteConflicts": "{{count}} conflicting note(s) replaced"
+      }
+    }
+  },
   "store": {
     "orphanNotes": "{{count}} notes on lanes not in {{keyMode}} mode are now hidden. (Data is preserved)",
     "orphanNotes_one": "",

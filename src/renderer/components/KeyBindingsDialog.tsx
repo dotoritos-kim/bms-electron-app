@@ -5,7 +5,6 @@ import { AccessibleDialog } from './AccessibleDialog';
 import type { KeyBinding, KeyAction } from '../lib/keyBindings';
 import {
   ACTION_CATEGORIES,
-  ACTION_LABELS,
   DEFAULT_BINDINGS,
   keyComboToDisplay,
   normalizeKeyCombo,
@@ -20,7 +19,7 @@ interface KeyBindingsDialogProps {
 }
 
 export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }: KeyBindingsDialogProps) {
-  const { t } = useTranslation(['app', 'common']);
+  const { t } = useTranslation(['app', 'common', 'editor']);
   const [editingAction, setEditingAction] = useState<KeyAction | null>(null);
   const [localBindings, setLocalBindings] = useState<KeyBinding[]>(bindings);
   const listeningRef = useRef(false);
@@ -96,8 +95,8 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
 
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-2">
           {ACTION_CATEGORIES.map((cat) => (
-            <div key={cat.label} className="mb-3">
-              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">{cat.label}</h3>
+            <div key={cat.id} className="mb-3">
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">{t(`editor:keyBindings.categories.${cat.id}`)}</h3>
               <div className="space-y-0.5">
                 {cat.actions.map((action) => {
                   const binding = bindingMap.get(action);
@@ -114,7 +113,7 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
                       }`}
                     >
                       <span className={`text-xs ${hasConflict ? 'text-red-400' : isModified ? 'text-yellow-300' : 'text-zinc-300'}`}>
-                        {ACTION_LABELS[action]}
+                        {t(`editor:keyBindings.actions.${action}`)}
                         {hasConflict && <span className="ml-1 text-xs text-red-500">{t('dialogs.keyBindings.conflictBadge')}</span>}
                       </span>
                       <button

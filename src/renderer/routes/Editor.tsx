@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Settings2, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap, Maximize2, X as XIcon } from 'lucide-react';
 // Removed react-resizable-panels — using custom resize handles instead
@@ -109,11 +110,12 @@ function PlaybackSeekbar({ onSeek }: { onSeek: (sec: number) => void }) {
 
 /** Isolated audio loading progress */
 function AudioLoadingProgress() {
+  const { t } = useTranslation('editor');
   const audioLoadProgress = useEditorStore((s) => s.audioLoadProgress);
   return (
     <div className="flex items-center gap-2 text-muted-foreground">
       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      <span>로딩 {audioLoadProgress.loaded}/{audioLoadProgress.total}</span>
+      <span>{t('routes.editor.audioLoading', { loaded: audioLoadProgress.loaded, total: audioLoadProgress.total })}</span>
       {audioLoadProgress.total > 0 && (
         <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
           <div className="h-full bg-blue-500 transition-all" style={{ width: `${(audioLoadProgress.loaded / audioLoadProgress.total) * 100}%` }} />
@@ -168,12 +170,6 @@ function BeatKeysoundPanelBridge(props: Omit<React.ComponentPropsWithRef<typeof 
 }
 
 /** 레이어 가시성/잠금/불투명도 패널 */
-const LAYER_LABELS: Record<keyof LayerConfig, string> = {
-  playable: '플레이어블',
-  invisible: '인비저블',
-  landmine: '지뢰',
-  bgm: 'BGM',
-};
 const LAYER_KEYS: (keyof LayerConfig)[] = ['playable', 'invisible', 'landmine', 'bgm'];
 
 function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChange }: {
@@ -182,15 +178,17 @@ function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChang
   onLockToggle: (layer: keyof LayerConfig) => void;
   onOpacityChange: (layer: keyof LayerConfig, opacity: number) => void;
 }) {
+  const { t } = useTranslation('editor');
   return (
     <div className="px-3 py-2 space-y-1.5" data-testid="layer-panel">
       {LAYER_KEYS.map((layer) => {
         const s = layerConfig[layer];
+        const label = t(`routes.editor.layerPanel.labels.${layer}`);
         return (
           <div key={layer} className="flex items-center gap-1.5">
             <button
-              title={s.visible ? '숨기기' : '표시'}
-              aria-label={s.visible ? `${LAYER_LABELS[layer]} 숨기기` : `${LAYER_LABELS[layer]} 표시`}
+              title={s.visible ? t('routes.editor.layerPanel.hideTitle') : t('routes.editor.layerPanel.showTitle')}
+              aria-label={s.visible ? t('routes.editor.layerPanel.hideAria', { layer: label }) : t('routes.editor.layerPanel.showAria', { layer: label })}
               aria-pressed={s.visible}
               onClick={() => onVisibleToggle(layer)}
               className="p-2 rounded hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100 shrink-0"
@@ -199,8 +197,8 @@ function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChang
               {s.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5 text-zinc-600" />}
             </button>
             <button
-              title={s.locked ? '잠금 해제' : '잠금'}
-              aria-label={s.locked ? `${LAYER_LABELS[layer]} 잠금 해제` : `${LAYER_LABELS[layer]} 잠금`}
+              title={s.locked ? t('routes.editor.layerPanel.unlockTitle') : t('routes.editor.layerPanel.lockTitle')}
+              aria-label={s.locked ? t('routes.editor.layerPanel.unlockAria', { layer: label }) : t('routes.editor.layerPanel.lockAria', { layer: label })}
               aria-pressed={s.locked}
               onClick={() => onLockToggle(layer)}
               className="p-2 rounded hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100 shrink-0"
@@ -208,7 +206,7 @@ function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChang
             >
               {s.locked ? <Lock className="h-3.5 w-3.5 text-yellow-400" /> : <Unlock className="h-3.5 w-3.5" />}
             </button>
-            <span className="text-xs text-zinc-400 w-14 truncate shrink-0">{LAYER_LABELS[layer]}</span>
+            <span className="text-xs text-zinc-400 w-14 truncate shrink-0">{label}</span>
             <input
               type="range"
               min={0}
@@ -217,7 +215,7 @@ function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChang
               value={s.opacity}
               onChange={(e) => onOpacityChange(layer, parseFloat(e.target.value))}
               className="flex-1 min-w-0 h-1 accent-blue-500 cursor-pointer"
-              title={`불투명도 ${Math.round(s.opacity * 100)}%`}
+              title={t('routes.editor.layerPanel.opacityTitle', { percent: Math.round(s.opacity * 100) })}
               data-testid={`layer-opacity-${layer}`}
             />
           </div>
@@ -239,6 +237,7 @@ interface EditorProps {
 
 
 export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard }: EditorProps) {
+  const { t } = useTranslation(['editor', 'app', 'common']);
   const { chart, isLoading, error, load } = useLocalBmsFile();
 
   // --- Zustand store (selective subscription — excludes high-frequency playbackTime/audioLoadProgress) ---
@@ -515,7 +514,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     if (first) {
       store.setCurrentBeat(first.beat);
     } else {
-      store.setToast({ message: '이 키음을 사용하는 노트가 없습니다', type: 'error' });
+      showToast(t('editor:routes.editor.keysoundNoNotes'), 'error');
     }
   }, [notes, store]);
 
@@ -528,9 +527,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     const count = keysoundUsageCounts[keysoundId] ?? 0;
     if (count > 0) {
       // Confirm: replace all usages with silent (00) then delete
-      const ok = window.confirm(
-        `이 키음은 ${count}개 노트에서 사용 중입니다.\n삭제하면 해당 노트의 키음이 무음(00)으로 교체됩니다.\n\n삭제하시겠습니까?`
-      );
+      const ok = window.confirm(t('editor:routes.editor.deleteUnusedConfirm', { count }));
       if (!ok) return;
       // Replace all notes using this keysound with 00
       const s = useEditorStore.getState();
@@ -541,7 +538,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       useEditorStore.setState({ notes: updatedNotes });
     }
     store.removeWavDefinitions([keysoundId]);
-    showToast(`키음 ${keysoundId} 삭제됨 (Ctrl+Z로 복원 가능)`, 'success');
+    showToast(t('editor:routes.editor.toast.keysoundDeleted', { id: keysoundId }), 'success');
   }, [keysoundUsageCounts, showToast]);
 
   // Lane config (uses store keyMode so mode switching works)
@@ -750,10 +747,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         newWavDefs[wavId] = item.filename;
       }
       store.updateHeadersWithWavDefs(newWavDefs);
-      showToast(`${Object.keys(newWavDefs).length}개 키음 가져오기 완료`, 'success');
+      showToast(t('editor:routes.editor.toast.keysoundsImported', { count: Object.keys(newWavDefs).length }), 'success');
     } catch (err) {
       console.error('[Editor] Import keysounds failed:', err);
-      showToast('키음 가져오기 실패', 'error');
+      showToast(t('editor:routes.editor.toast.keysoundImportFailed'), 'error');
     }
   }, [file.path, keysoundRecord, showToast]);
 
@@ -777,7 +774,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       }
       if (undefinedKeys.size > 0) {
         console.warn('[Editor] Notes reference undefined WAV keys:', [...undefinedKeys]);
-        showToast(`경고: ${undefinedKeys.size}개 미정의 WAV 참조 (${[...undefinedKeys].slice(0, 3).join(', ')}${undefinedKeys.size > 3 ? '...' : ''})`, 'warning');
+        showToast(t('editor:routes.editor.toast.undefinedWavWarning', { count: undefinedKeys.size, ids: [...undefinedKeys].slice(0, 3).join(', ') + (undefinedKeys.size > 3 ? '...' : '') }), 'warning');
       }
       // Check for notes at positions finer than standard BMS resolution (192)
       const highResNotes = chartToSave.notes.filter((n: { tick?: number }) => {
@@ -786,7 +783,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         return tickInMeasure % 20 !== 0; // 20 ticks = 1/192 of measure
       });
       if (highResNotes.length > 0) {
-        showToast(`${highResNotes.length}개 노트가 표준 해상도(192) 범위 밖 — 일부 플레이어에서 호환 문제 가능`, 'warning');
+        showToast(t('editor:routes.editor.toast.highResWarning', { count: highResNotes.length }), 'warning');
       }
       const bmsContent = writer.write(chartToSave);
       await window.api.file.saveBms(file.path, bmsContent);
@@ -805,11 +802,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         await window.api.file.saveMeta(file.path, metaJson).catch(() => {});
       }
       store.setHasUnsavedChanges(false);
-      showToast('저장 완료', 'success');
+      showToast(t('editor:routes.editor.toast.saved'), 'success');
       return true;
     } catch (err) {
       console.error('[Editor] Save failed:', err);
-      showToast('저장 실패: ' + (err instanceof Error ? err.message : String(err)), 'error');
+      showToast(t('editor:routes.editor.toast.saveFailed', { message: err instanceof Error ? err.message : String(err) }), 'error');
       return false;
     } finally {
       savingRef.current = false;
@@ -835,11 +832,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       const bmsContent = writer.write(chartToSave);
       const newPath = await window.api.file.saveAs(bmsContent, file.name);
       if (newPath) {
-        showToast('다른 이름으로 저장 완료', 'success');
+        showToast(t('editor:routes.editor.toast.savedAs'), 'success');
       }
     } catch (err) {
       console.error('[Editor] Save As failed:', err);
-      showToast('저장 실패: ' + (err instanceof Error ? err.message : String(err)), 'error');
+      showToast(t('editor:routes.editor.toast.saveFailed', { message: err instanceof Error ? err.message : String(err) }), 'error');
     }
   }, [chart, file.name, showToast]);
 
@@ -876,13 +873,13 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         case 'undo': {
           const desc = useEditorStore.getState().undoStack.at(-1)?.description;
           store.undo();
-          if (desc) showToast(`실행 취소: ${desc}`, 'info');
+          if (desc) showToast(t('editor:routes.editor.toast.undoAction', { description: desc }), 'info');
           break;
         }
         case 'redo': {
           const desc = useEditorStore.getState().redoStack.at(-1)?.description;
           store.redo();
-          if (desc) showToast(`다시 실행: ${desc}`, 'info');
+          if (desc) showToast(t('editor:routes.editor.toast.redoAction', { description: desc }), 'info');
           break;
         }
         case 'copy': store.copy(); break;
@@ -891,12 +888,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           const result = store.preparePaste(laneIds);
           if (result) {
             if (result.droppedCount > 0) {
-              showToast(`${result.droppedCount}개 노트가 현재 키 모드 범위 밖이라 제외됨`, 'warning');
+              showToast(t('editor:routes.editor.toast.pasteDropped', { count: result.droppedCount }), 'warning');
             }
             if (result.conflicts.length > 0) {
               // For now: auto-replace conflicts (full dialog UI deferred to P1)
               store.executePaste(result, 'replace');
-              showToast(`${result.conflicts.length}개 중복 노트 교체됨`, 'info');
+              showToast(t('editor:routes.editor.toast.pasteConflicts', { count: result.conflicts.length }), 'info');
             }
           }
           break;
@@ -956,7 +953,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         }
         case 'createGroup': {
           if (ids.length > 0) {
-            const name = prompt('그룹 이름:', `Group ${useEditorStore.getState().noteGroups.length + 1}`);
+            const name = prompt(t('editor:routes.editor.createGroupPrompt'), `Group ${useEditorStore.getState().noteGroups.length + 1}`);
             if (name) store.createGroup(name, ids);
           }
           break;
@@ -1293,7 +1290,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     if (hasUnsavedChanges) {
       onRegisterGuard(() => ({
         blocked: true,
-        message: '저장하지 않은 변경사항이 있습니다. 이동하시겠습니까?',
+        message: t('editor:routes.editor.navGuardMessage'),
         onSave: handleSaveWithCleanup,
       }));
     } else {
@@ -1369,17 +1366,17 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     return (
       <div className="h-full flex flex-col items-center justify-center gap-6 bg-zinc-950 px-8">
         <div className="text-center max-w-md">
-          <div className="text-red-400 text-lg font-semibold mb-2">파일을 열 수 없습니다</div>
-          <p className="text-sm text-zinc-400 mb-3">이 파일의 형식이 올바르지 않거나 손상되었을 수 있습니다.</p>
-          <div className="text-xs text-zinc-600 mb-1">파일 경로:</div>
+          <div className="text-red-400 text-lg font-semibold mb-2">{t('editor:routes.editor.error.cannotOpenTitle')}</div>
+          <p className="text-sm text-zinc-400 mb-3">{t('editor:routes.editor.error.fileCorrupt')}</p>
+          <div className="text-xs text-zinc-600 mb-1">{t('editor:routes.editor.error.filePath')}</div>
           <div className="text-xs text-zinc-400 font-mono bg-zinc-900 rounded px-3 py-1.5 mb-3 break-all select-all">{file.path}</div>
-          <div className="text-xs text-zinc-600 mb-1">오류 상세:</div>
+          <div className="text-xs text-zinc-600 mb-1">{t('editor:routes.editor.error.errorDetail')}</div>
           <div className="text-xs text-red-300/80 bg-red-950/30 border border-red-900/50 rounded px-3 py-1.5 mb-3 break-all select-all max-h-24 overflow-y-auto">{error}</div>
           <button
-            onClick={() => navigator.clipboard.writeText(`파일: ${file.path}\n오류: ${error}`)}
+            onClick={() => navigator.clipboard.writeText(t('editor:routes.editor.copyErrorTemplate', { path: file.path, error }))}
             className="text-xs text-zinc-400 hover:text-zinc-300 underline"
           >
-            오류 정보 복사
+            {t('editor:routes.editor.error.copyErrorInfo')}
           </button>
         </div>
         <div className="flex gap-3">
@@ -1387,7 +1384,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             onClick={() => load(file.path)}
             className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded transition-colors text-zinc-300"
           >
-            다시 시도
+            {t('editor:routes.editor.error.retry')}
           </button>
           <button
             onClick={async () => {
@@ -1400,13 +1397,13 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             }}
             className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors text-white"
           >
-            다른 파일 열기
+            {t('editor:routes.editor.error.openOtherFile')}
           </button>
           <button
             onClick={() => { onClearFile?.(); onBack(); }}
             className="text-blue-400 hover:text-blue-300 px-4 py-2 text-sm"
           >
-            홈으로
+            {t('editor:routes.editor.error.goHome')}
           </button>
         </div>
       </div>
@@ -1430,15 +1427,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               ? 'bg-yellow-500 text-yellow-950 font-semibold hover:bg-yellow-400 shadow-sm shadow-yellow-500/30 animate-[pulse_2s_ease-in-out_1]'
               : 'bg-zinc-800 text-zinc-400'
           }`}
-          title="저장 (Ctrl+S)"
+          title={t('editor:routes.editor.header.saveTitle')}
           data-testid="save-btn"
         >
           <Save className="h-3.5 w-3.5" />
-          {hasUnsavedChanges ? '저장 (Ctrl+S)' : '저장됨'}
+          {hasUnsavedChanges ? t('editor:routes.editor.header.saveBtnUnsaved') : t('editor:routes.editor.header.saveBtnSaved')}
         </button>
         {hasUnsavedChanges && (
           <span data-testid="modified-indicator" className="text-xs text-orange-400 font-medium">
-            수정 중
+            {t('editor:routes.editor.header.modifiedIndicator')}
           </span>
         )}
         <div className="flex-1" />
@@ -1447,17 +1444,17 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <div className="flex items-center gap-0.5">
           <button
             onClick={() => openModal('measureInsert')}
-            title="마디 삽입 (Ctrl+Shift+I)"
+            title={t('editor:routes.editor.header.insertMeasureTitle')}
             className="flex items-center gap-0.5 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors"
           >
-            <span className="font-bold text-zinc-300">+</span>마디
+            <span className="font-bold text-zinc-300">+</span>{t('editor:routes.editor.header.measureLabel')}
           </button>
           <button
             onClick={() => openModal('measureDelete')}
-            title="마디 삭제 (Ctrl+Shift+D)"
+            title={t('editor:routes.editor.header.deleteMeasureTitle')}
             className="flex items-center gap-0.5 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition-colors"
           >
-            <span className="font-bold text-zinc-300">−</span>마디
+            <span className="font-bold text-zinc-300">−</span>{t('editor:routes.editor.header.measureLabel')}
           </button>
         </div>
 
@@ -1470,10 +1467,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             aria-expanded={showToolMenu}
             aria-haspopup="menu"
             className={`flex items-center gap-1 px-2 py-1.5 rounded hover:bg-zinc-800 transition-colors text-xs ${showToolMenu ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-400'}`}
-            title="설정 메뉴"
+            title={t('editor:routes.editor.header.settingsTitle')}
           >
             <Settings2 className="h-3.5 w-3.5" />
-            <span>설정</span>
+            <span>{t('editor:routes.editor.header.settingsLabel')}</span>
             <ChevronDown className="h-3 w-3" />
           </button>
           {showToolMenu && (
@@ -1484,7 +1481,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 data-testid="ai-btn"
               >
                 <Wand2 className="h-3.5 w-3.5 text-purple-400" />
-                AI 차트 생성
+                {t('editor:routes.editor.header.aiChartLabel')}
               </button>
               <button
                 onClick={() => { openOverlay('audioSlicer'); setShowToolMenu(false); }}
@@ -1492,7 +1489,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 data-testid="slicer-btn"
               >
                 <Scissors className="h-3.5 w-3.5 text-blue-400" />
-                오디오 슬라이서
+                {t('editor:routes.editor.header.audioSlicerLabel')}
               </button>
               <button
                 onClick={() => { openModal('midi'); setShowToolMenu(false); }}
@@ -1500,7 +1497,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 data-testid="midi-btn"
               >
                 <Piano className="h-3.5 w-3.5 text-green-400" />
-                MIDI 설정
+                {t('editor:routes.editor.header.midiSettingsLabel')}
                 {midiRecordingMode !== 'off' && <span className="ml-auto text-xs bg-green-900/50 px-1 rounded">ON</span>}
               </button>
               <div className="h-px bg-zinc-800 my-1" />
@@ -1510,7 +1507,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 data-testid="keybindings-btn"
               >
                 <Keyboard className="h-3.5 w-3.5 text-zinc-400" />
-                키 바인딩 설정
+                {t('editor:routes.editor.header.keyBindingsLabel')}
               </button>
               <button
                 onClick={() => { openModal('noteColor'); setShowToolMenu(false); }}
@@ -1518,7 +1515,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 data-testid="note-color-btn"
               >
                 <span className="h-3.5 w-3.5 rounded-sm border border-zinc-500 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #88aaff 0%, #ff4444 50%, #666 100%)' }} />
-                노트 색상 설정
+                {t('editor:routes.editor.header.noteColorLabel')}
               </button>
             </div>
           )}
@@ -1529,7 +1526,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       <div className="flex flex-1 min-h-0">
         {/* --- LEFT: Keysound / Pattern Panel --- */}
         {!showLeftPanel && (
-          <button onClick={store.toggleLeftPanel} className="shrink-0 w-6 flex items-center justify-center bg-zinc-900 border-r border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200" title="키음 패널 열기">
+          <button onClick={store.toggleLeftPanel} className="shrink-0 w-6 flex items-center justify-center bg-zinc-900 border-r border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200" title={t('editor:routes.editor.leftPanel.openPanelTitle')}>
             <PanelLeftOpen className="h-3.5 w-3.5" />
           </button>
         )}
@@ -1543,7 +1540,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   leftPanelTab === 'keysound' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                키음
+                {t('editor:routes.editor.leftPanel.keysoundTab')}
               </button>
               <button
                 onClick={() => setLeftPanelTab('pattern')}
@@ -1551,7 +1548,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   leftPanelTab === 'pattern' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                패턴
+                {t('editor:routes.editor.leftPanel.patternTab')}
               </button>
             </div>
             {leftPanelTab === 'keysound' ? (
@@ -1641,16 +1638,16 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             ) : audioPhase === 'idle' ? (
               <button onClick={loadAudio} className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors text-zinc-300">
                 <Volume2 className="h-3.5 w-3.5" />
-                오디오 로드
+                {t('editor:routes.editor.playback.loadAudio')}
               </button>
             ) : audioPhase === 'loading' ? (
               <AudioLoadingProgress />
             ) : (
               <>
-                <button onClick={handlePlaybackToggle} className="p-2 rounded hover:bg-muted transition-colors" title="재생/일시정지 (Space)">
+                <button onClick={handlePlaybackToggle} className="p-2 rounded hover:bg-muted transition-colors" title={t('editor:routes.editor.playback.playPauseTitle')}>
                   {audioPhase === 'playing' ? <Pause className="h-4 w-4 text-orange-400" /> : <Play className="h-4 w-4 text-green-400" />}
                 </button>
-                <button onClick={handlePlaybackStop} className="p-2 rounded hover:bg-muted transition-colors" title="정지">
+                <button onClick={handlePlaybackStop} className="p-2 rounded hover:bg-muted transition-colors" title={t('editor:routes.editor.playback.stopTitle')}>
                   <Square className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
                 <PlaybackTimeDisplay />
@@ -1660,7 +1657,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   <button
                     onClick={() => { store.setLoopA(null); store.setLoopB(null); }}
                     className="px-2 py-1 rounded text-xs bg-orange-900/50 text-orange-300 hover:bg-orange-800/50"
-                    title="루프 해제 (\)"
+                    title={t('editor:routes.editor.playback.clearLoopTitle')}
                   >
                     🔁 {loopA !== null ? Math.floor(loopA / 4) : '?'}-{loopB !== null ? Math.floor(loopB / 4) : '?'}
                   </button>
@@ -1671,7 +1668,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   value={[0.25, 0.5, 0.75, 1, 1.5, 2].includes(playbackSpeed) ? String(playbackSpeed) : 'custom'}
                   onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) store.setPlaybackSpeed(v); }}
                   className="bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs rounded px-1.5 py-1 cursor-pointer"
-                  title="재생 속도 프리셋"
+                  title={t('editor:routes.editor.playback.speedPresetTitle')}
                 >
                   {([0.25, 0.5, 0.75, 1, 1.5, 2] as const).map((s) => (
                     <option key={s} value={String(s)}>{s}×</option>
@@ -1681,7 +1678,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   )}
                 </select>
                 <div className="w-px h-4 bg-zinc-700" />
-                <button onClick={() => store.setVolume(volume > 0 ? 0 : 0.8)} className="p-2 rounded hover:bg-muted transition-colors" title={volume > 0 ? '음소거' : '음소거 해제'}>
+                <button onClick={() => store.setVolume(volume > 0 ? 0 : 0.8)} className="p-2 rounded hover:bg-muted transition-colors" title={volume > 0 ? t('editor:routes.editor.playback.muteTitle') : t('editor:routes.editor.playback.unmuteTitle')}>
                   {volume > 0 ? <Volume2 className="h-3.5 w-3.5 text-muted-foreground" /> : <VolumeX className="h-3.5 w-3.5 text-zinc-500" />}
                 </button>
                 <input
@@ -1692,7 +1689,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                     audioPreloaderRef.current?.setMasterVolume?.(v);
                   }}
                   className="w-16 h-1 accent-blue-500 cursor-pointer"
-                  title={`볼륨: ${Math.round(volume * 100)}%`}
+                  title={t('editor:routes.editor.playback.volumeTitle', { percent: Math.round(volume * 100) })}
                 />
                 <div className="flex-1" />
                 <div className="w-px h-4 bg-zinc-700" />
@@ -1700,7 +1697,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 <button
                   onClick={() => openModal('bpmTap')}
                   className="p-2 rounded hover:bg-zinc-800 transition-colors text-zinc-400"
-                  title="BPM 탭"
+                  title={t('editor:routes.editor.playback.bpmTapTitle')}
                   data-testid="bpm-btn"
                 >
                   <Timer className="h-3.5 w-3.5" />
@@ -1708,7 +1705,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 <button
                   onClick={handlePlayTest}
                   className="p-2 rounded hover:bg-zinc-800 transition-colors text-zinc-400"
-                  title="플레이 테스트 (F5)"
+                  title={t('editor:routes.editor.playback.playTestTitle')}
                   data-testid="play-test-btn"
                 >
                   <PlayCircle className="h-3.5 w-3.5" />
@@ -1718,16 +1715,16 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             {/* View toggles — 항상 표시 (오디오 상태 무관) */}
             <div className="ml-auto flex items-center gap-0.5 shrink-0">
               <div className="w-px h-4 bg-zinc-700 mx-0.5" />
-              <button onClick={store.toggleLeftPanel} aria-pressed={showLeftPanel} aria-label="키사운드 패널 토글" className="p-1.5 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="키사운드 패널" data-testid="toggle-left-panel">
+              <button onClick={store.toggleLeftPanel} aria-pressed={showLeftPanel} aria-label={t('editor:routes.editor.playback.keysoundPanelTitle')} className="p-1.5 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title={t('editor:routes.editor.playback.keysoundPanelTitle')} data-testid="toggle-left-panel">
                 {showLeftPanel ? <PanelLeftClose className="h-3.5 w-3.5" /> : <PanelLeftOpen className="h-3.5 w-3.5" />}
               </button>
-              <button onClick={store.toggleRightPanel} aria-pressed={showRightPanel} aria-label="정보 패널 토글" className="p-1.5 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title="정보 패널" data-testid="toggle-right-panel">
+              <button onClick={store.toggleRightPanel} aria-pressed={showRightPanel} aria-label={t('editor:routes.editor.playback.infoPanelTitle')} className="p-1.5 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title={t('editor:routes.editor.playback.infoPanelTitle')} data-testid="toggle-right-panel">
                 {showRightPanel ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
               </button>
-              <button onClick={store.toggleMinimap} aria-pressed={showMinimap} aria-label="미니맵 토글" className={`p-1.5 rounded hover:bg-zinc-800 transition-colors ${showMinimap ? 'text-zinc-200' : 'text-zinc-400'}`} title="미니맵" data-testid="toggle-minimap">
+              <button onClick={store.toggleMinimap} aria-pressed={showMinimap} aria-label={t('editor:routes.editor.playback.minimapTitle')} className={`p-1.5 rounded hover:bg-zinc-800 transition-colors ${showMinimap ? 'text-zinc-200' : 'text-zinc-400'}`} title={t('editor:routes.editor.playback.minimapTitle')} data-testid="toggle-minimap">
                 <LucideMap className="h-3.5 w-3.5" />
               </button>
-              <button onClick={() => activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff')} aria-pressed={activeOverlay === 'diff'} aria-label="변경사항 비교" className={`p-1.5 rounded hover:bg-zinc-800 transition-colors ${activeOverlay === 'diff' ? 'text-orange-400' : 'text-zinc-400'}`} title="변경사항 비교 (Ctrl+D)" data-testid="diff-btn">
+              <button onClick={() => activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff')} aria-pressed={activeOverlay === 'diff'} aria-label={t('editor:routes.editor.playback.diffTitle')} className={`p-1.5 rounded hover:bg-zinc-800 transition-colors ${activeOverlay === 'diff' ? 'text-orange-400' : 'text-zinc-400'}`} title={t('editor:routes.editor.playback.diffTitle')} data-testid="diff-btn">
                 <GitCompare className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -1745,7 +1742,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             onClearSelection={store.clearSelection}
             onChangeType={store.changeNoteType}
           >
-            <div className="flex-1 min-h-0 overflow-hidden relative" role="application" aria-label="BMS 차트 편집기">
+            <div className="flex-1 min-h-0 overflow-hidden relative" role="application" aria-label={t('editor:routes.editor.canvas.ariaLabel')}>
               {/* Keysound hover info overlay */}
               {hoverKeysoundInfo && (
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none px-3 py-1 bg-zinc-900/90 border border-zinc-700 rounded text-xs text-zinc-300 font-mono shadow-lg">
@@ -1755,7 +1752,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               {/* Current keysound indicator for addNote/keysound tool */}
               {(activeTool === 'addNote' || activeTool === 'keysound') && currentKeysound && !hoverKeysoundInfo && (
                 <div className="absolute top-2 right-3 z-10 pointer-events-none px-2 py-1 bg-zinc-900/80 border border-zinc-700/50 rounded text-xs text-zinc-400 font-mono">
-                  키음: {currentKeysound}{keysoundRecord[currentKeysound] ? ` (${keysoundRecord[currentKeysound]})` : currentKeysound === '00' ? ' (무음)' : ''}
+                  {t('editor:routes.editor.canvas.keysoundIndicator', {
+                    id: currentKeysound,
+                    name: keysoundRecord[currentKeysound] ? ` (${keysoundRecord[currentKeysound]})` : currentKeysound === '00' ? t('editor:routes.editor.canvas.silentKeysound') : '',
+                  })}
                 </div>
               )}
               {chart && (
@@ -1813,8 +1813,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               <button
                 onClick={() => setMinimapPopout(true)}
                 className="p-1.5 flex items-center justify-center rounded hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-300"
-                title="미니맵 분리 (드래그 가능)"
-                aria-label="미니맵 팝아웃"
+                title={t('editor:routes.editor.minimap.popoutTitle')}
+                aria-label={t('editor:routes.editor.minimap.popoutTitle')}
               >
                 <Maximize2 className="h-3.5 w-3.5" />
               </button>
@@ -1835,7 +1835,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
         {/* --- RIGHT: Header Editor + Note Info + Minimap --- */}
         {!showRightPanel && (
-          <button onClick={store.toggleRightPanel} className="shrink-0 w-6 flex items-center justify-center bg-zinc-900 border-l border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200" title="정보 패널 열기">
+          <button onClick={store.toggleRightPanel} className="shrink-0 w-6 flex items-center justify-center bg-zinc-900 border-l border-zinc-800 hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200" title={t('editor:routes.editor.rightPanel.openPanelTitle')}>
             <PanelRightOpen className="h-3.5 w-3.5" />
           </button>
         )}
@@ -1880,7 +1880,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           )}
           <div className="border-b border-zinc-800 shrink-0">
             <button onClick={() => toggleSection('timeline')} className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors">
-              <span>키음 타임라인</span><span>{collapsedSections.has('timeline') ? '▸' : '▾'}</span>
+              <span>{t('editor:routes.editor.rightPanel.timelineSection')}</span><span>{collapsedSections.has('timeline') ? '▸' : '▾'}</span>
             </button>
           </div>
           {!collapsedSections.has('timeline') && <div className="border-b border-zinc-800 shrink-0 max-h-48 overflow-y-auto overflow-x-hidden">
@@ -1901,7 +1901,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           {/* Chart Statistics */}
           <div className="border-b border-zinc-800 shrink-0">
             <button onClick={() => toggleSection('stats')} className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors">
-              <span>통계</span><span>{collapsedSections.has('stats') ? '▸' : '▾'}</span>
+              <span>{t('editor:routes.editor.rightPanel.statsSection')}</span><span>{collapsedSections.has('stats') ? '▸' : '▾'}</span>
             </button>
             {!collapsedSections.has('stats') && (
               <div className="px-3 py-2">
@@ -1912,12 +1912,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           {/* Layer Panel */}
           <div className="border-b border-zinc-800 shrink-0">
             <div className="px-3 py-1.5 flex items-center justify-between">
-              <button onClick={() => toggleSection('layers')} className="text-xs font-semibold text-zinc-400 hover:text-zinc-200 flex items-center gap-1"><span>레이어</span><span className="text-xs">{collapsedSections.has('layers') ? '▸' : '▾'}</span></button>
+              <button onClick={() => toggleSection('layers')} className="text-xs font-semibold text-zinc-400 hover:text-zinc-200 flex items-center gap-1"><span>{t('editor:routes.editor.rightPanel.layersSection')}</span><span className="text-xs">{collapsedSections.has('layers') ? '▸' : '▾'}</span></button>
               <button
                 onClick={store.resetLayerConfig}
                 className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
-                title="레이어 설정 초기화"
-              >초기화</button>
+                title={t('editor:routes.editor.rightPanel.resetLayersTitle')}
+              >{t('editor:routes.editor.rightPanel.resetLayers')}</button>
             </div>
             {!collapsedSections.has('layers') && (
               <LayerPanel
@@ -1933,7 +1933,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               onClick={store.toggleHeaderCollapsed}
               className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800 shrink-0"
             >
-              <span>차트 정보</span>
+              <span>{t('editor:routes.editor.rightPanel.chartInfoSection')}</span>
               <span className="text-xs">{headerCollapsed ? '▸' : '▾'}</span>
             </button>
             {!headerCollapsed && (
@@ -1953,11 +1953,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 ) : chart && (
                   <div className="p-3 text-xs space-y-3">
                     <div>
-                      <label className="text-zinc-500">제목</label>
+                      <label className="text-zinc-500">{t('editor:routes.editor.rightPanel.titleLabel')}</label>
                       <div className="mt-0.5 text-zinc-200">{chart.songInfo?.title || '-'}</div>
                     </div>
                     <div>
-                      <label className="text-zinc-500">아티스트</label>
+                      <label className="text-zinc-500">{t('editor:routes.editor.rightPanel.artistLabel')}</label>
                       <div className="mt-0.5 text-zinc-200">{chart.songInfo?.artist || '-'}</div>
                     </div>
                   </div>
@@ -2015,8 +2015,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 onClick={() => setMinimapPopout(false)}
                 onPointerDown={(e) => e.stopPropagation()}
                 className="p-1.5 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
-                title="사이드바로 되돌리기"
-                aria-label="미니맵 사이드바로 되돌리기"
+                title={t('editor:routes.editor.minimap.dockToSidebar')}
+                aria-label={t('editor:routes.editor.minimap.dockToSidebarAria')}
               >
                 <PanelRightOpen className="w-3.5 h-3.5" />
               </button>
@@ -2025,8 +2025,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 onClick={() => setMinimapPopout(false)}
                 onPointerDown={(e) => e.stopPropagation()}
                 className="p-1.5 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
-                title="팝아웃 닫기 (인라인으로 복귀)"
-                aria-label="미니맵 팝아웃 닫기"
+                title={t('editor:routes.editor.minimap.closePopout')}
+                aria-label={t('editor:routes.editor.minimap.closePopoutAria')}
               >
                 <XIcon className="w-3.5 h-3.5" />
               </button>
@@ -2053,7 +2053,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 shrink-0 text-xs text-zinc-400 border-l border-zinc-800">
           {midiRecordingMode !== 'off' && (
-            <span className="text-green-400">MIDI: {midiRecordingMode === 'step' ? '스텝' : '실시간'}</span>
+            <span className="text-green-400">MIDI: {midiRecordingMode === 'step' ? t('editor:routes.editor.statusBar.midiStep') : t('editor:routes.editor.statusBar.midiRealtime')}</span>
           )}
           {(undoStack.length > 0 || redoStack.length > 0) && (
             <span className="flex items-center gap-1">
@@ -2061,7 +2061,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               <Redo2 className="h-3 w-3 ml-1" />{redoStack.length}
             </span>
           )}
-          추정 난이도: <span className="text-zinc-300 font-semibold">{estimateDifficulty(notes, editedBaseBpm, totalBeats) || '-'}</span>/12
+          {t('editor:routes.editor.statusBar.estimatedDifficulty')} <span className="text-zinc-300 font-semibold">{estimateDifficulty(notes, editedBaseBpm, totalBeats) || '-'}</span>/12
         </div>
       </div>
 
@@ -2069,23 +2069,23 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       <AccessibleDialog
         open={!!inputDialog}
         onClose={() => store.setInputDialog(null)}
-        title={inputDialog?.type === 'bpm-add' ? 'BPM 추가' : inputDialog?.type === 'bpm-edit' ? 'BPM 수정' : inputDialog?.type === 'stop-add' ? 'STOP 추가' : inputDialog?.type === 'stop-edit' ? 'STOP 수정' : `마디 ${inputDialog?.measure ?? 0} 박자표`}
+        title={inputDialog?.type === 'bpm-add' ? t('editor:routes.editor.inputDialog.bpmAdd') : inputDialog?.type === 'bpm-edit' ? t('editor:routes.editor.inputDialog.bpmEdit') : inputDialog?.type === 'stop-add' ? t('editor:routes.editor.inputDialog.stopAdd') : inputDialog?.type === 'stop-edit' ? t('editor:routes.editor.inputDialog.stopEdit') : t('editor:routes.editor.inputDialog.timeSig', { measure: inputDialog?.measure ?? 0 })}
         className="border border-zinc-700 p-4 w-72"
       >
         {inputDialog && (
           <>
             <h3 className="text-sm font-semibold text-zinc-200 mb-1">
-              {inputDialog.type === 'bpm-add' && 'BPM 추가'}
-              {inputDialog.type === 'bpm-edit' && 'BPM 수정'}
-              {inputDialog.type === 'stop-add' && 'STOP 추가'}
-              {inputDialog.type === 'stop-edit' && 'STOP 수정'}
-              {inputDialog.type === 'timesig-edit' && `마디 ${inputDialog.measure ?? 0} 박자표`}
+              {inputDialog.type === 'bpm-add' && t('editor:routes.editor.inputDialog.bpmAdd')}
+              {inputDialog.type === 'bpm-edit' && t('editor:routes.editor.inputDialog.bpmEdit')}
+              {inputDialog.type === 'stop-add' && t('editor:routes.editor.inputDialog.stopAdd')}
+              {inputDialog.type === 'stop-edit' && t('editor:routes.editor.inputDialog.stopEdit')}
+              {inputDialog.type === 'timesig-edit' && t('editor:routes.editor.inputDialog.timeSig', { measure: inputDialog.measure ?? 0 })}
             </h3>
             {(inputDialog.type === 'stop-add' || inputDialog.type === 'stop-edit') && (
-              <p className="text-xs text-zinc-400 mb-2">192 = 1비트, 0 입력 시 삭제</p>
+              <p className="text-xs text-zinc-400 mb-2">{t('editor:routes.editor.inputDialog.stopHint')}</p>
             )}
             {inputDialog.type === 'timesig-edit' && (
-              <p className="text-xs text-zinc-400 mb-2">1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8</p>
+              <p className="text-xs text-zinc-400 mb-2">{t('editor:routes.editor.inputDialog.timeSigHint')}</p>
             )}
             <form onSubmit={(e) => { e.preventDefault(); store.submitInputDialog(inputDialogRef.current?.value || ''); }}>
               <input
@@ -2093,8 +2093,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
               />
               <div className="flex justify-end gap-2 mt-3">
-                <button type="button" onClick={() => store.setInputDialog(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
-                <button type="submit" className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">확인</button>
+                <button type="button" onClick={() => store.setInputDialog(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">{t('editor:routes.editor.inputDialog.cancel')}</button>
+                <button type="submit" className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">{t('editor:routes.editor.inputDialog.confirm')}</button>
               </div>
             </form>
           </>
@@ -2102,19 +2102,19 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       </AccessibleDialog>
 
       {/* ===== BACK CONFIRMATION ===== */}
-      <AccessibleDialog open={showBackConfirm} onClose={() => store.setShowBackConfirm(false)} title="저장하지 않은 변경사항" className="border border-zinc-700 p-4 w-80">
-        <h3 className="text-sm font-semibold text-zinc-200 mb-2">저장하지 않은 변경사항</h3>
-        <p className="text-xs text-zinc-400 mb-4">저장하지 않은 변경사항이 있습니다. 저장하지 않고 나가시겠습니까?</p>
+      <AccessibleDialog open={showBackConfirm} onClose={() => store.setShowBackConfirm(false)} title={t('editor:routes.editor.backConfirm.title')} className="border border-zinc-700 p-4 w-80">
+        <h3 className="text-sm font-semibold text-zinc-200 mb-2">{t('editor:routes.editor.backConfirm.title')}</h3>
+        <p className="text-xs text-zinc-400 mb-4">{t('editor:routes.editor.backConfirm.body')}</p>
         <div className="flex justify-end gap-2">
-          <button onClick={() => store.setShowBackConfirm(false)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
+          <button onClick={() => store.setShowBackConfirm(false)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">{t('editor:routes.editor.backConfirm.cancel')}</button>
           <button
             onClick={() => { store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
             className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
-          >저장 안 함</button>
+          >{t('editor:routes.editor.backConfirm.discard')}</button>
           <button
             onClick={async () => { const ok = await handleSaveWithCleanup(); if (!ok) return; store.setShowBackConfirm(false); handlePlaybackStop(); onBack(); }}
             className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-          >저장 후 나가기</button>
+          >{t('editor:routes.editor.backConfirm.saveAndLeave')}</button>
         </div>
       </AccessibleDialog>
 
@@ -2130,11 +2130,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       <AccessibleDialog
         open={activeModal === 'measureInsert' || activeModal === 'measureDelete'}
         onClose={() => setActiveModal(null)}
-        title={activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
+        title={activeModal === 'measureInsert' ? t('editor:routes.editor.measureDialog.insertTitle') : t('editor:routes.editor.measureDialog.deleteTitle')}
         className="border border-zinc-700 p-4 w-80"
       >
         <h3 data-testid="measure-dialog-title" className="text-sm font-semibold text-zinc-200 mb-3">
-          {activeModal === 'measureInsert' ? '마디 삽입' : '마디 삭제'}
+          {activeModal === 'measureInsert' ? t('editor:routes.editor.measureDialog.insertTitle') : t('editor:routes.editor.measureDialog.deleteTitle')}
         </h3>
 
         {/* Quick action buttons */}
@@ -2149,8 +2149,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               }}
             >
               <span className="text-blue-400 font-bold">↑</span>
-              <span>마디 <span className="text-blue-300 font-mono font-bold">{store.beatToMF(modalBeatRef.current).measure}</span> 앞에 삽입</span>
-              <span className="ml-auto text-zinc-500">(현재 마디)</span>
+              <span>{t('editor:routes.editor.measureDialog.insertBefore', { measure: store.beatToMF(modalBeatRef.current).measure })}</span>
+              <span className="ml-auto text-zinc-500">{t('editor:routes.editor.measureDialog.currentMeasureLabel')}</span>
             </button>
             <button
               className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-200 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-500 rounded text-left transition-colors"
@@ -2161,7 +2161,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               }}
             >
               <span className="text-blue-400 font-bold">↓</span>
-              <span>마디 <span className="text-blue-300 font-mono font-bold">{store.beatToMF(modalBeatRef.current).measure}</span> 뒤에 삽입</span>
+              <span>{t('editor:routes.editor.measureDialog.insertAfter', { measure: store.beatToMF(modalBeatRef.current).measure })}</span>
             </button>
           </div>
         ) : (
@@ -2175,8 +2175,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               }}
             >
               <span className="text-red-400 font-bold">✕</span>
-              <span>마디 <span className="text-red-300 font-mono font-bold">{store.beatToMF(modalBeatRef.current).measure}</span> 삭제</span>
-              <span className="ml-auto text-zinc-500">(현재 마디)</span>
+              <span>{t('editor:routes.editor.measureDialog.deleteCurrent', { measure: store.beatToMF(modalBeatRef.current).measure })}</span>
+              <span className="ml-auto text-zinc-500">{t('editor:routes.editor.measureDialog.currentMeasureLabel')}</span>
             </button>
           </div>
         )}
@@ -2184,7 +2184,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         {/* Divider */}
         <div className="flex items-center gap-2 mb-3">
           <div className="flex-1 border-t border-zinc-700" />
-          <span className="text-xs text-zinc-500">직접 입력</span>
+          <span className="text-xs text-zinc-500">{t('editor:routes.editor.measureDialog.dividerLabel')}</span>
           <div className="flex-1 border-t border-zinc-700" />
         </div>
 
@@ -2202,21 +2202,21 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             type="number" min={0} step={1}
             defaultValue={store.beatToMF(modalBeatRef.current).measure}
             className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
-            placeholder="마디 번호"
+            placeholder={t('editor:routes.editor.measureDialog.measurePlaceholder')}
           />
           <div className="flex justify-end gap-2 mt-3">
-            <button type="button" onClick={() => setActiveModal(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">취소</button>
+            <button type="button" onClick={() => setActiveModal(null)} className="px-3 py-1 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800">{t('editor:routes.editor.measureDialog.cancel')}</button>
             <button type="submit" className={`px-3 py-1 text-xs text-white rounded ${activeModal === 'measureInsert' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'}`}>
-              {activeModal === 'measureInsert' ? '삽입' : '삭제'}
+              {activeModal === 'measureInsert' ? t('editor:routes.editor.measureDialog.insert') : t('editor:routes.editor.measureDialog.delete')}
             </button>
           </div>
         </form>
       </AccessibleDialog>
 
       {/* ===== AUTO-SAVE RECOVERY ===== */}
-      <AccessibleDialog open={activeModal === 'autoSaveRecovery'} onClose={() => setActiveModal(null)} title="자동 저장 복구" className="border border-zinc-700 p-4 w-80">
-        <h3 className="text-sm font-semibold text-zinc-200 mb-2">자동 저장 복구</h3>
-        <p className="text-xs text-zinc-400 mb-4">이전 세션의 자동 저장 데이터가 발견되었습니다. 복구하시겠습니까?</p>
+      <AccessibleDialog open={activeModal === 'autoSaveRecovery'} onClose={() => setActiveModal(null)} title={t('editor:routes.editor.autoSaveRecovery.title')} className="border border-zinc-700 p-4 w-80">
+        <h3 className="text-sm font-semibold text-zinc-200 mb-2">{t('editor:routes.editor.autoSaveRecovery.title')}</h3>
+        <p className="text-xs text-zinc-400 mb-4">{t('editor:routes.editor.autoSaveRecovery.body')}</p>
         <div className="flex justify-end gap-2">
           <button
             onClick={() => {
@@ -2225,7 +2225,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               window.api.file.deleteAutoSave(file.path).catch(() => {});
             }}
             className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
-          >무시</button>
+          >{t('editor:routes.editor.autoSaveRecovery.ignore')}</button>
           <button
             onClick={async () => {
               if (autoSaveContentRef.current) {
@@ -2237,7 +2237,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               setActiveModal(null);
             }}
             className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-          >복구</button>
+          >{t('editor:routes.editor.autoSaveRecovery.recover')}</button>
         </div>
       </AccessibleDialog>
 
@@ -2245,17 +2245,17 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       <AccessibleDialog
         open={activeModal === 'addBookmark'}
         onClose={() => setActiveModal(null)}
-        title={bookmarkEditMode === 'rename' ? '북마크 편집' : '북마크 추가'}
+        title={bookmarkEditMode === 'rename' ? t('editor:routes.editor.bookmarkDialog.editTitle') : t('editor:routes.editor.bookmarkDialog.addTitle')}
         className="border border-zinc-700 p-4 w-72"
       >
         <h3 className="text-sm font-semibold text-zinc-200 mb-1 flex items-center gap-1.5">
           <Bookmark className="h-4 w-4 text-yellow-400" />
-          마디 #{pendingBookmarkMeasure} 북마크
+          {t('editor:routes.editor.bookmarkDialog.measureBookmark', { measure: pendingBookmarkMeasure })}
         </h3>
         <p className="text-xs text-zinc-400 mb-3">
           {bookmarkEditMode === 'rename'
-            ? '북마크 이름을 변경하거나 삭제하세요.'
-            : '북마크 이름을 입력하세요.'}
+            ? t('editor:routes.editor.bookmarkDialog.renamePrompt')
+            : t('editor:routes.editor.bookmarkDialog.addPrompt')}
         </p>
         <form onSubmit={(e) => {
           e.preventDefault();
@@ -2278,7 +2278,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               : `Bookmark ${pendingBookmarkMeasure}`}
             autoFocus
             className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500 mb-3"
-            placeholder="북마크 이름"
+            placeholder={t('editor:routes.editor.bookmarkDialog.namePlaceholder')}
           />
           <div className="flex justify-between gap-2">
             {bookmarkEditMode === 'rename' && (
@@ -2286,12 +2286,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 type="button"
                 onClick={() => { store.removeBookmark(pendingBookmarkMeasure); setActiveModal(null); }}
                 className="px-3 py-1.5 text-xs text-red-400 hover:text-red-300 rounded hover:bg-zinc-800 transition-colors"
-              >삭제</button>
+              >{t('editor:routes.editor.bookmarkDialog.delete')}</button>
             )}
             <div className="flex gap-2 ml-auto">
-              <button type="button" onClick={() => setActiveModal(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">취소</button>
+              <button type="button" onClick={() => setActiveModal(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">{t('editor:routes.editor.bookmarkDialog.cancel')}</button>
               <button type="submit" className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
-                {bookmarkEditMode === 'rename' ? '저장' : '추가'}
+                {bookmarkEditMode === 'rename' ? t('editor:routes.editor.bookmarkDialog.save') : t('editor:routes.editor.bookmarkDialog.add')}
               </button>
             </div>
           </div>
@@ -2302,11 +2302,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       <AccessibleDialog
         open={activeModal === 'clipboardHistory'}
         onClose={() => setActiveModal(null)}
-        title="클립보드 히스토리"
+        title={t('editor:routes.editor.clipboardHistory.title')}
         className="border border-zinc-700 p-4 w-80"
       >
-        <h3 className="text-sm font-semibold text-zinc-200 mb-1">클립보드 히스토리</h3>
-        <p className="text-xs text-zinc-400 mb-3">항목을 선택하면 해당 노트들이 클립보드로 복사됩니다.</p>
+        <h3 className="text-sm font-semibold text-zinc-200 mb-1">{t('editor:routes.editor.clipboardHistory.title')}</h3>
+        <p className="text-xs text-zinc-400 mb-3">{t('editor:routes.editor.clipboardHistory.hint')}</p>
         <div className="space-y-1 max-h-64 overflow-y-auto">
           {clipboardHistory.map((entry, i) => {
             const keysounds = [...new Set(entry.map((n) => n.keysound).filter(Boolean))].slice(0, 3);
@@ -2322,18 +2322,18 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 className="w-full text-left px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors group"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-300 font-mono">{entry.length}개 노트</span>
-                  {isCurrentClipboard && <span className="text-xs text-blue-400">현재</span>}
+                  <span className="text-xs text-zinc-300 font-mono">{t('editor:routes.editor.clipboardHistory.noteCount', { count: entry.length })}</span>
+                  {isCurrentClipboard && <span className="text-xs text-blue-400">{t('editor:routes.editor.clipboardHistory.currentLabel')}</span>}
                 </div>
                 <div className="text-xs text-zinc-400 mt-0.5 truncate">
-                  {keysounds.length > 0 ? keysounds.join(', ') + (keysounds.length < [...new Set(entry.map((n) => n.keysound).filter(Boolean))].length ? ' …' : '') : '키음 없음'}
+                  {keysounds.length > 0 ? keysounds.join(', ') + (keysounds.length < [...new Set(entry.map((n) => n.keysound).filter(Boolean))].length ? ' …' : '') : t('editor:routes.editor.clipboardHistory.noKeysounds')}
                 </div>
               </button>
             );
           })}
         </div>
         <div className="mt-3 flex justify-end">
-          <button onClick={() => setActiveModal(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">닫기</button>
+          <button onClick={() => setActiveModal(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors">{t('editor:routes.editor.clipboardHistory.close')}</button>
         </div>
       </AccessibleDialog>
 
@@ -2341,9 +2341,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       {activeOverlay === 'playTest' && (
         <div className="fixed inset-0 z-[60] bg-zinc-950">
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-4 py-1.5 bg-zinc-900/90 border border-zinc-700 rounded-full text-xs text-zinc-400 shadow-lg">
-            <span>플레이 테스트</span>
+            <span>{t('editor:routes.editor.playTest.label')}</span>
             <span className="text-zinc-600">|</span>
-            <button onClick={() => setActiveOverlay(null)} className="text-blue-400 hover:text-blue-300">편집으로 돌아가기 (Esc)</button>
+            <button onClick={() => setActiveOverlay(null)} className="text-blue-400 hover:text-blue-300">{t('editor:routes.editor.playTest.returnToEditor')}</button>
           </div>
           <Player
             file={file}
@@ -2357,8 +2357,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       {activeOverlay === 'diff' && chart && originalChartInfoRef.current && (
         <div className="fixed inset-0 z-[55] bg-zinc-950/95 flex flex-col">
           <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 flex-shrink-0">
-            <h2 className="text-sm font-bold text-zinc-200">변경사항 비교</h2>
-            <button onClick={() => setActiveOverlay(null)} className="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded transition-colors">닫기 (Esc)</button>
+            <h2 className="text-sm font-bold text-zinc-200">{t('editor:routes.editor.diff.title')}</h2>
+            <button onClick={() => setActiveOverlay(null)} className="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded transition-colors">{t('editor:routes.editor.diff.close')}</button>
           </div>
           <div className="flex-1 min-h-0 p-2">
             <BmsChartDiff
@@ -2401,18 +2401,18 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         <AccessibleDialog
           open={true}
           onClose={() => { setActiveModal(null); setReplaceKeysoundTarget(null); }}
-          title="키음 일괄 교체"
+          title={t('editor:routes.editor.replaceKeysoundTitle')}
         >
           <div className="p-4 space-y-4">
             <div className="text-sm">
-              <span className="text-muted-foreground">원본: </span>
+              <span className="text-muted-foreground">{t('editor:routes.editor.replaceKeysound.sourceLabel')} </span>
               <span className="font-mono font-bold">{replaceKeysoundTarget}</span>
               {keysoundRecord[replaceKeysoundTarget] && (
                 <span className="text-muted-foreground ml-2">({keysoundRecord[replaceKeysoundTarget]})</span>
               )}
-              <span className="text-muted-foreground ml-2">— {keysoundUsageCounts[replaceKeysoundTarget] || 0}개 노트</span>
+              <span className="text-muted-foreground ml-2">{t('editor:routes.editor.replaceKeysound.noteCount', { count: keysoundUsageCounts[replaceKeysoundTarget] || 0 })}</span>
             </div>
-            <div className="text-sm text-muted-foreground">대상 키음을 선택하세요:</div>
+            <div className="text-sm text-muted-foreground">{t('editor:routes.editor.replaceKeysound.targetPrompt')}</div>
             <div className="h-64 border rounded overflow-hidden">
               <KeysoundPanel
                 keysounds={keysoundRecord}
@@ -2421,7 +2421,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   if (toId === replaceKeysoundTarget) return;
                   const count = keysoundUsageCounts[replaceKeysoundTarget] || 0;
                   store.replaceKeysound(replaceKeysoundTarget, toId);
-                  store.setToast({ message: `${count}개 노트의 키음을 ${replaceKeysoundTarget} → ${toId}로 교체 (Ctrl+Z로 복원 가능)`, type: 'success' });
+                  showToast(t('editor:routes.editor.toast.keysoundReplaced', { count, from: replaceKeysoundTarget, to: toId }), 'success');
                   setActiveModal(null);
                   setReplaceKeysoundTarget(null);
                 }}
@@ -2435,7 +2435,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 className="px-3 py-1.5 text-xs rounded bg-zinc-700 hover:bg-zinc-600"
                 onClick={() => { setActiveModal(null); setReplaceKeysoundTarget(null); }}
               >
-                취소
+                {t('editor:routes.editor.replaceKeysound.cancel')}
               </button>
             </div>
           </div>
@@ -2486,7 +2486,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               nextNoteId: nextId,
               hasUnsavedChanges: true,
             });
-            showToast(`${newNotes.length}개 노트 생성 완료`, 'success');
+            showToast(t('editor:routes.editor.toast.notesGenerated', { count: newNotes.length }), 'success');
           }}
         />
       )}
@@ -2500,7 +2500,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           usedWavIds={new Set(Object.keys(keysoundRecord).map((k) => k.toUpperCase()))}
           onSlicesCreated={(wavDefs) => {
             store.updateHeadersWithWavDefs(wavDefs);
-            showToast(`${Object.keys(wavDefs).length}개 슬라이스 저장 완료`, 'success');
+            showToast(t('editor:routes.editor.toast.slicesSaved', { count: Object.keys(wavDefs).length }), 'success');
             setActiveOverlay(null);
           }}
         />

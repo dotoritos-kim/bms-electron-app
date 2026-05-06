@@ -1,5 +1,6 @@
 import React from 'react';
 import { vi } from 'vitest';
+import i18next from 'i18next';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { KeyBindingsDialog } from '../../../src/renderer/components/KeyBindingsDialog';
 import {
@@ -10,6 +11,13 @@ import {
   saveKeyBindings,
 } from '../../../src/renderer/lib/keyBindings';
 import type { KeyBinding, KeyAction } from '../../../src/renderer/lib/keyBindings';
+
+// Helpers to look up translated category/action labels — the dialog renders
+// translations via t(`editor:keyBindings.{categories,actions}.${id}`), not
+// the English ACTION_CATEGORIES/ACTION_LABELS constants.
+const t = (key: string) => i18next.t(key);
+const categoryLabel = (id: string) => t(`editor:keyBindings.categories.${id}`);
+const actionLabel = (action: string) => t(`editor:keyBindings.actions.${action}`);
 
 vi.mock('../../../src/renderer/lib/keyBindings', async () => {
   const actual = await vi.importActual('../../../src/renderer/lib/keyBindings');
@@ -54,22 +62,22 @@ describe('KeyBindingsDialog', () => {
     expect(titles[0]).toBeInTheDocument();
   });
 
-  // 3. Renders all action categories
+  // 3. Renders all action categories (translated)
   it('renders all action category headings from ACTION_CATEGORIES', () => {
     renderDialog();
     for (const cat of ACTION_CATEGORIES) {
-      expect(screen.getByText(cat.label)).toBeInTheDocument();
+      expect(screen.getByText(categoryLabel(cat.id))).toBeInTheDocument();
     }
   });
 
-  // 4. Each action shows its label from ACTION_LABELS
-  // Note: "저장" appears both as the 'save' action label and the footer Save button text,
-  // so we use getAllByText for labels that may have duplicates.
+  // 4. Each action shows its translated label
+  // Note: action labels can repeat in footer buttons (e.g. Save), so we use
+  // getAllByText with length >= 1 to tolerate duplicates.
   it('renders all action labels from ACTION_LABELS', () => {
     renderDialog();
     const allActions = ACTION_CATEGORIES.flatMap((c) => c.actions);
     for (const action of allActions) {
-      const elements = screen.getAllByText(ACTION_LABELS[action]);
+      const elements = screen.getAllByText(actionLabel(action));
       expect(elements.length).toBeGreaterThanOrEqual(1);
     }
   });

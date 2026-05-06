@@ -406,7 +406,7 @@
   },
   "store": {
     "orphanNotes": "{{count}} notes on lanes not in {{keyMode}} mode are now hidden. (Data is preserved)",
-    "orphanNotes_one": "",
+    "orphanNotes_one": "{{count}} note on a lane not in {{keyMode}} mode is now hidden. (Data is preserved)",
     "removeUnusedKeysounds": "Remove unused keysounds",
     "replaceKeysound": "Replace keysound"
   },

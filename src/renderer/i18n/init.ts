@@ -50,7 +50,9 @@ export function initI18n(initialLocale: SupportedLocale): Promise<I18nInstance> 
       lng: initialLocale,
       fallbackLng: FALLBACK_LOCALE,
       defaultNS: 'app',
-      ns: ['common'], // boot loads common only; routes load the rest via Suspense
+      // 5 namespaces total / 정렬된 ko+en 합계 1,078줄 — 모두 preload해도 비용 무시 수준이며
+      // E2E에서 dialog 진입 직후 raw key가 노출되는 문제를 막는다.
+      ns: ['common', 'app', 'editor', 'errors', 'player'],
       load: 'languageOnly',
       interpolation: { escapeValue: false }, // React already escapes
       react: {

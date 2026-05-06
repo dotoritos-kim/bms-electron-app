@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import i18next from 'i18next';
 import { BMSParser, Timing, Positioning, Spacing, SongInfo, KeySounds, Notes } from '@rhythm-archive/bms-core';
 import type { BMSChart, BMSNote, ISongInfoData } from '@rhythm-archive/bms-core';
 import { detectKeyMode } from '@rhythm-archive/bms-editor';
@@ -210,11 +211,11 @@ export function useLocalBmsFile() {
       if (err instanceof Error) {
         // User-friendly messages for common file system errors
         if (err.message.includes('ENOENT') || err.message.includes('no such file')) {
-          message = '파일을 찾을 수 없습니다. 파일이 이동 또는 삭제되었을 수 있습니다.';
+          message = i18next.t('errors:bms.fileNotFound');
         } else if (err.message.includes('EACCES') || err.message.includes('EPERM')) {
-          message = '파일에 접근할 수 없습니다. 권한을 확인해 주세요.';
+          message = i18next.t('errors:bms.fileAccessDenied');
         } else if (err.message.includes('EBUSY')) {
-          message = '파일이 다른 프로그램에서 사용 중입니다.';
+          message = i18next.t('errors:bms.fileBusy');
         } else {
           message = err.message;
         }

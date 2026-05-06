@@ -128,6 +128,16 @@
     },
     "patternLibrary": {
       "applyTooltip": "클릭하여 현재 위치에 적용\n{{count}}개 노트, {{beats}}비트",
+      "categories": {
+        "chord": "동시치기",
+        "custom": "사용자 정의",
+        "jack": "잭",
+        "roll": "롤",
+        "scratch": "스크래치",
+        "stairs": "계단",
+        "stream": "스트림",
+        "trill": "트릴"
+      },
       "deleteTooltip": "삭제",
       "empty": "패턴 없음",
       "noSearchResults": "검색 결과 없음",

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 
 export interface ToastItem {
@@ -14,24 +15,25 @@ interface ToastStackProps {
 }
 
 export function ToastStack({ toasts, onDismiss }: ToastStackProps) {
+  const { t } = useTranslation('common');
   if (toasts.length === 0) return null;
 
   return (
     <div role="status" aria-live="polite" aria-atomic="false" className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-sm">
-      {toasts.map((t) => (
+      {toasts.map((toast) => (
         <div
-          key={t.id}
+          key={toast.id}
           className={`flex items-start gap-2 px-3 py-2 rounded-lg text-xs font-medium shadow-lg animate-[slideIn_0.2s_ease-out] ${
-            t.type === 'success' ? 'bg-green-900/90 text-green-200 border border-green-700/50' :
-            t.type === 'error' ? 'bg-red-900/90 text-red-200 border border-red-700/50' :
-            t.type === 'warning' ? 'bg-yellow-900/90 text-yellow-200 border border-yellow-700/50' :
+            toast.type === 'success' ? 'bg-green-900/90 text-green-200 border border-green-700/50' :
+            toast.type === 'error' ? 'bg-red-900/90 text-red-200 border border-red-700/50' :
+            toast.type === 'warning' ? 'bg-yellow-900/90 text-yellow-200 border border-yellow-700/50' :
             'bg-zinc-800/90 text-zinc-200 border border-zinc-700/50'
           }`}
         >
-          <span className="flex-1">{t.message}</span>
+          <span className="flex-1">{toast.message}</span>
           <button
-            onClick={() => onDismiss(t.id)}
-            aria-label="알림 닫기"
+            onClick={() => onDismiss(toast.id)}
+            aria-label={t('actions.dismiss')}
             className="p-1.5 rounded hover:bg-white/10 shrink-0"
           >
             <X className="h-3 w-3" />

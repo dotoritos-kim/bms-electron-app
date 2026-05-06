@@ -128,6 +128,16 @@
     },
     "patternLibrary": {
       "applyTooltip": "Click to apply at the current position\n{{count}} notes, {{beats}} beats",
+      "categories": {
+        "chord": "Chord",
+        "custom": "User defined",
+        "jack": "Jack",
+        "roll": "Roll",
+        "scratch": "Scratch",
+        "stairs": "Stairs",
+        "stream": "Stream",
+        "trill": "Trill"
+      },
       "deleteTooltip": "Delete",
       "empty": "No patterns",
       "noSearchResults": "No matches",

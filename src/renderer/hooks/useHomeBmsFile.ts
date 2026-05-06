@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import i18next from 'i18next';
 import type { BMSNote, ISongInfoData } from '@rhythm-archive/bms-core';
 import type { KeyMode, BpmChange, StopEvent, ScrollSpeedChange } from '@rhythm-archive/bms-editor';
 import BmsParserWorker from '../workers/bmsParser.worker?worker';
@@ -74,7 +75,7 @@ export function useHomeBmsFile() {
         chart: null,
         isLoading: false,
         phase: 'idle',
-        error: err instanceof Error ? err.message : '파일을 읽을 수 없습니다.',
+        error: err instanceof Error ? err.message : i18next.t('errors:bms.fileReadFailed'),
       });
       return;
     }
@@ -157,7 +158,7 @@ export function useHomeBmsFile() {
         chart: null,
         isLoading: false,
         phase: 'idle',
-        error: event.message ?? 'BMS 파싱 중 오류가 발생했습니다.',
+        error: event.message ?? i18next.t('errors:bms.parseError'),
       });
       workerRef.current = null;
     };

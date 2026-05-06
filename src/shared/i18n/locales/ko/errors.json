@@ -1,4 +1,11 @@
 {
+  "bms": {
+    "fileNotFound": "파일을 찾을 수 없습니다. 파일이 이동 또는 삭제되었을 수 있습니다.",
+    "fileAccessDenied": "파일에 접근할 수 없습니다. 권한을 확인해 주세요.",
+    "fileBusy": "파일이 다른 프로그램에서 사용 중입니다.",
+    "fileReadFailed": "파일을 읽을 수 없습니다.",
+    "parseError": "BMS 파싱 중 오류가 발생했습니다."
+  },
   "file": {
     "readFailed": "파일을 읽지 못했어요: {{path}}",
     "saveFailed": "파일을 저장하지 못했어요: {{path}}",

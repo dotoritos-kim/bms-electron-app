@@ -1621,8 +1621,18 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             snapEnabled={snapEnabled}
             onSnapToggle={store.toggleSnap}
             layerConfig={layerConfig}
-            onLayerVisibleToggle={(layer: string) => store.setLayerVisible(layer as any, !layerConfig[layer as keyof typeof layerConfig].visible)}
-            onLayerLockToggle={(layer: string) => store.setLayerLocked(layer as any, !layerConfig[layer as keyof typeof layerConfig].locked)}
+            onLayerVisibleToggle={(layer: string) => {
+              if (layer in layerConfig) {
+                const key = layer as keyof typeof layerConfig;
+                store.setLayerVisible(key, !layerConfig[key].visible);
+              }
+            }}
+            onLayerLockToggle={(layer: string) => {
+              if (layer in layerConfig) {
+                const key = layer as keyof typeof layerConfig;
+                store.setLayerLocked(key, !layerConfig[key].locked);
+              }
+            }}
             onZoomIn={() => zoomControlRef.current?.zoomIn()}
             onZoomOut={() => zoomControlRef.current?.zoomOut()}
             onZoomPreset={(s: number) => zoomControlRef.current?.zoomTo(s)}

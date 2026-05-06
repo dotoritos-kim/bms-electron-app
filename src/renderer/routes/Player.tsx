@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Notechart, AudioPreloader, GamePlayer } from '@rhythm-archive/bms-player';
 import type { FileMap, ScoreState, NotechartInput } from '@rhythm-archive/bms-player';
@@ -19,6 +20,7 @@ interface PlayerProps {
 type PlayerPhase = 'loading-chart' | 'loading-audio' | 'ready' | 'error';
 
 export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerProps) {
+  const { t } = useTranslation('app');
   const { chart, isLoading, error, load } = useLocalBmsFile();
   const [phase, setPhase] = useState<PlayerPhase>('loading-chart');
   const [audioProgress, setAudioProgress] = useState({ loaded: 0, total: 0 });
@@ -173,7 +175,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
     if (phase === 'ready') {
       onRegisterGuard(() => ({
         blocked: true,
-        message: '게임 플레이 중입니다. 나가시겠습니까?',
+        message: t('player.exitConfirm'),
       }));
     } else {
       onRegisterGuard(null);
@@ -207,13 +209,13 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
             onClick={() => { setPhase('loading-chart'); load(file.path); }}
             className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 rounded transition-colors text-zinc-300"
           >
-            다시 시도
+            {t('common:actions.retry')}
           </button>
           <button
             onClick={() => { onClearFile?.(); onBack(); }}
             className="px-4 py-2 text-sm text-blue-400 hover:text-blue-300"
           >
-            홈으로
+            {t('errors.goHome')}
           </button>
         </div>
       </div>
@@ -261,7 +263,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
         <button onClick={handleExit} className="p-1 rounded hover:bg-zinc-800 transition-colors">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <div className="flex-1 min-w-0 text-xs text-zinc-400 truncate" title="키 설정은 편집 화면 > 도구 > 키 바인딩 설정에서 변경할 수 있습니다">
+        <div className="flex-1 min-w-0 text-xs text-zinc-400 truncate" title={t('player.keyBindingsHint')}>
           {chart?.songInfo?.title || file.name} — {chart?.keyMode} | BPM {chart?.bpm.initial}
         </div>
         <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0">

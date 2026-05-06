@@ -173,6 +173,10 @@
     },
     "unpinFile": "Unpin"
   },
+  "player": {
+    "exitConfirm": "A game is in progress. Are you sure you want to leave?",
+    "keyBindingsHint": "Key bindings can be changed in Editor > Tools > Key Bindings"
+  },
   "navigation": {
     "discardLabel": "Don't save",
     "leaveLabel": "Leave",

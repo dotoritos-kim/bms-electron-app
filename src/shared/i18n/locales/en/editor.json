@@ -8,20 +8,21 @@
   },
   "panels": {
     "beatKeysound": {
-      "current": "",
-      "empty": "",
-      "title": "",
-      "tooltip": ""
+      "current": "◀ now",
+      "empty": "No keysounds near current position",
+      "title": "Keysound Timeline",
+      "tooltip": "Keysounds near the current position, in chronological order. Click to preview."
     },
     "bgmManager": {
-      "channelStats": "",
-      "clickToSelect": "",
-      "muteOff": "",
-      "muteOn": "",
-      "soloOff": "",
-      "soloOn": "",
-      "title_one": "",
-      "title_other": ""
+      "channelStats": "{{notes}} notes, {{keysounds}} keysounds",
+      "clickToSelect": "Click: select",
+      "muteOff": "Unmute",
+      "muteOn": "Mute this channel",
+      "soloOff": "Unsolo",
+      "soloOn": "Solo this channel",
+      "title": "BGM Manager ({{count}})",
+      "title_one": "BGM Manager ({{count}})",
+      "title_other": "BGM Manager ({{count}})"
     },
     "header": {
       "artistField": "Artist",

@@ -489,7 +489,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800 shrink-0">
         <h2 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
           <Scissors className="h-4 w-4" />
-          {t('app:audioSlicer.title')}
+          {t('audioSlicer.title')}
         </h2>
         {fileName && <span className="text-xs text-zinc-500">{fileName}</span>}
         <div className="flex-1" />
@@ -506,14 +506,14 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
           className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 transition-colors"
         >
           <Upload className="h-3.5 w-3.5" />
-          {loading ? t('app:audioSlicer.loading') : t('app:audioSlicer.openButton')}
+          {loading ? t('audioSlicer.loading') : t('audioSlicer.openButton')}
         </button>
         {audioBuffer && (
           <>
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handlePlay} className={`flex items-center gap-1 px-2 py-1.5 rounded text-zinc-300 ${isPlaying ? 'bg-red-900/50 hover:bg-red-900/70 ring-1 ring-red-500/50' : 'bg-zinc-800 hover:bg-zinc-700'}`}>
               {isPlaying ? <Square className="h-3.5 w-3.5 text-red-400" /> : <Play className="h-3.5 w-3.5 text-green-400" />}
-              {isPlaying ? t('app:audioSlicer.stopButton') : (selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.01) ? t('app:audioSlicer.playSelectionButton') : t('app:audioSlicer.playButton')}
+              {isPlaying ? t('audioSlicer.stopButton') : (selStart !== null && selEnd !== null && Math.abs(selEnd - selStart) > 0.01) ? t('audioSlicer.playSelectionButton') : t('audioSlicer.playButton')}
               {isPlaying && <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
             </button>
             <div className="w-px h-4 bg-zinc-700" />
@@ -525,10 +525,10 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
             </button>
             <div className="w-px h-4 bg-zinc-700" />
             <button onClick={handleAddMarker} disabled={selStart === null} className="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 rounded text-zinc-300">
-              {t('app:audioSlicer.addMarkerButton')}
+              {t('audioSlicer.addMarkerButton')}
             </button>
             <button onClick={() => setMarkers([])} className="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300">
-              {t('app:audioSlicer.clearMarkersButton')}
+              {t('audioSlicer.clearMarkersButton')}
             </button>
             <div className="w-px h-4 bg-zinc-700" />
             <button
@@ -536,10 +536,10 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
               className="flex items-center gap-1 px-2 py-1.5 bg-orange-900/50 hover:bg-orange-900/70 rounded text-orange-300"
             >
               <Wand2 className="h-3.5 w-3.5" />
-              {t('app:audioSlicer.autoDetectButton')}
+              {t('audioSlicer.autoDetectButton')}
             </button>
             <label className="flex items-center gap-1 text-zinc-500">
-              {t('app:audioSlicer.sensitivityLabel')}:
+              {t('audioSlicer.sensitivityLabel')}:
               <input
                 type="range"
                 min={0.005}
@@ -564,18 +564,18 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
             </label>
             {autoSliceMsgType && (
               <span className={`text-xs px-2 py-1 rounded font-medium ${autoSliceMsgType === 'warning' ? 'text-yellow-300 bg-yellow-800/60 border border-yellow-600/50 animate-pulse' : 'text-green-400 bg-green-950/40'}`}>
-                {autoSliceMsgType === 'warning' ? t('app:audioSlicer.autoDetectNoResults') : t('app:audioSlicer.autoDetectSuccess', { count: autoSliceCount })}
+                {autoSliceMsgType === 'warning' ? t('audioSlicer.autoDetectNoResults') : t('audioSlicer.autoDetectSuccess', { count: autoSliceCount })}
               </span>
             )}
             <div className="flex-1" />
-            <span className="text-zinc-500">{t('app:audioSlicer.markerCountSummary', { markerCount: markers.length, sliceCount: markers.length + 1 })}</span>
+            <span className="text-zinc-500">{t('audioSlicer.markerCountSummary', { markerCount: markers.length, sliceCount: markers.length + 1 })}</span>
             <button
               onClick={handleSliceAndSave}
               disabled={markers.length === 0 || slicing}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded transition-colors"
             >
               <Scissors className="h-3.5 w-3.5" />
-              {slicing ? t('app:audioSlicer.slicingButton') : t('app:audioSlicer.sliceAndSaveButton')}
+              {slicing ? t('audioSlicer.slicingButton') : t('audioSlicer.sliceAndSaveButton')}
             </button>
           </>
         )}
@@ -600,8 +600,8 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
           <div className="flex items-center justify-center h-full text-zinc-600">
             <div className="text-center">
               <Scissors className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>{t('app:audioSlicer.emptyTitle')}</p>
-              <p className="text-xs mt-1">{t('app:audioSlicer.emptyFormats')}</p>
+              <p>{t('audioSlicer.emptyTitle')}</p>
+              <p className="text-xs mt-1">{t('audioSlicer.emptyFormats')}</p>
             </div>
           </div>
         )}
@@ -610,19 +610,19 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       {/* Info bar */}
       {audioBuffer && (
         <div className="flex items-center gap-4 px-4 py-1.5 border-t border-zinc-800 text-xs text-zinc-500 shrink-0">
-          <span>{t('app:audioSlicer.infoLength')}: {audioBuffer.duration.toFixed(2)}s</span>
-          <span>{t('app:audioSlicer.infoSampleRate')}: {audioBuffer.sampleRate}Hz</span>
-          <span>{t('app:audioSlicer.infoChannels')}: {audioBuffer.numberOfChannels}</span>
-          <span>{t('app:audioSlicer.infoView')}: {viewStart.toFixed(1)}s - {(viewStart + viewDuration).toFixed(1)}s</span>
+          <span>{t('audioSlicer.infoLength')}: {audioBuffer.duration.toFixed(2)}s</span>
+          <span>{t('audioSlicer.infoSampleRate')}: {audioBuffer.sampleRate}Hz</span>
+          <span>{t('audioSlicer.infoChannels')}: {audioBuffer.numberOfChannels}</span>
+          <span>{t('audioSlicer.infoView')}: {viewStart.toFixed(1)}s - {(viewStart + viewDuration).toFixed(1)}s</span>
           {selStart !== null && selEnd !== null && (
             <span className="text-blue-400">
-              {t('app:audioSlicer.infoSelection')}: {Math.min(selStart, selEnd).toFixed(3)}s - {Math.max(selStart, selEnd).toFixed(3)}s
+              {t('audioSlicer.infoSelection')}: {Math.min(selStart, selEnd).toFixed(3)}s - {Math.max(selStart, selEnd).toFixed(3)}s
               ({Math.abs(selEnd - selStart).toFixed(3)}s)
             </span>
           )}
           {/* Mini overview bar showing viewport position within full audio */}
           <div className="flex-1" />
-          <div className="w-32 h-2 bg-zinc-800 rounded-full relative overflow-hidden" title={t('app:audioSlicer.viewportTooltip')}>
+          <div className="w-32 h-2 bg-zinc-800 rounded-full relative overflow-hidden" title={t('audioSlicer.viewportTooltip')}>
             <div
               className="absolute top-0 h-full bg-blue-500/50 rounded-full"
               style={{

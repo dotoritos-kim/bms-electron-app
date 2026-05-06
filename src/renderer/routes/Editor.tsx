@@ -457,7 +457,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const keysoundRecord = useMemo<Record<string, string>>(() => {
     if (headers?.wav.size) {
       const rec: Record<string, string> = {};
-      headers.wav.forEach((v, k) => { rec[k] = v; });
+      headers.wav.forEach((v: string, k: string) => { rec[k] = v; });
       return rec;
     }
     return chart?.keysounds || {};
@@ -510,7 +510,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     store.selectByFilter({ keysounds: [keysoundId] });
     const first = notes.find((n) =>
       n.keysound === keysoundId ||
-      n.additionalKeysounds?.some((ak) => ak.keysound === keysoundId)
+      n.additionalKeysounds?.some((ak: { keysound: string }) => ak.keysound === keysoundId)
     );
     if (first) {
       store.setCurrentBeat(first.beat);
@@ -780,7 +780,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         showToast(`경고: ${undefinedKeys.size}개 미정의 WAV 참조 (${[...undefinedKeys].slice(0, 3).join(', ')}${undefinedKeys.size > 3 ? '...' : ''})`, 'warning');
       }
       // Check for notes at positions finer than standard BMS resolution (192)
-      const highResNotes = chartToSave.notes.filter((n) => {
+      const highResNotes = chartToSave.notes.filter((n: { tick?: number }) => {
         if (n.tick === undefined) return false;
         const tickInMeasure = n.tick % 3840; // ticks per 4/4 measure
         return tickInMeasure % 20 !== 0; // 20 ticks = 1/192 of measure
@@ -936,7 +936,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         case 'toggleDiff': activeOverlay === 'diff' ? setActiveOverlay(null) : openOverlay('diff'); break;
         case 'moveToBgm': store.changeNoteType('bgm'); break;
         case 'moveToPlay': {
-          const firstLane = laneIds.find(id => id !== 'SC' && id !== 'FZ' && id !== 'FZ2') ?? laneIds[0] ?? '1';
+          const firstLane = laneIds.find((id: string) => id !== 'SC' && id !== 'FZ' && id !== 'FZ2') ?? laneIds[0] ?? '1';
           store.changeNoteType('playable', firstLane);
           break;
         }
@@ -989,7 +989,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         return;
       }
       const worker = createLocalAudioWorker(file.path);
-      preloader = new AudioPreloader('', fileMap, worker, (type, payload) => {
+      preloader = new AudioPreloader('', fileMap, worker, (type: string, payload: unknown) => {
         if (type === 'PROGRESS') {
           const p = payload as { loadedCount: number; total: number };
           store.setAudioLoadProgress({ loaded: p.loadedCount, total: p.total });
@@ -2417,7 +2417,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               <KeysoundPanel
                 keysounds={keysoundRecord}
                 currentKeysound={replaceKeysoundTarget}
-                onSelect={(toId) => {
+                onSelect={(toId: string) => {
                   if (toId === replaceKeysoundTarget) return;
                   const count = keysoundUsageCounts[replaceKeysoundTarget] || 0;
                   store.replaceKeysound(replaceKeysoundTarget, toId);

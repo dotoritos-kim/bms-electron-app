@@ -350,9 +350,12 @@ test.describe('Key Bindings Dialog - Deep Interaction', () => {
     const bodyText = await window.locator('body').textContent() || '';
     expect(bodyText).toContain('키 바인딩 설정');
 
-    // Find a key binding button and click it to start editing
-    // Look for the save action button ("저장")
-    const bindingButtons = window.locator('button.font-mono');
+    // Find a key binding button and click it to start editing.
+    // Scope to the dialog — `button.font-mono` alone also matches the
+    // language-selector button in the header, which sits behind the modal
+    // overlay and causes the click to be intercepted.
+    const dialog = window.getByRole('dialog');
+    const bindingButtons = dialog.locator('button.font-mono');
     const count = await bindingButtons.count();
     expect(count).toBeGreaterThan(0);
 

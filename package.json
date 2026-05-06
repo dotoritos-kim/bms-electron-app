@@ -85,7 +85,8 @@
     "publish": {
       "provider": "github",
       "owner": "dotoritos-kim",
-      "repo": "bms-electron-app"
+      "repo": "bms-electron-app",
+      "releaseType": "release"
     },
     "win": {
       "target": [

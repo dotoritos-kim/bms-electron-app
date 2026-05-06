@@ -56,11 +56,13 @@
       "resetIndicator": "리셋됨",
       "tapButton": "탭 (Space)",
       "tapsCount": "BPM ({{count}} taps)",
+      "tapsCount_other": "",
       "title": "BPM 탭"
     },
     "keyBindings": {
       "conflictBadge": "충돌",
       "conflictSummary": "{{count}}개 항목 키 충돌",
+      "conflictSummary_other": "",
       "listening": "키 입력 대기...",
       "resetDefaults": "기본값 복원",
       "saveButton": "저장",
@@ -141,6 +143,33 @@
   "errors": {
     "goHome": "홈으로",
     "renderingTitle": "렌더링 오류"
+  },
+  "home": {
+    "meta": {
+      "file": "파일",
+      "genre": "장르"
+    },
+    "newFile": {
+      "artistField": "아티스트",
+      "createButton": "생성",
+      "creating": "생성 중...",
+      "keyModeField": "키모드",
+      "title": "새 BMS 파일",
+      "titleField": "제목"
+    },
+    "pinFile": "고정",
+    "recentFiles": "최근 파일",
+    "removeFromList": "목록에서 제거",
+    "stats": {
+      "invisible": "안 보이는 노트",
+      "keyMode": "키모드",
+      "keysounds": "키사운드",
+      "landmines": "지뢰",
+      "longNotes": "롱노트",
+      "scratch": "스크래치",
+      "totalNotes": "전체 노트"
+    },
+    "unpinFile": "고정 해제"
   },
   "navigation": {
     "discardLabel": "저장 안 함",

@@ -56,11 +56,15 @@
       "resetIndicator": "reset",
       "tapButton": "Tap (Space)",
       "tapsCount": "BPM ({{count}} taps)",
+      "tapsCount_one": "",
+      "tapsCount_other": "",
       "title": "BPM Tap"
     },
     "keyBindings": {
       "conflictBadge": "conflict",
       "conflictSummary": "{{count}} bindings conflict",
+      "conflictSummary_one": "",
+      "conflictSummary_other": "",
       "listening": "Press a key...",
       "resetDefaults": "Reset to defaults",
       "saveButton": "Save",
@@ -141,6 +145,33 @@
   "errors": {
     "goHome": "Go Home",
     "renderingTitle": "Rendering Error"
+  },
+  "home": {
+    "meta": {
+      "file": "File",
+      "genre": "Genre"
+    },
+    "newFile": {
+      "artistField": "Artist",
+      "createButton": "Create",
+      "creating": "Creating...",
+      "keyModeField": "Key Mode",
+      "title": "New BMS File",
+      "titleField": "Title"
+    },
+    "pinFile": "Pin",
+    "recentFiles": "Recent files",
+    "removeFromList": "Remove from list",
+    "stats": {
+      "invisible": "Invisible",
+      "keyMode": "Key Mode",
+      "keysounds": "Keysounds",
+      "landmines": "Landmines",
+      "longNotes": "Long notes",
+      "scratch": "Scratch",
+      "totalNotes": "Total notes"
+    },
+    "unpinFile": "Unpin"
   },
   "navigation": {
     "discardLabel": "Don't save",

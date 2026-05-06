@@ -1,0 +1,19 @@
+{
+  "panels": {
+    "beatKeysound": {
+      "current": "",
+      "empty": "",
+      "title": "",
+      "tooltip": ""
+    },
+    "bgmManager": {
+      "channelStats": "",
+      "clickToSelect": "",
+      "muteOff": "",
+      "muteOn": "",
+      "soloOff": "",
+      "soloOn": "",
+      "title_other": ""
+    }
+  }
+}

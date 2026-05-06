@@ -55,6 +55,17 @@ interface ErrorMessage {
 
 type OutgoingMessage = ProgressMessage | LoadedMessage | DoneMessage | ErrorMessage;
 
+interface WorkerShim {
+  postMessage(message: unknown): void;
+  addEventListener(type: string, listener: (event: MessageEvent) => void): void;
+  removeEventListener(type: string, listener: (event: MessageEvent) => void): void;
+  terminate(): void;
+  onmessage: ((event: MessageEvent) => void) | null;
+  onerror: ((event: ErrorEvent) => void) | null;
+  onmessageerror: ((event: MessageEvent) => void) | null;
+  dispatchEvent(event: Event): boolean;
+}
+
 /**
  * Creates a fake Worker that loads audio via Electron IPC.
  *
@@ -64,7 +75,7 @@ export function createLocalAudioWorker(bmsFilePath: string): Worker {
   const listeners: Array<(event: MessageEvent) => void> = [];
   let onMessageHandler: ((event: MessageEvent) => void) | null = null;
 
-  const fakeWorker = {
+  const fakeWorker: WorkerShim = {
     postMessage(message: LoadAudioMessage) {
       if (message.type === 'LOAD_AUDIO') {
         loadAllViaIPC(message.payload.fileMap, bmsFilePath, (msg) => {

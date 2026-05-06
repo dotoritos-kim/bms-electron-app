@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.2.1](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.2.0...v0.2.1) (2026-05-06)
+
+
+### Bug Fixes
+
+* **i18n:** mount language switcher so users can change locale ([b5ef147](https://github.com/dotoritos-kim/bms-electron-app/commit/b5ef147144982a6ccb70160bf67c94a9378f9b18))
+
 ## [0.2.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.1.2...v0.2.0) (2026-05-06)
 
 

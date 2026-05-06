@@ -30,6 +30,7 @@ import { Player } from './Player';
 import { useEditorStore } from '../stores/editorStore';
 import type { AudioPhase, PasteAnalysis, LayerConfig } from '../stores/editorStore';
 import { deserializeMeta, serializeMeta, buildMetaFromState, applyMetaToState } from '../lib/bmsMeta';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { PatternLibraryPanel } from '../components/PatternLibraryPanel';
 import { KeyBindingsDialog } from '../components/KeyBindingsDialog';
 import { NoteColorDialog } from '../components/NoteColorDialog';
@@ -2072,6 +2073,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             </span>
           )}
           {t('editor:routes.editor.statusBar.estimatedDifficulty')} <span className="text-zinc-300 font-semibold">{estimateDifficulty(notes, editedBaseBpm, totalBeats) || '-'}</span>/12
+          <LanguageSwitcher variant="compact" />
         </div>
       </div>
 

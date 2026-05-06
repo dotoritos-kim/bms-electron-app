@@ -1,5 +1,6 @@
 import { Home, Play, Edit } from 'lucide-react';
 import type { AppRoute, CurrentFile } from '../App';
+import { AppStatusBar } from './AppStatusBar';
 
 interface LayoutProps {
   route: AppRoute;
@@ -9,34 +10,42 @@ interface LayoutProps {
 }
 
 export function Layout({ route, onNavigate, currentFile, children }: LayoutProps) {
-  return (
-    <div className="flex h-full w-full">
-      {/* Sidebar */}
-      <nav className="w-14 bg-zinc-900 border-r border-zinc-800 flex flex-col items-center py-3 gap-2 shrink-0">
-        <NavButton
-          icon={<Home className="h-5 w-5" />}
-          active={route === 'home'}
-          onClick={() => onNavigate('home')}
-          label="Home"
-        />
-        <NavButton
-          icon={<Play className="h-5 w-5" />}
-          active={route === 'player'}
-          onClick={() => onNavigate('player')}
-          disabled={!currentFile}
-          label="Play"
-        />
-        <NavButton
-          icon={<Edit className="h-5 w-5" />}
-          active={route === 'editor'}
-          onClick={() => onNavigate('editor')}
-          disabled={!currentFile}
-          label="Edit"
-        />
-      </nav>
+  // Editor route owns its own status bar (with LanguageSwitcher inlined),
+  // so suppress the global one to avoid stacking two bars.
+  const showGlobalStatusBar = route !== 'editor';
 
-      {/* Main content */}
-      <main className="flex-1 overflow-hidden">{children}</main>
+  return (
+    <div className="flex flex-col h-full w-full">
+      <div className="flex flex-1 min-h-0 w-full">
+        {/* Sidebar */}
+        <nav className="w-14 bg-zinc-900 border-r border-zinc-800 flex flex-col items-center py-3 gap-2 shrink-0">
+          <NavButton
+            icon={<Home className="h-5 w-5" />}
+            active={route === 'home'}
+            onClick={() => onNavigate('home')}
+            label="Home"
+          />
+          <NavButton
+            icon={<Play className="h-5 w-5" />}
+            active={route === 'player'}
+            onClick={() => onNavigate('player')}
+            disabled={!currentFile}
+            label="Play"
+          />
+          <NavButton
+            icon={<Edit className="h-5 w-5" />}
+            active={route === 'editor'}
+            onClick={() => onNavigate('editor')}
+            disabled={!currentFile}
+            label="Edit"
+          />
+        </nav>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-hidden">{children}</main>
+      </div>
+
+      {showGlobalStatusBar && <AppStatusBar />}
     </div>
   );
 }

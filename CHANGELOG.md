@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.2.2](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.2.1...v0.2.2) (2026-05-06)
+
+
+### Bug Fixes
+
+* **e2e:** scope key-binding locator to dialog to avoid header collision ([418638e](https://github.com/dotoritos-kim/bms-electron-app/commit/418638e0e369faa2c81f2bf342e53e9846a743dd))
+
 ## [0.2.1](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.2.0...v0.2.1) (2026-05-06)
 
 

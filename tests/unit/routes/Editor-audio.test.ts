@@ -78,8 +78,8 @@ describe('Editor audio abort bail-out', () => {
     const preloader = new AudioPreloader('', { a: 'a.wav', b: 'b.wav' }, worker);
 
     // Populate audioDataMap
-    (preloader as unknown as { audioDataMap: Map<string, ArrayBuffer> }).audioDataMap.set('a', new ArrayBuffer(16));
-    (preloader as unknown as { audioDataMap: Map<string, ArrayBuffer> }).audioDataMap.set('b', new ArrayBuffer(16));
+    (preloader as unknown as { fetchPipeline: { audioDataMap: Map<string, ArrayBuffer> } }).fetchPipeline.audioDataMap.set('a', new ArrayBuffer(16));
+    (preloader as unknown as { fetchPipeline: { audioDataMap: Map<string, ArrayBuffer> } }).fetchPipeline.audioDataMap.set('b', new ArrayBuffer(16));
 
     const decodePromise = preloader.decodeAll();
 
@@ -98,7 +98,7 @@ describe('Editor audio abort bail-out', () => {
     const worker = new MockWorker() as unknown as Worker;
     const preloader = new AudioPreloader('', { x: 'x.wav' }, worker);
 
-    (preloader as unknown as { audioDataMap: Map<string, ArrayBuffer> }).audioDataMap.set('x', new ArrayBuffer(16));
+    (preloader as unknown as { fetchPipeline: { audioDataMap: Map<string, ArrayBuffer> } }).fetchPipeline.audioDataMap.set('x', new ArrayBuffer(16));
 
     const decodePromise = preloader.decodeAll();
     preloader.abort();
@@ -107,8 +107,8 @@ describe('Editor audio abort bail-out', () => {
     // Allow any pending micro-tasks to settle
     await new Promise((r) => setTimeout(r, 60));
 
-    const audioBuffers = (preloader as unknown as { audioBuffers: Map<string, AudioBuffer> }).audioBuffers;
-    expect(audioBuffers.size).toBe(0);
+    const store = (preloader as unknown as { store: { has: (k: string) => boolean } }).store;
+    expect(store.has('x')).toBe(false);
   });
 
   it('two sequential preloader instances — abort of first does not affect second', async () => {

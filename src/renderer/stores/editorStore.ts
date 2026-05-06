@@ -1713,8 +1713,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         keysound = toId;
         changed = true;
       }
-      if (n.additionalKeysounds?.some((ak: { keysound: string }) => ak.keysound === fromId)) {
-        additionalKeysounds = n.additionalKeysounds.map((ak: { keysound: string }) =>
+      if (n.additionalKeysounds?.some((ak) => ak.keysound === fromId)) {
+        additionalKeysounds = n.additionalKeysounds.map((ak) =>
           ak.keysound === fromId ? { ...ak, keysound: toId } : ak
         );
         changed = true;

@@ -157,7 +157,6 @@
   "store": {
     "orphanNotes": "{{count}} notes on lanes not in {{keyMode}} mode are now hidden. (Data is preserved)",
     "orphanNotes_one": "",
-    "orphanNotes_other": "",
     "removeUnusedKeysounds": "Remove unused keysounds",
     "replaceKeysound": "Replace keysound"
   },

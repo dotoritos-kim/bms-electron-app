@@ -155,7 +155,6 @@
   },
   "store": {
     "orphanNotes": "{{keyMode}} 모드에 없는 레인의 노트 {{count}}개가 숨겨졌습니다. (데이터는 보존됨)",
-    "orphanNotes_other": "",
     "removeUnusedKeysounds": "미사용 키음 삭제",
     "replaceKeysound": "키음 일괄 교체"
   },

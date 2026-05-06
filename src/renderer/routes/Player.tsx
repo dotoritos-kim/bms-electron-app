@@ -20,7 +20,7 @@ interface PlayerProps {
 type PlayerPhase = 'loading-chart' | 'loading-audio' | 'ready' | 'error';
 
 export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerProps) {
-  const { t } = useTranslation('app');
+  const { t } = useTranslation(['app', 'common']);
   const { chart, isLoading, error, load } = useLocalBmsFile();
   const [phase, setPhase] = useState<PlayerPhase>('loading-chart');
   const [audioProgress, setAudioProgress] = useState({ loaded: 0, total: 0 });

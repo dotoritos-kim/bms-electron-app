@@ -31,7 +31,7 @@ const KEY_MODE_OPTIONS: { value: KeyModeOption; label: string }[] = [
 ];
 
 export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
-  const { t } = useTranslation('app');
+  const { t } = useTranslation(['app', 'common']);
   const [folderPath, setFolderPath] = useState<string | null>(null);
   const [files, setFiles] = useState<BmsFileEntry[]>([]);
   const [scanning, setScanning] = useState(false);

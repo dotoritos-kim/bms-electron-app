@@ -56,7 +56,11 @@ export function initI18n(initialLocale: SupportedLocale): Promise<I18nInstance> 
       load: 'languageOnly',
       interpolation: { escapeValue: false }, // React already escapes
       react: {
-        useSuspense: true,
+        // Suspense is disabled so the App tree mounts immediately even before
+        // namespaces finish loading. The 5 namespaces are preloaded at boot
+        // (`ns: [...]` above) so the raw-key window is short, and t() will
+        // re-render automatically once each namespace lands.
+        useSuspense: false,
       },
       returnNull: false,
       saveMissing: isDev,

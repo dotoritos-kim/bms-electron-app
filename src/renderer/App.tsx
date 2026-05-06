@@ -62,7 +62,7 @@ export interface CurrentFile {
 }
 
 export function App() {
-  const { t } = useTranslation('app');
+  const { t } = useTranslation(['app', 'common']);
   // Restore last session
   const [route, setRoute] = useState<AppRoute>(() => {
     const session = loadSession();

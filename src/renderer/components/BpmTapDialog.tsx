@@ -7,7 +7,7 @@ interface BpmTapDialogProps {
 }
 
 export function BpmTapDialog({ onClose, onApply }: BpmTapDialogProps) {
-  const { t } = useTranslation('app');
+  const { t } = useTranslation(['app', 'common']);
   const [taps, setTaps] = useState<number[]>([]);
   const [wasReset, setWasReset] = useState(false);
   const bpm = useMemo(() => {

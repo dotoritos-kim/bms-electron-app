@@ -20,7 +20,7 @@ interface KeyBindingsDialogProps {
 }
 
 export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }: KeyBindingsDialogProps) {
-  const { t } = useTranslation('app');
+  const { t } = useTranslation(['app', 'common']);
   const [editingAction, setEditingAction] = useState<KeyAction | null>(null);
   const [localBindings, setLocalBindings] = useState<KeyBinding[]>(bindings);
   const listeningRef = useRef(false);

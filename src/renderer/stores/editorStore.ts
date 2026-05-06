@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import i18next from 'i18next';
 import type {
   EditableBMSNote,
   BMSBpmChange,
@@ -1593,7 +1594,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (orphanCount > 0) {
       set({
         toast: {
-          message: `${keyMode} 모드에 없는 레인의 노트 ${orphanCount}개가 숨겨졌습니다. (데이터는 보존됨)`,
+          message: i18next.t('editor:store.orphanNotes', { keyMode, count: orphanCount }),
           type: 'error',
         },
       });
@@ -1703,7 +1704,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   replaceKeysound: (fromId, toId) => {
     if (fromId === toId) return;
     const s = get();
-    s.pushUndo('키음 일괄 교체');
+    s.pushUndo(i18next.t('editor:store.replaceKeysound'));
     const updated = s.notes.map((n) => {
       let changed = false;
       let keysound = n.keysound;
@@ -1726,7 +1727,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   removeWavDefinitions: (keysoundIds) => {
     const s = get();
     if (!s.headers) return;
-    s.pushUndo('미사용 키음 삭제');
+    s.pushUndo(i18next.t('editor:store.removeUnusedKeysounds'));
     const newWav = new Map(s.headers.wav);
     for (const id of keysoundIds) newWav.delete(id);
     set({ headers: { ...s.headers, wav: newWav }, hasUnsavedChanges: true });

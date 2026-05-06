@@ -1,4 +1,9 @@
 {
+  "store": {
+    "orphanNotes": "{{count}} notes on lanes not in {{keyMode}} mode are now hidden. (Data is preserved)",
+    "replaceKeysound": "Replace keysound",
+    "removeUnusedKeysounds": "Remove unused keysounds"
+  },
   "contextMenu": {
     "copy": "Copy",
     "cut": "Cut",

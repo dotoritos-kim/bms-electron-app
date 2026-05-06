@@ -56,13 +56,15 @@
       "resetIndicator": "리셋됨",
       "tapButton": "탭 (Space)",
       "tapsCount": "BPM ({{count}} taps)",
-      "tapsCount_other": "",
+      "tapsCount_one": "BPM ({{count}} tap)",
+      "tapsCount_other": "BPM ({{count}} taps)",
       "title": "BPM 탭"
     },
     "keyBindings": {
       "conflictBadge": "충돌",
       "conflictSummary": "{{count}}개 항목 키 충돌",
-      "conflictSummary_other": "",
+      "conflictSummary_one": "{{count}}개 항목 키 충돌",
+      "conflictSummary_other": "{{count}}개 항목 키 충돌",
       "listening": "키 입력 대기...",
       "resetDefaults": "기본값 복원",
       "saveButton": "저장",

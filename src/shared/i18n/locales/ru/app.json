@@ -72,6 +72,9 @@
       "waiting": ""
     }
   },
+  "errors": {
+    "goHome": ""
+  },
   "home": {
     "meta": {
       "file": "",
@@ -104,6 +107,10 @@
     "leaveLabel": "",
     "leaveTitle": "",
     "saveAndLeaveLabel": ""
+  },
+  "player": {
+    "exitConfirm": "",
+    "keyBindingsHint": ""
   },
   "stats": {
     "duration": "",

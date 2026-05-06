@@ -16,5 +16,11 @@
       "title_one": "",
       "title_other": ""
     }
+  },
+  "store": {
+    "orphanNotes_one": "",
+    "orphanNotes_other": "",
+    "removeUnusedKeysounds": "",
+    "replaceKeysound": ""
   }
 }

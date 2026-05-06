@@ -15,5 +15,10 @@
       "soloOn": "",
       "title_other": ""
     }
+  },
+  "store": {
+    "orphanNotes_other": "",
+    "removeUnusedKeysounds": "",
+    "replaceKeysound": ""
   }
 }

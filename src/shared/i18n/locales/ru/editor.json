@@ -18,5 +18,13 @@
       "title_many": "",
       "title_other": ""
     }
+  },
+  "store": {
+    "orphanNotes_one": "",
+    "orphanNotes_few": "",
+    "orphanNotes_many": "",
+    "orphanNotes_other": "",
+    "removeUnusedKeysounds": "",
+    "replaceKeysound": ""
   }
 }

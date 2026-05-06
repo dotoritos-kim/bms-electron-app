@@ -56,6 +56,22 @@ jobs:
         continue-on-error: true
         run: npm run type-check
 
+      # i18n parser check: BLOCKING. Verifies that locale JSONs match the
+      # `t('ns:key')` calls in source — any new key without a JSON entry (or
+      # any orphaned entry that needs sorting) fails the build.
+      - name: i18n parser check (locale JSON parity)
+        run: npm run i18n:check
+
+      # ESLint Korean-literal regression check: NON-BLOCKING during the
+      # incremental Tier 1-7 migration. Tier 1-4 components on the
+      # bms-electron-app side still hold ~454 hardcoded literals that the
+      # I18N-EXTRACTION-PLAYBOOK is working through. Flip `continue-on-error`
+      # to false once migration completes so new regressions block PRs.
+      - name: ESLint hardcoded Korean check [non-blocking baseline]
+        id: lint-i18n
+        continue-on-error: true
+        run: npm run lint:i18n
+
       - name: Run unit + integration + compatibility tests
         run: npm run test -- tests/unit tests/integration tests/compatibility
 

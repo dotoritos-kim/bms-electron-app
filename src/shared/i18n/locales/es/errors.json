@@ -1,0 +1,9 @@
+{
+  "bms": {
+    "fileAccessDenied": "",
+    "fileBusy": "",
+    "fileNotFound": "",
+    "fileReadFailed": "",
+    "parseError": ""
+  }
+}

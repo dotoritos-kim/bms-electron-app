@@ -31,6 +31,12 @@ jobs:
           npm run build --workspace=@rhythm-archive/bms-player
           npm run build --workspace=@rhythm-archive/bms-editor
 
+      - name: i18n parser check (fail on missing/added keys)
+        run: npm run i18n:check
+
+      - name: ESLint hardcoded-Korean rule
+        run: npm run lint:i18n
+
       - run: npm run test -- tests/unit tests/integration tests/compatibility
       - run: npm run test:coverage -- tests/unit tests/integration tests/compatibility
 

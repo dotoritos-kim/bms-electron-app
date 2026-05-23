@@ -35,15 +35,21 @@
       "difficultyLabel": "Difficulty",
       "generateButton": "Generate chart",
       "generatedSummary": "{{count}} notes generated",
+      "generatedSummary_one": "{{count}} notes generated",
+      "generatedSummary_other": "{{count}} notes generated",
       "gridSnapToggle": "Grid snap",
       "lnRatioLabel": "LN ratio",
       "minNotesWarning": "At least 4 notes are required",
       "noOnsetsWarning": "No onsets detected. The audio may be too quiet or silent. Lowering the difficulty raises sensitivity.",
       "previewLabel": "Preview ({{count}} notes)",
+      "previewLabel_one": "Preview ({{count}} notes)",
+      "previewLabel_other": "Preview ({{count}} notes)",
       "scratchToggle": "Include scratch",
       "suggestButton": "Suggest pattern",
       "suggestCountLabel": "Notes to generate",
       "suggestExplanation": "Analyse existing notes and propose the next phrase. The current chart contains {{count}} notes.",
+      "suggestExplanation_one": "Analyse existing notes and propose the next phrase. The current chart contains {{count}} notes.",
+      "suggestExplanation_other": "Analyse existing notes and propose the next phrase. The current chart contains {{count}} notes.",
       "tabs": {
         "generate": "Audio → chart",
         "suggest": "Suggest pattern"
@@ -128,6 +134,8 @@
     },
     "patternLibrary": {
       "applyTooltip": "Click to apply at the current position\n{{count}} notes, {{beats}} beats",
+      "applyTooltip_one": "Click to apply at the current position\n{{count}} notes, {{beats}} beats",
+      "applyTooltip_other": "Click to apply at the current position\n{{count}} notes, {{beats}} beats",
       "builtIn": {
         "chord2": "2-note chord",
         "chord3": "3-note chord",
@@ -163,6 +171,8 @@
       "noSearchResults": "No matches",
       "panelTitle": "Pattern Library",
       "patternStats": "{{count}} notes · {{beats}} beats",
+      "patternStats_one": "{{count}} notes · {{beats}} beats",
+      "patternStats_other": "{{count}} notes · {{beats}} beats",
       "saveDialog": {
         "namePlaceholder": "Pattern name",
         "tagsPlaceholder": "Tags (comma-separated)",

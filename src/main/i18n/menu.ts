@@ -37,7 +37,10 @@ type MenuKey =
   | 'menu.resetZoom'
   | 'menu.zoomIn'
   | 'menu.zoomOut'
-  | 'menu.toggleFullScreen';
+  | 'menu.toggleFullScreen'
+  | 'dialog.importKeysound'
+  | 'dialog.newBms'
+  | 'dialog.openAudio';
 
 type MenuDictionary = Record<MenuKey, string>;
 
@@ -64,6 +67,9 @@ const dictionaries: Partial<Record<SupportedLocale, MenuDictionary>> = {
     'menu.zoomIn': '확대',
     'menu.zoomOut': '축소',
     'menu.toggleFullScreen': '전체 화면 토글',
+    'dialog.importKeysound': '키음 파일 가져오기',
+    'dialog.newBms': '새 BMS 파일 만들기',
+    'dialog.openAudio': '오디오 파일 열기',
   },
   en: {
     'menu.file': 'File',
@@ -87,6 +93,9 @@ const dictionaries: Partial<Record<SupportedLocale, MenuDictionary>> = {
     'menu.zoomIn': 'Zoom In',
     'menu.zoomOut': 'Zoom Out',
     'menu.toggleFullScreen': 'Toggle Full Screen',
+    'dialog.importKeysound': 'Import keysound files',
+    'dialog.newBms': 'Create new BMS file',
+    'dialog.openAudio': 'Open audio file',
   },
 };
 

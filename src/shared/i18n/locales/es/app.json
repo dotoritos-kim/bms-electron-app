@@ -27,6 +27,36 @@
     "viewportTooltip": ""
   },
   "dialogs": {
+    "autoChart": {
+      "applyButton": "",
+      "audioLoaded": "",
+      "audioLoading": "",
+      "audioOpenButton": "",
+      "audioSection": "",
+      "difficultyLabel": "",
+      "generateButton": "",
+      "generatedSummary_one": "",
+      "generatedSummary_many": "",
+      "generatedSummary_other": "",
+      "gridSnapToggle": "",
+      "lnRatioLabel": "",
+      "minNotesWarning": "",
+      "noOnsetsWarning": "",
+      "previewLabel_one": "",
+      "previewLabel_many": "",
+      "previewLabel_other": "",
+      "scratchToggle": "",
+      "suggestButton": "",
+      "suggestCountLabel": "",
+      "suggestExplanation_one": "",
+      "suggestExplanation_many": "",
+      "suggestExplanation_other": "",
+      "tabs": {
+        "generate": "",
+        "suggest": ""
+      },
+      "title": ""
+    },
     "bpmTap": {
       "applyButton": "",
       "resetButton": "",
@@ -67,6 +97,34 @@
       "title": "",
       "unmapped": "",
       "waiting": ""
+    },
+    "noteColor": {
+      "applyButton": "",
+      "customBadge": "",
+      "description": "",
+      "resetAllButton": "",
+      "resetTooltip": "",
+      "swatchTooltip": "",
+      "title": ""
+    },
+    "patternLibrary": {
+      "applyTooltip_one": "",
+      "applyTooltip_many": "",
+      "applyTooltip_other": "",
+      "deleteTooltip": "",
+      "empty": "",
+      "noSearchResults": "",
+      "panelTitle": "",
+      "patternStats_one": "",
+      "patternStats_many": "",
+      "patternStats_other": "",
+      "saveDialog": {
+        "namePlaceholder": "",
+        "tagsPlaceholder": "",
+        "title": ""
+      },
+      "saveSelectionButton": "",
+      "searchPlaceholder": ""
     }
   },
   "errors": {

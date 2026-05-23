@@ -65,7 +65,6 @@ export async function setStoredLocale(locale: SupportedLocale): Promise<boolean>
     store.set('locale', locale);
     return true;
   } catch (err) {
-    // eslint-disable-next-line no-console -- main process diagnostic
     console.warn('[localeStore] persist failed:', err);
     return false;
   }
@@ -81,8 +80,13 @@ export async function resolveInitialLocale(): Promise<SupportedLocale> {
   const stored = await getStoredLocale();
   if (stored) return stored;
 
-  const fromOs = normalizeOsLocale(app.getLocale());
-  if (fromOs) return fromOs;
+  try {
+    const fromOs = normalizeOsLocale(app.getLocale());
+    if (fromOs) return fromOs;
+  } catch {
+    // app may be unavailable in unit-test contexts where electron is mocked
+    // without an `app` export. Fall through to the en default.
+  }
 
   return 'en';
 }

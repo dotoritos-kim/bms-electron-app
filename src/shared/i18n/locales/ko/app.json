@@ -35,15 +35,18 @@
       "difficultyLabel": "난이도",
       "generateButton": "차트 생성",
       "generatedSummary": "{{count}}개 노트 생성됨",
+      "generatedSummary_other": "{{count}}개 노트 생성됨",
       "gridSnapToggle": "그리드 스냅",
       "lnRatioLabel": "LN 비율",
       "minNotesWarning": "최소 4개 이상의 노트가 필요합니다",
       "noOnsetsWarning": "감지된 온셋이 없습니다. 오디오 볼륨이 너무 낮거나 무음일 수 있습니다. 난이도를 낮추면 감도가 올라갑니다.",
       "previewLabel": "미리보기 ({{count}}개 노트)",
+      "previewLabel_other": "미리보기 ({{count}}개 노트)",
       "scratchToggle": "스크래치 포함",
       "suggestButton": "패턴 제안 생성",
       "suggestCountLabel": "생성할 노트 수",
       "suggestExplanation": "기존 노트 패턴을 분석하여 다음 마디의 노트를 제안합니다. 현재 차트에 {{count}}개 노트가 있습니다.",
+      "suggestExplanation_other": "기존 노트 패턴을 분석하여 다음 마디의 노트를 제안합니다. 현재 차트에 {{count}}개 노트가 있습니다.",
       "tabs": {
         "generate": "오디오 → 차트 생성",
         "suggest": "패턴 제안"
@@ -128,6 +131,7 @@
     },
     "patternLibrary": {
       "applyTooltip": "클릭하여 현재 위치에 적용\n{{count}}개 노트, {{beats}}비트",
+      "applyTooltip_other": "클릭하여 현재 위치에 적용\n{{count}}개 노트, {{beats}}비트",
       "builtIn": {
         "chord2": "2겹 동시",
         "chord3": "3겹 동시",
@@ -163,6 +167,7 @@
       "noSearchResults": "검색 결과 없음",
       "panelTitle": "패턴 라이브러리",
       "patternStats": "{{count}}노트 · {{beats}}비트",
+      "patternStats_other": "{{count}}노트 · {{beats}}비트",
       "saveDialog": {
         "namePlaceholder": "패턴 이름",
         "tagsPlaceholder": "태그 (쉼표 구분)",

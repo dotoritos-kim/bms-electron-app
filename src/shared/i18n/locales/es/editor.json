@@ -18,6 +18,212 @@
       "title_other": ""
     }
   },
+  "routes": {
+    "editor": {
+      "audioLoading": "",
+      "autoSaveRecovery": {
+        "body": "",
+        "ignore": "",
+        "recover": "",
+        "title": ""
+      },
+      "backConfirm": {
+        "body": "",
+        "cancel": "",
+        "discard": "",
+        "saveAndLeave": "",
+        "title": ""
+      },
+      "bookmarkDialog": {
+        "add": "",
+        "addPrompt": "",
+        "addTitle": "",
+        "cancel": "",
+        "delete": "",
+        "editTitle": "",
+        "measureBookmark": "",
+        "namePlaceholder": "",
+        "renamePrompt": "",
+        "save": ""
+      },
+      "canvas": {
+        "ariaLabel": "",
+        "keysoundIndicator": ""
+      },
+      "clipboardHistory": {
+        "close": "",
+        "currentLabel": "",
+        "hint": "",
+        "noKeysounds": "",
+        "noteCount_one": "",
+        "noteCount_many": "",
+        "noteCount_other": "",
+        "title": ""
+      },
+      "copyErrorTemplate": "",
+      "createGroupPrompt": "",
+      "deleteUnusedConfirm_one": "",
+      "deleteUnusedConfirm_many": "",
+      "deleteUnusedConfirm_other": "",
+      "diff": {
+        "close": "",
+        "title": ""
+      },
+      "error": {
+        "cannotOpenTitle": "",
+        "copyErrorInfo": "",
+        "errorDetail": "",
+        "fileCorrupt": "",
+        "filePath": "",
+        "goHome": "",
+        "openOtherFile": "",
+        "retry": ""
+      },
+      "header": {
+        "aiChartLabel": "",
+        "audioSlicerLabel": "",
+        "deleteMeasureTitle": "",
+        "insertMeasureTitle": "",
+        "keyBindingsLabel": "",
+        "measureLabel": "",
+        "midiSettingsLabel": "",
+        "modifiedIndicator": "",
+        "noteColorLabel": "",
+        "saveBtnSaved": "",
+        "saveBtnUnsaved": "",
+        "saveTitle": "",
+        "settingsLabel": "",
+        "settingsTitle": ""
+      },
+      "inputDialog": {
+        "bpmAdd": "",
+        "bpmEdit": "",
+        "cancel": "",
+        "confirm": "",
+        "stopAdd": "",
+        "stopEdit": "",
+        "stopHint": "",
+        "timeSig": "",
+        "timeSigHint": ""
+      },
+      "keysoundNoNotes": "",
+      "layerPanel": {
+        "hideAria": "",
+        "hideTitle": "",
+        "lockAria": "",
+        "lockTitle": "",
+        "opacityTitle": "",
+        "showAria": "",
+        "showTitle": "",
+        "unlockAria": "",
+        "unlockTitle": ""
+      },
+      "leftPanel": {
+        "keysoundTab": "",
+        "openPanelTitle": "",
+        "patternTab": ""
+      },
+      "measureDialog": {
+        "cancel": "",
+        "currentMeasureLabel": "",
+        "delete": "",
+        "deleteCurrent": "",
+        "deleteTitle": "",
+        "dividerLabel": "",
+        "insert": "",
+        "insertAfter": "",
+        "insertBefore": "",
+        "insertTitle": "",
+        "measurePlaceholder": ""
+      },
+      "minimap": {
+        "closePopout": "",
+        "closePopoutAria": "",
+        "dockToSidebar": "",
+        "dockToSidebarAria": "",
+        "popoutTitle": ""
+      },
+      "navGuardMessage": "",
+      "playback": {
+        "bpmTapTitle": "",
+        "clearLoopTitle": "",
+        "diffTitle": "",
+        "infoPanelTitle": "",
+        "keysoundPanelTitle": "",
+        "loadAudio": "",
+        "minimapTitle": "",
+        "muteTitle": "",
+        "playPauseTitle": "",
+        "playTestTitle": "",
+        "speedPresetTitle": "",
+        "stopTitle": "",
+        "unmuteTitle": "",
+        "volumeTitle": ""
+      },
+      "playTest": {
+        "label": "",
+        "returnToEditor": ""
+      },
+      "replaceKeysound": {
+        "cancel": "",
+        "noteCount_one": "",
+        "noteCount_many": "",
+        "noteCount_other": "",
+        "sourceLabel": "",
+        "targetPrompt": ""
+      },
+      "replaceKeysoundTitle": "",
+      "rightPanel": {
+        "artistLabel": "",
+        "chartInfoSection": "",
+        "layersSection": "",
+        "openPanelTitle": "",
+        "resetLayers": "",
+        "resetLayersTitle": "",
+        "statsSection": "",
+        "timelineSection": "",
+        "titleLabel": ""
+      },
+      "statusBar": {
+        "estimatedDifficulty": "",
+        "midiRealtime": "",
+        "midiStep": ""
+      },
+      "toast": {
+        "highResWarning_one": "",
+        "highResWarning_many": "",
+        "highResWarning_other": "",
+        "keysoundDeleted": "",
+        "keysoundImportFailed": "",
+        "keysoundReplaced_one": "",
+        "keysoundReplaced_many": "",
+        "keysoundReplaced_other": "",
+        "keysoundsImported_one": "",
+        "keysoundsImported_many": "",
+        "keysoundsImported_other": "",
+        "notesGenerated_one": "",
+        "notesGenerated_many": "",
+        "notesGenerated_other": "",
+        "pasteConflicts_one": "",
+        "pasteConflicts_many": "",
+        "pasteConflicts_other": "",
+        "pasteDropped_one": "",
+        "pasteDropped_many": "",
+        "pasteDropped_other": "",
+        "redoAction": "",
+        "saved": "",
+        "savedAs": "",
+        "saveFailed": "",
+        "slicesSaved_one": "",
+        "slicesSaved_many": "",
+        "slicesSaved_other": "",
+        "undefinedWavWarning_one": "",
+        "undefinedWavWarning_many": "",
+        "undefinedWavWarning_other": "",
+        "undoAction": ""
+      }
+    }
+  },
   "store": {
     "orphanNotes_one": "",
     "orphanNotes_many": "",

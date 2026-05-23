@@ -9,7 +9,6 @@ import './global.css';
 // brief window before namespaces land, then re-renders with translations.
 // This keeps E2E dev helpers (__DEV_OPEN_FILE__) reachable from first paint.
 void localeService.init().catch((err: unknown) => {
-  // eslint-disable-next-line no-console -- boot diagnostic
   console.error('[boot] LocaleService.init failed:', err);
 });
 

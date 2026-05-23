@@ -6,6 +6,40 @@
     "paste": "Paste",
     "selectAll": "Select All"
   },
+  "diff": {
+    "ariaLabel": "Diff comparison",
+    "empty": {
+      "after": "File deleted",
+      "before": "No file"
+    },
+    "filter": {
+      "changesOnlyShort": "Changes only",
+      "changesOnlyTooltip": "Show only changes"
+    },
+    "legend": {
+      "added": "Added ({{count}})",
+      "modified": "Modified ({{count}})",
+      "removed": "Removed ({{count}})",
+      "unchangedDimmed": "Unchanged notes are dimmed"
+    },
+    "measureCount": "({{count}} measures)",
+    "measureCount_one": "({{count}} measure)",
+    "nav": {
+      "next": "Next change",
+      "nextTooltip": "Next change (F8)",
+      "prev": "Previous change",
+      "prevTooltip": "Previous change (F7)"
+    },
+    "noChanges": {
+      "detail": "Identical to the original",
+      "title": "No changes"
+    },
+    "sidebar": {
+      "heading": "Change locations",
+      "measureLabel": "Measure {{measure}}"
+    },
+    "viewModeAria": "View mode"
+  },
   "keyBindings": {
     "actions": {
       "addBookmark": "Add bookmark",
@@ -19,11 +53,11 @@
       "escape": "Cancel / deselect",
       "insertMeasure": "Insert measure",
       "mirror": "Mirror",
-      "moveToBgm": "Selected notes → BGM",
-      "moveToPlay": "Selected notes → Playable",
       "moveDown": "Move down",
       "moveLeft": "Move left",
       "moveRight": "Move right",
+      "moveToBgm": "Selected notes → BGM",
+      "moveToPlay": "Selected notes → Playable",
       "moveUp": "Move up",
       "noteSearch": "Note search",
       "paste": "Paste",
@@ -55,14 +89,32 @@
       "edit": "Edit",
       "file": "File",
       "layer": "Layer",
+      "loop": "Loop",
       "measure": "Measure",
       "move": "Move",
       "panel": "Panel",
       "playback": "Playback",
-      "loop": "Loop",
       "search": "Search",
       "tools": "Tools",
       "transform": "Transform"
+    }
+  },
+  "noteChart": {
+    "error": {
+      "webglLost": "WebGL context lost"
+    },
+    "layout": {
+      "horizontalColumns": "Horizontal columns",
+      "verticalSingle": "Vertical single"
+    },
+    "measureProgress": "{{current}}/{{total}} measures",
+    "measureUnit": "measure",
+    "settings": {
+      "clickToSeekHint": "(click to seek to position)",
+      "dragSensitivityHint": "(drag sensitivity)",
+      "lanePerBeatHint": "(lines per beat)",
+      "noteWidthHint": "(note width by scroll speed)",
+      "resetLabel": "(reset)"
     }
   },
   "panels": {
@@ -216,197 +268,220 @@
   "routes": {
     "editor": {
       "audioLoading": "Loading {{loaded}}/{{total}}",
-      "layerPanel": {
-        "hideTitle": "Hide",
-        "showTitle": "Show",
-        "hideAria": "Hide {{layer}}",
-        "showAria": "Show {{layer}}",
-        "lockTitle": "Lock",
-        "unlockTitle": "Unlock",
-        "lockAria": "Lock {{layer}}",
-        "unlockAria": "Unlock {{layer}}",
-        "opacityTitle": "Opacity {{percent}}%",
-        "labels": {
-          "playable": "Playable",
-          "invisible": "Invisible",
-          "landmine": "Landmine",
-          "bgm": "BGM"
-        }
+      "autoSaveRecovery": {
+        "body": "Auto-save data from a previous session was found. Recover it?",
+        "ignore": "Ignore",
+        "recover": "Recover",
+        "title": "Auto-save recovery"
       },
-      "error": {
-        "cannotOpenTitle": "Cannot open file",
-        "fileCorrupt": "The file format may be invalid or the file may be corrupted.",
-        "filePath": "File path:",
-        "errorDetail": "Error detail:",
-        "copyErrorInfo": "Copy error info",
-        "retry": "Retry",
-        "openOtherFile": "Open other file",
-        "goHome": "Go home"
+      "backConfirm": {
+        "body": "You have unsaved changes. Leave without saving?",
+        "cancel": "Cancel",
+        "discard": "Don't save",
+        "saveAndLeave": "Save and leave",
+        "title": "Unsaved changes"
       },
-      "header": {
-        "saveTitle": "Save (Ctrl+S)",
-        "saveBtnUnsaved": "Save (Ctrl+S)",
-        "saveBtnSaved": "Saved",
-        "modifiedIndicator": "Modified",
-        "insertMeasureTitle": "Insert measure (Ctrl+Shift+I)",
-        "deleteMeasureTitle": "Delete measure (Ctrl+Shift+D)",
-        "measureLabel": "measure",
-        "settingsTitle": "Settings menu",
-        "settingsLabel": "Settings",
-        "aiChartLabel": "AI Chart Generator",
-        "audioSlicerLabel": "Audio Slicer",
-        "midiSettingsLabel": "MIDI Settings",
-        "keyBindingsLabel": "Key Bindings",
-        "noteColorLabel": "Note Color Settings"
-      },
-      "leftPanel": {
-        "keysoundTab": "Keysounds",
-        "patternTab": "Patterns",
-        "openPanelTitle": "Open keysound panel"
-      },
-      "playback": {
-        "loadAudio": "Load audio",
-        "playPauseTitle": "Play / Pause (Space)",
-        "stopTitle": "Stop",
-        "clearLoopTitle": "Clear loop (\\)",
-        "speedPresetTitle": "Speed preset",
-        "muteTitle": "Mute",
-        "unmuteTitle": "Unmute",
-        "volumeTitle": "Volume: {{percent}}%",
-        "bpmTapTitle": "BPM tap",
-        "playTestTitle": "Play test (F5)",
-        "keysoundPanelTitle": "Keysound panel",
-        "infoPanelTitle": "Info panel",
-        "minimapTitle": "Minimap",
-        "diffTitle": "Toggle diff view (Ctrl+D)"
+      "bookmarkDialog": {
+        "add": "Add",
+        "addPrompt": "Enter a bookmark name.",
+        "addTitle": "Add bookmark",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "editTitle": "Edit bookmark",
+        "measureBookmark": "Measure #{{measure}} bookmark",
+        "namePlaceholder": "Bookmark name",
+        "renamePrompt": "Change or delete the bookmark name.",
+        "save": "Save"
       },
       "canvas": {
         "ariaLabel": "BMS chart editor",
         "keysoundIndicator": "Keysound: {{id}}{{name}}",
         "silentKeysound": " (silent)"
       },
-      "minimap": {
-        "dockToSidebar": "Dock to sidebar",
-        "dockToSidebarAria": "Dock minimap to sidebar",
-        "closePopout": "Close popout (return to inline)",
-        "closePopoutAria": "Close minimap popout",
-        "popoutTitle": "Detach minimap (draggable)"
+      "clipboardHistory": {
+        "close": "Close",
+        "currentLabel": "current",
+        "hint": "Select an entry to copy those notes to the clipboard.",
+        "noKeysounds": "No keysounds",
+        "noteCount": "{{count}} notes",
+        "noteCount_one": "{{count}} notes",
+        "noteCount_other": "{{count}} notes",
+        "title": "Clipboard History"
       },
-      "rightPanel": {
-        "openPanelTitle": "Open info panel",
-        "timelineSection": "Keysound Timeline",
-        "statsSection": "Stats",
-        "layersSection": "Layers",
-        "resetLayers": "Reset",
-        "resetLayersTitle": "Reset layer config",
-        "chartInfoSection": "Chart Info",
-        "titleLabel": "Title",
-        "artistLabel": "Artist"
+      "copyErrorTemplate": "File: {{path}}\nError: {{error}}",
+      "createGroupPrompt": "Group name:",
+      "deleteUnusedConfirm": "This keysound is used by {{count}} note(s).\nDeleting it will replace those notes with silent (00).\n\nDelete anyway?",
+      "deleteUnusedConfirm_one": "This keysound is used by {{count}} note(s).\nDeleting it will replace those notes with silent (00).\n\nDelete anyway?",
+      "deleteUnusedConfirm_other": "This keysound is used by {{count}} note(s).\nDeleting it will replace those notes with silent (00).\n\nDelete anyway?",
+      "diff": {
+        "close": "Close (Esc)",
+        "title": "Diff View"
       },
-      "statusBar": {
-        "midiStep": "Step",
-        "midiRealtime": "Realtime",
-        "estimatedDifficulty": "Est. difficulty:"
+      "error": {
+        "cannotOpenTitle": "Cannot open file",
+        "copyErrorInfo": "Copy error info",
+        "errorDetail": "Error detail:",
+        "fileCorrupt": "The file format may be invalid or the file may be corrupted.",
+        "filePath": "File path:",
+        "goHome": "Go home",
+        "openOtherFile": "Open other file",
+        "retry": "Retry"
+      },
+      "header": {
+        "aiChartLabel": "AI Chart Generator",
+        "audioSlicerLabel": "Audio Slicer",
+        "deleteMeasureTitle": "Delete measure (Ctrl+Shift+D)",
+        "insertMeasureTitle": "Insert measure (Ctrl+Shift+I)",
+        "keyBindingsLabel": "Key Bindings",
+        "measureLabel": "measure",
+        "midiSettingsLabel": "MIDI Settings",
+        "modifiedIndicator": "Modified",
+        "noteColorLabel": "Note Color Settings",
+        "saveBtnSaved": "Saved",
+        "saveBtnUnsaved": "Save (Ctrl+S)",
+        "saveTitle": "Save (Ctrl+S)",
+        "settingsLabel": "Settings",
+        "settingsTitle": "Settings menu"
       },
       "inputDialog": {
         "bpmAdd": "Add BPM",
         "bpmEdit": "Edit BPM",
+        "cancel": "Cancel",
+        "confirm": "OK",
         "stopAdd": "Add STOP",
         "stopEdit": "Edit STOP",
-        "timeSig": "Measure {{measure}} time signature",
         "stopHint": "192 = 1 beat, enter 0 to delete",
-        "timeSigHint": "1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8",
-        "cancel": "Cancel",
-        "confirm": "OK"
+        "timeSig": "Measure {{measure}} time signature",
+        "timeSigHint": "1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8"
       },
-      "backConfirm": {
-        "title": "Unsaved changes",
-        "body": "You have unsaved changes. Leave without saving?",
-        "cancel": "Cancel",
-        "discard": "Don't save",
-        "saveAndLeave": "Save and leave"
+      "keysoundNoNotes": "No notes use this keysound",
+      "layerPanel": {
+        "hideAria": "Hide {{layer}}",
+        "hideTitle": "Hide",
+        "labels": {
+          "bgm": "BGM",
+          "invisible": "Invisible",
+          "landmine": "Landmine",
+          "playable": "Playable"
+        },
+        "lockAria": "Lock {{layer}}",
+        "lockTitle": "Lock",
+        "opacityTitle": "Opacity {{percent}}%",
+        "showAria": "Show {{layer}}",
+        "showTitle": "Show",
+        "unlockAria": "Unlock {{layer}}",
+        "unlockTitle": "Unlock"
+      },
+      "leftPanel": {
+        "keysoundTab": "Keysounds",
+        "openPanelTitle": "Open keysound panel",
+        "patternTab": "Patterns"
       },
       "measureDialog": {
-        "insertTitle": "Insert measure",
-        "deleteTitle": "Delete measure",
-        "insertBefore": "Insert before measure {{measure}}",
+        "cancel": "Cancel",
         "currentMeasureLabel": "(current measure)",
-        "insertAfter": "Insert after measure {{measure}}",
-        "deleteCurrent": "Delete measure {{measure}}",
-        "dividerLabel": "Manual input",
-        "measurePlaceholder": "Measure number",
-        "cancel": "Cancel",
-        "insert": "Insert",
-        "delete": "Delete"
-      },
-      "autoSaveRecovery": {
-        "title": "Auto-save recovery",
-        "body": "Auto-save data from a previous session was found. Recover it?",
-        "ignore": "Ignore",
-        "recover": "Recover"
-      },
-      "bookmarkDialog": {
-        "editTitle": "Edit bookmark",
-        "addTitle": "Add bookmark",
-        "measureBookmark": "Measure #{{measure}} bookmark",
-        "renamePrompt": "Change or delete the bookmark name.",
-        "addPrompt": "Enter a bookmark name.",
-        "namePlaceholder": "Bookmark name",
         "delete": "Delete",
-        "cancel": "Cancel",
-        "save": "Save",
-        "add": "Add"
+        "deleteCurrent": "Delete measure {{measure}}",
+        "deleteTitle": "Delete measure",
+        "dividerLabel": "Manual input",
+        "insert": "Insert",
+        "insertAfter": "Insert after measure {{measure}}",
+        "insertBefore": "Insert before measure {{measure}}",
+        "insertTitle": "Insert measure",
+        "measurePlaceholder": "Measure number"
       },
-      "clipboardHistory": {
-        "title": "Clipboard History",
-        "hint": "Select an entry to copy those notes to the clipboard.",
-        "noteCount": "{{count}} notes",
-        "currentLabel": "current",
-        "noKeysounds": "No keysounds",
-        "close": "Close"
+      "minimap": {
+        "closePopout": "Close popout (return to inline)",
+        "closePopoutAria": "Close minimap popout",
+        "dockToSidebar": "Dock to sidebar",
+        "dockToSidebarAria": "Dock minimap to sidebar",
+        "popoutTitle": "Detach minimap (draggable)"
+      },
+      "navGuardMessage": "You have unsaved changes. Leave anyway?",
+      "playback": {
+        "bpmTapTitle": "BPM tap",
+        "clearLoopTitle": "Clear loop (\\)",
+        "diffTitle": "Toggle diff view (Ctrl+D)",
+        "infoPanelTitle": "Info panel",
+        "keysoundPanelTitle": "Keysound panel",
+        "loadAudio": "Load audio",
+        "minimapTitle": "Minimap",
+        "muteTitle": "Mute",
+        "playPauseTitle": "Play / Pause (Space)",
+        "playTestTitle": "Play test (F5)",
+        "speedPresetTitle": "Speed preset",
+        "stopTitle": "Stop",
+        "unmuteTitle": "Unmute",
+        "volumeTitle": "Volume: {{percent}}%"
       },
       "playTest": {
         "label": "Play test",
         "returnToEditor": "Return to editor (Esc)"
       },
-      "diff": {
-        "title": "Diff View",
-        "close": "Close (Esc)"
-      },
       "replaceKeysound": {
-        "sourceLabel": "Source:",
+        "cancel": "Cancel",
         "noteCount": "— {{count}} notes",
-        "targetPrompt": "Select target keysound:",
-        "cancel": "Cancel"
+        "noteCount_one": "— {{count}} notes",
+        "noteCount_other": "— {{count}} notes",
+        "sourceLabel": "Source:",
+        "targetPrompt": "Select target keysound:"
       },
-      "keysoundNoNotes": "No notes use this keysound",
-      "deleteUnusedConfirm": "This keysound is used by {{count}} note(s).\nDeleting it will replace those notes with silent (00).\n\nDelete anyway?",
-      "createGroupPrompt": "Group name:",
-      "navGuardMessage": "You have unsaved changes. Leave anyway?",
-      "copyErrorTemplate": "File: {{path}}\nError: {{error}}",
       "replaceKeysoundTitle": "Replace Keysound",
+      "rightPanel": {
+        "artistLabel": "Artist",
+        "chartInfoSection": "Chart Info",
+        "layersSection": "Layers",
+        "openPanelTitle": "Open info panel",
+        "resetLayers": "Reset",
+        "resetLayersTitle": "Reset layer config",
+        "statsSection": "Stats",
+        "timelineSection": "Keysound Timeline",
+        "titleLabel": "Title"
+      },
+      "statusBar": {
+        "estimatedDifficulty": "Est. difficulty:",
+        "midiRealtime": "Realtime",
+        "midiStep": "Step"
+      },
       "toast": {
-        "notesGenerated": "{{count}} notes generated",
-        "slicesSaved": "{{count}} slices saved",
-        "keysoundReplaced": "Replaced keysound {{from}} → {{to}} on {{count}} notes (Ctrl+Z to undo)",
-        "keysoundDeleted": "Keysound {{id}} deleted (Ctrl+Z to undo)",
-        "keysoundsImported": "{{count}} keysounds imported",
-        "keysoundImportFailed": "Keysound import failed",
-        "undefinedWavWarning": "Warning: {{count}} undefined WAV reference(s) ({{ids}})",
         "highResWarning": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
-        "saved": "Saved",
-        "saveFailed": "Save failed: {{message}}",
-        "savedAs": "Saved as",
-        "undoAction": "Undo: {{description}}",
-        "redoAction": "Redo: {{description}}",
+        "highResWarning_one": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
+        "highResWarning_other": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
+        "keysoundDeleted": "Keysound {{id}} deleted (Ctrl+Z to undo)",
+        "keysoundImportFailed": "Keysound import failed",
+        "keysoundReplaced": "Replaced keysound {{from}} → {{to}} on {{count}} notes (Ctrl+Z to undo)",
+        "keysoundReplaced_one": "Replaced keysound {{from}} → {{to}} on {{count}} notes (Ctrl+Z to undo)",
+        "keysoundReplaced_other": "Replaced keysound {{from}} → {{to}} on {{count}} notes (Ctrl+Z to undo)",
+        "keysoundsImported": "{{count}} keysounds imported",
+        "keysoundsImported_one": "{{count}} keysounds imported",
+        "keysoundsImported_other": "{{count}} keysounds imported",
+        "notesGenerated": "{{count}} notes generated",
+        "notesGenerated_one": "{{count}} notes generated",
+        "notesGenerated_other": "{{count}} notes generated",
+        "pasteConflicts": "{{count}} conflicting note(s) replaced",
+        "pasteConflicts_one": "{{count}} conflicting note(s) replaced",
+        "pasteConflicts_other": "{{count}} conflicting note(s) replaced",
         "pasteDropped": "{{count}} note(s) outside key mode range excluded",
-        "pasteConflicts": "{{count}} conflicting note(s) replaced"
+        "pasteDropped_one": "{{count}} note(s) outside key mode range excluded",
+        "pasteDropped_other": "{{count}} note(s) outside key mode range excluded",
+        "redoAction": "Redo: {{description}}",
+        "saved": "Saved",
+        "savedAs": "Saved as",
+        "saveFailed": "Save failed: {{message}}",
+        "slicesSaved": "{{count}} slices saved",
+        "slicesSaved_one": "{{count}} slices saved",
+        "slicesSaved_other": "{{count}} slices saved",
+        "undefinedWavWarning": "Warning: {{count}} undefined WAV reference(s) ({{ids}})",
+        "undefinedWavWarning_one": "Warning: {{count}} undefined WAV reference(s) ({{ids}})",
+        "undefinedWavWarning_other": "Warning: {{count}} undefined WAV reference(s) ({{ids}})",
+        "undoAction": "Undo: {{description}}"
       }
     }
   },
   "store": {
     "orphanNotes": "{{count}} notes on lanes not in {{keyMode}} mode are now hidden. (Data is preserved)",
     "orphanNotes_one": "{{count}} note on a lane not in {{keyMode}} mode is now hidden. (Data is preserved)",
+    "orphanNotes_other": "{{count}} notes on lanes not in {{keyMode}} mode are now hidden. (Data is preserved)",
     "removeUnusedKeysounds": "Remove unused keysounds",
     "replaceKeysound": "Replace keysound"
   },

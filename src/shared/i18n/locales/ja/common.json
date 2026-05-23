@@ -1,7 +1,9 @@
 {
   "actions": {
     "cancel": "",
-    "retry": ""
+    "dismiss": "",
+    "retry": "",
+    "save": ""
   },
   "language": {
     "current": "",

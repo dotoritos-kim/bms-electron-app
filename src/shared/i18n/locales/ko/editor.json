@@ -6,6 +6,39 @@
     "paste": "붙여넣기",
     "selectAll": "모두 선택"
   },
+  "diff": {
+    "ariaLabel": "변경사항 비교",
+    "empty": {
+      "after": "파일 삭제됨",
+      "before": "파일 없음"
+    },
+    "filter": {
+      "changesOnlyShort": "변경만",
+      "changesOnlyTooltip": "변경만 보기"
+    },
+    "legend": {
+      "added": "추가 ({{count}})",
+      "modified": "수정 ({{count}})",
+      "removed": "삭제 ({{count}})",
+      "unchangedDimmed": "미변경 노트 반투명 처리됨"
+    },
+    "measureCount": "({{count}}개 마디)",
+    "nav": {
+      "next": "다음 변경",
+      "nextTooltip": "다음 변경 (F8)",
+      "prev": "이전 변경",
+      "prevTooltip": "이전 변경 (F7)"
+    },
+    "noChanges": {
+      "detail": "원본과 동일합니다",
+      "title": "변경사항 없음"
+    },
+    "sidebar": {
+      "heading": "변경 위치",
+      "measureLabel": "마디 {{measure}}"
+    },
+    "viewModeAria": "보기 모드"
+  },
   "keyBindings": {
     "actions": {
       "addBookmark": "북마크 추가",
@@ -19,11 +52,11 @@
       "escape": "취소/선택 해제",
       "insertMeasure": "마디 삽입",
       "mirror": "미러",
-      "moveToBgm": "선택 노트 → BGM",
-      "moveToPlay": "선택 노트 → 플레이",
       "moveDown": "아래로 이동",
       "moveLeft": "왼쪽 이동",
       "moveRight": "오른쪽 이동",
+      "moveToBgm": "선택 노트 → BGM",
+      "moveToPlay": "선택 노트 → 플레이",
       "moveUp": "위로 이동",
       "noteSearch": "노트 검색",
       "paste": "붙여넣기",
@@ -55,14 +88,32 @@
       "edit": "편집",
       "file": "파일",
       "layer": "레이어",
+      "loop": "루프",
       "measure": "마디",
       "move": "이동",
       "panel": "패널",
       "playback": "재생",
-      "loop": "루프",
       "search": "검색",
       "tools": "도구",
       "transform": "변환"
+    }
+  },
+  "noteChart": {
+    "error": {
+      "webglLost": "WebGL 컨텍스트 손실"
+    },
+    "layout": {
+      "horizontalColumns": "가로 컬럼",
+      "verticalSingle": "세로 1줄"
+    },
+    "measureProgress": "{{current}}/{{total}} 마디",
+    "measureUnit": "마디",
+    "settings": {
+      "clickToSeekHint": "(클릭하여 해당 위치로 이동)",
+      "dragSensitivityHint": "(드래그 민감도)",
+      "lanePerBeatHint": "(비트당 라인)",
+      "noteWidthHint": "(스크롤 속도에 따른 노트 너비)",
+      "resetLabel": "(리셋)"
     }
   },
   "panels": {
@@ -215,196 +266,208 @@
   "routes": {
     "editor": {
       "audioLoading": "로딩 {{loaded}}/{{total}}",
-      "layerPanel": {
-        "hideTitle": "숨기기",
-        "showTitle": "표시",
-        "hideAria": "{{layer}} 숨기기",
-        "showAria": "{{layer}} 표시",
-        "lockTitle": "잠금",
-        "unlockTitle": "잠금 해제",
-        "lockAria": "{{layer}} 잠금",
-        "unlockAria": "{{layer}} 잠금 해제",
-        "opacityTitle": "불투명도 {{percent}}%",
-        "labels": {
-          "playable": "플레이어블",
-          "invisible": "인비저블",
-          "landmine": "지뢰",
-          "bgm": "BGM"
-        }
+      "autoSaveRecovery": {
+        "body": "이전 세션의 자동 저장 데이터가 발견되었습니다. 복구하시겠습니까?",
+        "ignore": "무시",
+        "recover": "복구",
+        "title": "자동 저장 복구"
       },
-      "error": {
-        "cannotOpenTitle": "파일을 열 수 없습니다",
-        "fileCorrupt": "이 파일의 형식이 올바르지 않거나 손상되었을 수 있습니다.",
-        "filePath": "파일 경로:",
-        "errorDetail": "오류 상세:",
-        "copyErrorInfo": "오류 정보 복사",
-        "retry": "다시 시도",
-        "openOtherFile": "다른 파일 열기",
-        "goHome": "홈으로"
+      "backConfirm": {
+        "body": "저장하지 않은 변경사항이 있습니다. 저장하지 않고 나가시겠습니까?",
+        "cancel": "취소",
+        "discard": "저장 안 함",
+        "saveAndLeave": "저장 후 나가기",
+        "title": "저장하지 않은 변경사항"
       },
-      "header": {
-        "saveTitle": "저장 (Ctrl+S)",
-        "saveBtnUnsaved": "저장 (Ctrl+S)",
-        "saveBtnSaved": "저장됨",
-        "modifiedIndicator": "수정 중",
-        "insertMeasureTitle": "마디 삽입 (Ctrl+Shift+I)",
-        "deleteMeasureTitle": "마디 삭제 (Ctrl+Shift+D)",
-        "measureLabel": "마디",
-        "settingsTitle": "설정 메뉴",
-        "settingsLabel": "설정",
-        "aiChartLabel": "AI 차트 생성",
-        "audioSlicerLabel": "오디오 슬라이서",
-        "midiSettingsLabel": "MIDI 설정",
-        "keyBindingsLabel": "키 바인딩 설정",
-        "noteColorLabel": "노트 색상 설정"
-      },
-      "leftPanel": {
-        "keysoundTab": "키음",
-        "patternTab": "패턴",
-        "openPanelTitle": "키음 패널 열기"
-      },
-      "playback": {
-        "loadAudio": "오디오 로드",
-        "playPauseTitle": "재생/일시정지 (Space)",
-        "stopTitle": "정지",
-        "clearLoopTitle": "루프 해제 (\\)",
-        "speedPresetTitle": "재생 속도 프리셋",
-        "muteTitle": "음소거",
-        "unmuteTitle": "음소거 해제",
-        "volumeTitle": "볼륨: {{percent}}%",
-        "bpmTapTitle": "BPM 탭",
-        "playTestTitle": "플레이 테스트 (F5)",
-        "keysoundPanelTitle": "키사운드 패널",
-        "infoPanelTitle": "정보 패널",
-        "minimapTitle": "미니맵",
-        "diffTitle": "변경사항 비교 (Ctrl+D)"
+      "bookmarkDialog": {
+        "add": "추가",
+        "addPrompt": "북마크 이름을 입력하세요.",
+        "addTitle": "북마크 추가",
+        "cancel": "취소",
+        "delete": "삭제",
+        "editTitle": "북마크 편집",
+        "measureBookmark": "마디 #{{measure}} 북마크",
+        "namePlaceholder": "북마크 이름",
+        "renamePrompt": "북마크 이름을 변경하거나 삭제하세요.",
+        "save": "저장"
       },
       "canvas": {
         "ariaLabel": "BMS 차트 편집기",
         "keysoundIndicator": "키음: {{id}}{{name}}",
         "silentKeysound": " (무음)"
       },
-      "minimap": {
-        "dockToSidebar": "사이드바로 되돌리기",
-        "dockToSidebarAria": "미니맵 사이드바로 되돌리기",
-        "closePopout": "팝아웃 닫기 (인라인으로 복귀)",
-        "closePopoutAria": "미니맵 팝아웃 닫기",
-        "popoutTitle": "미니맵 분리 (드래그 가능)"
+      "clipboardHistory": {
+        "close": "닫기",
+        "currentLabel": "현재",
+        "hint": "항목을 선택하면 해당 노트들이 클립보드로 복사됩니다.",
+        "noKeysounds": "키음 없음",
+        "noteCount": "{{count}}개 노트",
+        "noteCount_other": "{{count}}개 노트",
+        "title": "클립보드 히스토리"
       },
-      "rightPanel": {
-        "openPanelTitle": "정보 패널 열기",
-        "timelineSection": "키음 타임라인",
-        "statsSection": "통계",
-        "layersSection": "레이어",
-        "resetLayers": "초기화",
-        "resetLayersTitle": "레이어 설정 초기화",
-        "chartInfoSection": "차트 정보",
-        "titleLabel": "제목",
-        "artistLabel": "아티스트"
+      "copyErrorTemplate": "파일: {{path}}\n오류: {{error}}",
+      "createGroupPrompt": "그룹 이름:",
+      "deleteUnusedConfirm": "이 키음은 {{count}}개 노트에서 사용 중입니다.\n삭제하면 해당 노트의 키음이 무음(00)으로 교체됩니다.\n\n삭제하시겠습니까?",
+      "deleteUnusedConfirm_other": "이 키음은 {{count}}개 노트에서 사용 중입니다.\n삭제하면 해당 노트의 키음이 무음(00)으로 교체됩니다.\n\n삭제하시겠습니까?",
+      "diff": {
+        "close": "닫기 (Esc)",
+        "title": "변경사항 비교"
       },
-      "statusBar": {
-        "midiStep": "스텝",
-        "midiRealtime": "실시간",
-        "estimatedDifficulty": "추정 난이도:"
+      "error": {
+        "cannotOpenTitle": "파일을 열 수 없습니다",
+        "copyErrorInfo": "오류 정보 복사",
+        "errorDetail": "오류 상세:",
+        "fileCorrupt": "이 파일의 형식이 올바르지 않거나 손상되었을 수 있습니다.",
+        "filePath": "파일 경로:",
+        "goHome": "홈으로",
+        "openOtherFile": "다른 파일 열기",
+        "retry": "다시 시도"
+      },
+      "header": {
+        "aiChartLabel": "AI 차트 생성",
+        "audioSlicerLabel": "오디오 슬라이서",
+        "deleteMeasureTitle": "마디 삭제 (Ctrl+Shift+D)",
+        "insertMeasureTitle": "마디 삽입 (Ctrl+Shift+I)",
+        "keyBindingsLabel": "키 바인딩 설정",
+        "measureLabel": "마디",
+        "midiSettingsLabel": "MIDI 설정",
+        "modifiedIndicator": "수정 중",
+        "noteColorLabel": "노트 색상 설정",
+        "saveBtnSaved": "저장됨",
+        "saveBtnUnsaved": "저장 (Ctrl+S)",
+        "saveTitle": "저장 (Ctrl+S)",
+        "settingsLabel": "설정",
+        "settingsTitle": "설정 메뉴"
       },
       "inputDialog": {
         "bpmAdd": "BPM 추가",
         "bpmEdit": "BPM 수정",
+        "cancel": "취소",
+        "confirm": "확인",
         "stopAdd": "STOP 추가",
         "stopEdit": "STOP 수정",
-        "timeSig": "마디 {{measure}} 박자표",
         "stopHint": "192 = 1비트, 0 입력 시 삭제",
-        "timeSigHint": "1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8",
-        "cancel": "취소",
-        "confirm": "확인"
+        "timeSig": "마디 {{measure}} 박자표",
+        "timeSigHint": "1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8"
       },
-      "backConfirm": {
-        "title": "저장하지 않은 변경사항",
-        "body": "저장하지 않은 변경사항이 있습니다. 저장하지 않고 나가시겠습니까?",
-        "cancel": "취소",
-        "discard": "저장 안 함",
-        "saveAndLeave": "저장 후 나가기"
+      "keysoundNoNotes": "이 키음을 사용하는 노트가 없습니다",
+      "layerPanel": {
+        "hideAria": "{{layer}} 숨기기",
+        "hideTitle": "숨기기",
+        "labels": {
+          "bgm": "BGM",
+          "invisible": "인비저블",
+          "landmine": "지뢰",
+          "playable": "플레이어블"
+        },
+        "lockAria": "{{layer}} 잠금",
+        "lockTitle": "잠금",
+        "opacityTitle": "불투명도 {{percent}}%",
+        "showAria": "{{layer}} 표시",
+        "showTitle": "표시",
+        "unlockAria": "{{layer}} 잠금 해제",
+        "unlockTitle": "잠금 해제"
+      },
+      "leftPanel": {
+        "keysoundTab": "키음",
+        "openPanelTitle": "키음 패널 열기",
+        "patternTab": "패턴"
       },
       "measureDialog": {
-        "insertTitle": "마디 삽입",
-        "deleteTitle": "마디 삭제",
-        "insertBefore": "마디 {{measure}} 앞에 삽입",
+        "cancel": "취소",
         "currentMeasureLabel": "(현재 마디)",
-        "insertAfter": "마디 {{measure}} 뒤에 삽입",
-        "deleteCurrent": "마디 {{measure}} 삭제",
-        "dividerLabel": "직접 입력",
-        "measurePlaceholder": "마디 번호",
-        "cancel": "취소",
-        "insert": "삽입",
-        "delete": "삭제"
-      },
-      "autoSaveRecovery": {
-        "title": "자동 저장 복구",
-        "body": "이전 세션의 자동 저장 데이터가 발견되었습니다. 복구하시겠습니까?",
-        "ignore": "무시",
-        "recover": "복구"
-      },
-      "bookmarkDialog": {
-        "editTitle": "북마크 편집",
-        "addTitle": "북마크 추가",
-        "measureBookmark": "마디 #{{measure}} 북마크",
-        "renamePrompt": "북마크 이름을 변경하거나 삭제하세요.",
-        "addPrompt": "북마크 이름을 입력하세요.",
-        "namePlaceholder": "북마크 이름",
         "delete": "삭제",
-        "cancel": "취소",
-        "save": "저장",
-        "add": "추가"
+        "deleteCurrent": "마디 {{measure}} 삭제",
+        "deleteTitle": "마디 삭제",
+        "dividerLabel": "직접 입력",
+        "insert": "삽입",
+        "insertAfter": "마디 {{measure}} 뒤에 삽입",
+        "insertBefore": "마디 {{measure}} 앞에 삽입",
+        "insertTitle": "마디 삽입",
+        "measurePlaceholder": "마디 번호"
       },
-      "clipboardHistory": {
-        "title": "클립보드 히스토리",
-        "hint": "항목을 선택하면 해당 노트들이 클립보드로 복사됩니다.",
-        "noteCount": "{{count}}개 노트",
-        "currentLabel": "현재",
-        "noKeysounds": "키음 없음",
-        "close": "닫기"
+      "minimap": {
+        "closePopout": "팝아웃 닫기 (인라인으로 복귀)",
+        "closePopoutAria": "미니맵 팝아웃 닫기",
+        "dockToSidebar": "사이드바로 되돌리기",
+        "dockToSidebarAria": "미니맵 사이드바로 되돌리기",
+        "popoutTitle": "미니맵 분리 (드래그 가능)"
+      },
+      "navGuardMessage": "저장하지 않은 변경사항이 있습니다. 이동하시겠습니까?",
+      "playback": {
+        "bpmTapTitle": "BPM 탭",
+        "clearLoopTitle": "루프 해제 (\\)",
+        "diffTitle": "변경사항 비교 (Ctrl+D)",
+        "infoPanelTitle": "정보 패널",
+        "keysoundPanelTitle": "키사운드 패널",
+        "loadAudio": "오디오 로드",
+        "minimapTitle": "미니맵",
+        "muteTitle": "음소거",
+        "playPauseTitle": "재생/일시정지 (Space)",
+        "playTestTitle": "플레이 테스트 (F5)",
+        "speedPresetTitle": "재생 속도 프리셋",
+        "stopTitle": "정지",
+        "unmuteTitle": "음소거 해제",
+        "volumeTitle": "볼륨: {{percent}}%"
       },
       "playTest": {
         "label": "플레이 테스트",
         "returnToEditor": "편집으로 돌아가기 (Esc)"
       },
-      "diff": {
-        "title": "변경사항 비교",
-        "close": "닫기 (Esc)"
-      },
       "replaceKeysound": {
-        "sourceLabel": "원본:",
+        "cancel": "취소",
         "noteCount": "— {{count}}개 노트",
-        "targetPrompt": "대상 키음을 선택하세요:",
-        "cancel": "취소"
+        "noteCount_other": "— {{count}}개 노트",
+        "sourceLabel": "원본:",
+        "targetPrompt": "대상 키음을 선택하세요:"
       },
-      "keysoundNoNotes": "이 키음을 사용하는 노트가 없습니다",
-      "deleteUnusedConfirm": "이 키음은 {{count}}개 노트에서 사용 중입니다.\n삭제하면 해당 노트의 키음이 무음(00)으로 교체됩니다.\n\n삭제하시겠습니까?",
-      "createGroupPrompt": "그룹 이름:",
-      "navGuardMessage": "저장하지 않은 변경사항이 있습니다. 이동하시겠습니까?",
-      "copyErrorTemplate": "파일: {{path}}\n오류: {{error}}",
       "replaceKeysoundTitle": "키음 일괄 교체",
+      "rightPanel": {
+        "artistLabel": "아티스트",
+        "chartInfoSection": "차트 정보",
+        "layersSection": "레이어",
+        "openPanelTitle": "정보 패널 열기",
+        "resetLayers": "초기화",
+        "resetLayersTitle": "레이어 설정 초기화",
+        "statsSection": "통계",
+        "timelineSection": "키음 타임라인",
+        "titleLabel": "제목"
+      },
+      "statusBar": {
+        "estimatedDifficulty": "추정 난이도:",
+        "midiRealtime": "실시간",
+        "midiStep": "스텝"
+      },
       "toast": {
-        "notesGenerated": "{{count}}개 노트 생성 완료",
-        "slicesSaved": "{{count}}개 슬라이스 저장 완료",
-        "keysoundReplaced": "{{count}}개 노트의 키음을 {{from}} → {{to}}로 교체 (Ctrl+Z로 복원 가능)",
-        "keysoundDeleted": "키음 {{id}} 삭제됨 (Ctrl+Z로 복원 가능)",
-        "keysoundsImported": "{{count}}개 키음 가져오기 완료",
-        "keysoundImportFailed": "키음 가져오기 실패",
-        "undefinedWavWarning": "경고: {{count}}개 미정의 WAV 참조 ({{ids}})",
         "highResWarning": "{{count}}개 노트가 표준 해상도(192) 범위 밖 — 일부 플레이어에서 호환 문제 가능",
-        "saved": "저장 완료",
-        "saveFailed": "저장 실패: {{message}}",
-        "savedAs": "다른 이름으로 저장 완료",
-        "undoAction": "실행 취소: {{description}}",
-        "redoAction": "다시 실행: {{description}}",
+        "highResWarning_other": "{{count}}개 노트가 표준 해상도(192) 범위 밖 — 일부 플레이어에서 호환 문제 가능",
+        "keysoundDeleted": "키음 {{id}} 삭제됨 (Ctrl+Z로 복원 가능)",
+        "keysoundImportFailed": "키음 가져오기 실패",
+        "keysoundReplaced": "{{count}}개 노트의 키음을 {{from}} → {{to}}로 교체 (Ctrl+Z로 복원 가능)",
+        "keysoundReplaced_other": "{{count}}개 노트의 키음을 {{from}} → {{to}}로 교체 (Ctrl+Z로 복원 가능)",
+        "keysoundsImported": "{{count}}개 키음 가져오기 완료",
+        "keysoundsImported_other": "{{count}}개 키음 가져오기 완료",
+        "notesGenerated": "{{count}}개 노트 생성 완료",
+        "notesGenerated_other": "{{count}}개 노트 생성 완료",
+        "pasteConflicts": "{{count}}개 중복 노트 교체됨",
+        "pasteConflicts_other": "{{count}}개 중복 노트 교체됨",
         "pasteDropped": "{{count}}개 노트가 현재 키 모드 범위 밖이라 제외됨",
-        "pasteConflicts": "{{count}}개 중복 노트 교체됨"
+        "pasteDropped_other": "{{count}}개 노트가 현재 키 모드 범위 밖이라 제외됨",
+        "redoAction": "다시 실행: {{description}}",
+        "saved": "저장 완료",
+        "savedAs": "다른 이름으로 저장 완료",
+        "saveFailed": "저장 실패: {{message}}",
+        "slicesSaved": "{{count}}개 슬라이스 저장 완료",
+        "slicesSaved_other": "{{count}}개 슬라이스 저장 완료",
+        "undefinedWavWarning": "경고: {{count}}개 미정의 WAV 참조 ({{ids}})",
+        "undefinedWavWarning_other": "경고: {{count}}개 미정의 WAV 참조 ({{ids}})",
+        "undoAction": "실행 취소: {{description}}"
       }
     }
   },
   "store": {
     "orphanNotes": "{{keyMode}} 모드에 없는 레인의 노트 {{count}}개가 숨겨졌습니다. (데이터는 보존됨)",
+    "orphanNotes_other": "{{keyMode}} 모드에 없는 레인의 노트 {{count}}개가 숨겨졌습니다. (데이터는 보존됨)",
     "removeUnusedKeysounds": "미사용 키음 삭제",
     "replaceKeysound": "키음 일괄 교체"
   },

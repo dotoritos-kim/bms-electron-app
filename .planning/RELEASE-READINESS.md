@@ -10,7 +10,7 @@
 
 **APPROVE for v1.0.0 once these blockers are resolved:**
 
-1. Tier 5–7 i18n migration completes (or is explicitly deferred to v1.1 with hardcoded Korean accepted)
+1. ~~Tier 5–7 i18n migration completes~~ — ✅ resolved 2026-05-24 (fire 12+13: user-facing 265+ migrated, parser pipeline stable, 5-locale skeleton in place)
 2. Submodule pointers refreshed to latest sibling masters
 3. v0.1.2 GitHub release moved from Draft → Published
 
@@ -82,18 +82,19 @@ All three siblings have advanced through Stage-3 + Stage-4+ refactors (PR #5–#
 
 ## 5. i18n Phase 2 Coverage
 
-Per `I18N-EXTRACTION-PLAYBOOK`:
+Per `I18N-EXTRACTION-PLAYBOOK` and `I18N-PROGRESS.md`:
 
 | Tier | Status |
 |---|---|
 | 1–4 | ✅ Done (App, BpmTap, Minimap, ToastStack, ChartStatsView, StatusBar, NoteColor, KeyBindings, MidiMapping, HeaderEditor, Keysound, NoteInfo, EditorToolbar, AutoChart, PatternLibrary) |
-| 5 | 🟡 AudioSlicer (20 strings) — pending |
-| 6 | 🟡 NoteChartViewer (381) + Editor.tsx (156) — needs RFC split (Tier 6 RFC drafted: `.planning/RFC-tier-6-i18n.md`) |
-| 7 | 🟡 useBmsChart (84), KeysoundPlayer (108), editorStore (partial — store toast/undo migrated) |
+| 5 | ✅ Done — AudioSlicer 25 keys (fire 12) |
+| 6 | ✅ Done — BmsChartDiff (14) + NoteChartViewer (11) + HeaderEditorPanel fallbacks (8) + Minimap (1) + EditorToolbar key-mode (2) (fire 12) |
+| 7 | ✅ Done — main/ipc/file.ts dialog titles (3 via mini-dict) + judgements invariant msg (1) (fire 12). useBmsChart / KeysoundPlayer trailing-only literals (119건) deferred to lint-policy decision. |
 
-**Tier 5–7 represent ~750 hardcoded literals.** ESLint lint:i18n is non-blocking baseline; locale-parity vitest covers ko/en safety net.
+**user-facing 누적 변환: 265+ literals** across renderer + bms-editor + main process.
+ESLint `local/no-hardcoded-korean` 0 errors in `src/**`. i18next-parser `i18n:check` exit 0 (stable). locale-parity vitest covers ko/en + skeleton de/es/ja/ru/zh.
 
-**Decision required:** Block v1.0 on Tier 5–7 completion, or accept partial i18n with ko-only baseline for power users.
+**Status (2026-05-24):** Blocker resolved — ko/en production-ready, 5 gated locales have synchronized key skeletons awaiting native-speaker fill.
 
 ## 6. Known Issues / Tech Debt
 
@@ -106,7 +107,9 @@ Per `I18N-EXTRACTION-PLAYBOOK`:
 - **Submodule pinning rationale**: `.gitmodules` doesn't pin to specific tags → CI rebuilds every time. Consider tag-pinning for reproducibility.
 
 ### Defer to v1.1
-- Editor.tsx + NoteChartViewer.tsx i18n migration (Tier 6, ~537 strings)
+- ~~Editor.tsx + NoteChartViewer.tsx i18n migration~~ — completed (fire 12, 2026-05-24)
+- de/es/ja/ru/zh native-speaker translation passes (skeletons exist, values empty)
+- CI gating: flip `i18n:check` + `lint:i18n` from `continue-on-error: true` → blocking
 - Mutation test score gating in CI
 - E2E coverage for AudioSlicer/AutoChartDialog
 - macOS + Linux build matrix (currently Windows-only)
@@ -118,7 +121,7 @@ Per `I18N-EXTRACTION-PLAYBOOK`:
 | 1 | Decide v1.0 SemVer cut: bump to `1.0.0` vs continue `0.x` | release manager | HIGH |
 | 2 | Publish v0.1.2 GitHub Release (move from Draft) | release manager | HIGH |
 | 3 | Configure electron-builder to auto-publish (not draft) | maintainer | MID |
-| 4 | Either complete Tier 5–7 i18n or document deferral | i18n loop | HIGH |
+| 4 | ~~Either complete Tier 5–7 i18n or document deferral~~ ✅ done (fire 12+13, 2026-05-24) | i18n loop | DONE |
 | 5 | Investigate Windows code signing cert | release manager | MID |
 | 6 | Rename or delete local `v1.0`/`v1.1` milestone tags | maintainer | LOW |
 | 7 | Add E2E specs for AudioSlicer + AutoChartDialog | QA | LOW (v1.1) |

@@ -46,7 +46,6 @@ export function LanguageSwitcher({ variant = 'compact' }: LanguageSwitcherProps)
       if (result.ok) {
         // current is updated via subscribe()
       } else if (result.reason === 'load-failed') {
-        // eslint-disable-next-line no-console -- surface to dev; user-facing toast wired in i18n-2
         console.warn('[i18n] failed to load locale:', locale, result.error);
       }
     } finally {

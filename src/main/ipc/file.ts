@@ -3,6 +3,8 @@ import { readFile, writeFile, readdir, stat, copyFile, rename, unlink } from 'fs
 import { join, extname, basename, dirname } from 'path';
 import { handle } from './handle';
 import type { BmsFileInfo } from '../../shared/ipc-contract';
+import { t as tMenu } from '../i18n/menu';
+import { resolveInitialLocale } from '../store/localeStore';
 
 const BMS_EXTENSIONS = new Set(['.bms', '.bme', '.bml', '.pms', '.bmson']);
 
@@ -148,8 +150,9 @@ export function registerFileIpc(): void {
     if (!win) { dialogOpen = false; return []; }
 
     try {
+      const locale = await resolveInitialLocale();
       const result = await dialog.showOpenDialog(win, {
-        title: '키음 파일 가져오기', // eslint-disable-line local/no-hardcoded-korean
+        title: tMenu(locale, 'dialog.importKeysound'),
         filters: [
           { name: 'Audio Files', extensions: ['wav', 'ogg', 'mp3', 'flac'] },
           { name: 'All Files', extensions: ['*'] },
@@ -224,8 +227,9 @@ export function registerFileIpc(): void {
       if (!win) { dialogOpen = false; return null; }
 
       try {
+        const locale = await resolveInitialLocale();
         const result = await dialog.showSaveDialog(win, {
-          title: '새 BMS 파일 만들기', // eslint-disable-line local/no-hardcoded-korean
+          title: tMenu(locale, 'dialog.newBms'),
           defaultPath: `${opts.title || 'untitled'}.bms`,
           filters: [
             { name: 'BMS Files', extensions: ['bms', 'bme', 'bml'] },
@@ -282,8 +286,9 @@ export function registerFileIpc(): void {
     if (!win) { dialogOpen = false; return null; }
 
     try {
+      const locale = await resolveInitialLocale();
       const result = await dialog.showOpenDialog(win, {
-        title: '오디오 파일 열기', // eslint-disable-line local/no-hardcoded-korean
+        title: tMenu(locale, 'dialog.openAudio'),
         filters: [
           { name: 'Audio Files', extensions: ['wav', 'mp3', 'ogg', 'flac', 'm4a'] },
           { name: 'All Files', extensions: ['*'] },

@@ -40,7 +40,12 @@ module.exports = {
   input: ['src/{renderer,shared}/**/*.{ts,tsx}'],
   sort: true,
   verbose: false,
-  failOnWarnings: true,
+  // `failOnWarnings` is intentionally false: several call sites resolve keys
+  // dynamically (`t(`${ns}:fields.${key}.label`)`) and the parser cannot
+  // statically extract those — they would always trip the gate while the keys
+  // themselves are present in locale JSONs. CI relies on `--fail-on-update`
+  // (set by the `i18n:check` script) to catch genuine missing keys.
+  failOnWarnings: false,
   failOnUpdate: false, // overridden by `i18n:check` script
   customValueTemplate: null,
   // `resetDefaultValueLocale: 'ko'`는 의도적으로 제거: 매 extract마다 큐레이션된

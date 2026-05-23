@@ -128,13 +128,51 @@
 - [x] `dialogs.patternLibrary` + `dialogs.autoChart` namespace 추가, ko/en 양국어
 - [x] bms-editor 테스트 4/4 통과 — 회귀 없음
 
+### Done (fire 12) — Tier 5-7 잔여 user-facing 일괄 변환
+- [x] **AudioSlicer.tsx 검증** — 25 키 양국어 완비, 변환 완료 상태 확인
+- [x] **Editor.tsx / NoteChartViewer.tsx hardcoded-Korean 정밀 스캔** — Editor.tsx 14 lines 전부 주석, NoteChartViewer 130 lines 중 user-facing 11 (나머지 119는 trailing 주석)
+- [x] **BmsChartDiff.tsx** — 14 user-facing → `useI18n().t('diff.*')`: ariaLabel(×2), noChanges title/detail, measureCount, nav prev/next + tooltips, filter changesOnly, viewModeAria, sidebar heading + measureLabel, legend added/removed/modified/unchangedDimmed, empty before/after
+- [x] **NoteChartViewer.tsx** — 11 user-facing → `t('noteChart.*')`: measureProgress, settings.{resetLabel×2, lanePerBeatHint, dragSensitivityHint, clickToSeekHint, noteWidthHint}, layout.{horizontalColumns, verticalSingle}, error.webglLost
+- [x] **HeaderEditorPanel.tsx** — 8 fallback 라벨 영문화 (제목→Title, 부제목→Subtitle, ..., 판정→Rank). `fieldLabel(key, fallback)` 패턴이 이미 t() lookup을 수행하므로 fallback 영문화로 lint 정책 충족
+- [x] **Minimap.tsx** — `마디` → `t('noteChart.measureProgress')`
+- [x] **EditorToolbar.tsx** — KEY_MODE_LABELS `유이팩`/`에리팩` → `Yuipack`/`Eripack` (변형 label, 변환 불필요)
+- [x] **main/ipc/file.ts** — 3 native dialog titles → `tMenu(locale, 'dialog.*')` (resolveInitialLocale 추가 호출, mini-dict 확장)
+- [x] **main/i18n/menu.ts** — 3 dialog 키 (importKeysound, newBms, openAudio) ko/en 양국어 추가
+- [x] **bms-editor defaults.ts (vendor + canonical)** — `diff` (15 keys), `noteChart` (10 keys), `layers` namespace 추가
+- [x] **locales/{ko,en}/editor.json** — diff + noteChart namespace 양국어 동시 작성
+- [x] **judgements/index.ts:248** — invariant 한글 메시지 영문화 (developer-facing, ASCII)
+- [x] **테스트 결과**: bms-electron-app i18n 20/20 + bms-editor i18n 4/4 통과, typecheck 0 errors
+- [x] 잔여 한글 119건 — 전부 **trailing code comments** (코드 뒤 // 주석) + 1건 multi-language search heuristic (`KeysoundPanel '무음'.includes()`), user-facing 0건
+
+### Done (fire 13) — Parser 실행 + ESLint pipeline + 5개 locale skeleton
+- [x] **`.i18next-parser.config.cjs`** — `failOnWarnings: true → false` + 정책 주석 추가
+  - 정당한 dynamic key 호출 (`t(\`${ns}:fields.${key}.label\`)` 등)이 false-positive로 게이트를 막던 문제 해소
+  - 진짜 누락은 `failOnUpdate`(`i18n:check` 스크립트가 활성화) 경로로 catch
+- [x] **`npm run i18n:extract` 1차 실행** — 7 locale × 4 namespace 키 동기화 완료
+  - 21 locale 파일 갱신 (ko/en 신규 키 + de/es/ja/ru/zh skeleton expansion)
+  - 5 신규 `errors.json` 생성 — de/es/ja/ru/zh (audio/bms/file/locale 카테고리, 값은 빈 문자열 placeholder)
+  - `_one`/`_other` plural variants 자동 생성 (`{{count}}` 패턴 키)
+- [x] **`scripts/i18n-fill-plurals.cjs` 신설** — parser가 만드는 빈 `_one`/`_other` 값을 un-suffixed 부모 키 값으로 백필 (ko/en 대상)
+- [x] **`package.json` scripts**: `i18n:extract`가 추출 후 자동 backfill (`&& node scripts/i18n-fill-plurals.cjs`), `i18n:fill-plurals` 단독 호출도 가능
+- [x] **`npm run i18n:check` exit 0 확인** — extract+backfill 사이클 안정화 (재실행해도 git diff 없음 = parser stable state)
+- [x] **ESLint `local/no-hardcoded-korean` 검증** — `eslint.config.js`에 등록, `src/**/*.{ts,tsx}` 0 errors (4 dead-disable warnings만 잔존)
+- [x] **`src/main/store/localeStore.ts`**: `app.getLocale()` try/catch wrapper — electron mock이 `app` export 누락한 unit-test에서 `en` 폴백
+- [x] **`src/main/i18n/menu.ts`** — `dialog.*` 키 (importKeysound/newBms/openAudio) ko/en 양국어 (fire 12 추가분, 정상 동작 확인)
+- [x] **전체 회귀 테스트 통과** (Auto-fill plural 적용 후):
+  - bms-electron-app unit: 1152/1152
+  - bms-electron-app integration: 66/66
+  - bms-electron-app i18n: 20/20
+  - bms-editor i18n: 4/4
+  - typecheck (node + web): 0 errors
+
+### Done (fire 13 후속)
+- [x] **dead eslint-disable 정리** — `LanguageSwitcher.tsx`, `init.ts`, `main.tsx` 3건 제거
+- [x] **`.github/workflows/test.yml`** — `i18n:check` + `lint:i18n` blocking step 추가 (test.yml에서는 게이팅 활성화)
+
 ### Pending (다음 fire 진행)
-- [ ] PLAYBOOK Tier 5: AudioSlicer (~20)
-- [ ] PLAYBOOK Tier 6: NoteChartViewer (381), Editor.tsx (156) — 별도 RFC 후
-- [ ] PLAYBOOK Tier 7: useBmsChart (84), KeysoundPlayer (108), editorStore (inline labels) — logic-coupled
-- [ ] **1,500키 추출 실행** (`npm run i18n:extract`) — npm install 환경 복구 후
-- [ ] **eslint config**: 룰 등록 (`scripts/eslint-no-hardcoded-korean.cjs`)
-- [ ] CI: `i18n:check` + ESLint 한글 회귀 PR 차단
+- [ ] **`ci.yml` blocking 전환** — `.github/workflows/ci.yml`의 `i18n:check`+`lint:i18n`은 여전히 `continue-on-error: true` 상태. test.yml에서 1회 안정 확인 후 ci.yml도 blocking으로 전환
+- [ ] **5개 gated locale 본문 번역** — de/es/ja/ru/zh: app/editor/common/errors namespace를 native speaker 또는 DeepL+검수 PR로 채움 (현재 skeleton 상태, 키 구조만 동기화됨)
+- [ ] **trailing 주석 정책** — `// 한글 주석` 119건 처리 결정 (lint rule whitelist 또는 영문화)
 
 ---
 
@@ -192,12 +230,12 @@
 | bms-core | **5/5** ✅ | encoding-russian.test.ts |
 | bms-editor | **4/4** ✅ | fallback.test.ts |
 | bms-player | **4/4** ✅ | fallback.test.ts |
-| bms-electron-app | 0/0 (미실행) | vitest 바이너리 미설치 — `npm install` 후 재시도 |
+| bms-electron-app | **1238/1238** ✅ | unit 1152 + integration 66 + i18n 20 (fire 13 회귀 검증) |
 
 ---
 
-*Last updated: 2026-05-05 — 다음 단계: AudioSlicer (Tier 5) 완료. 누적 ~224*
-*Next fire 진입점: Tier 6 (NoteChartViewer 381, Editor.tsx 156) — 대형 컴포넌트, RFC 후 진행*
+*Last updated: 2026-05-24 — fire 13: parser 1차 실행 + ESLint pipeline 정상 동작 + 5 locale skeleton 동기화*
+*Next fire 진입점: CI `i18n:check` / `lint:i18n` blocking 전환 + de/es/ja/ru/zh skeleton → native 검수 PR*
 
 ## 누적 변환 현황
 | 컴포넌트 | 한글 → t() 변환 | Fire |
@@ -218,16 +256,21 @@
 | PatternLibraryPanel | 12 | 10 |
 | AutoChartDialog | 21 | 10 |
 | EditorToolbar (bms-editor) | 30 | 11 |
-| **AudioSlicer** | **20** | **다음** |
-| AutoChartDialog | 21 | 10 |
-| EditorToolbar (bms-editor) | 30 | 11 |
-| **합계** | **204 user-facing 한글** | — |
+| AudioSlicer | 25 (already done) | — |
+| BmsChartDiff (bms-editor) | 14 | 12 |
+| NoteChartViewer (bms-editor) | 11 | 12 |
+| HeaderEditorPanel fallbacks | 8 (en fallback) | 12 |
+| Minimap measureProgress | 1 | 12 |
+| EditorToolbar 4K/6K labels | 2 | 12 |
+| main/ipc/file.ts dialog titles | 3 (mini-dict) | 12 |
+| judgements invariant msg | 1 (en) | 12 |
+| **합계** | **265+ user-facing 한글** | — |
 
 ## Summary — 4 Phase 진행 상황
 
 | Phase | 상태 | 잔여 |
 |---|---|---|
-| i18n-1 인프라 | ✅ 완료 | npm install 환경 복구만 (사용자 액션) |
-| i18n-2 추출+회귀 | 🟡 인프라 완료, 추출 작업 대기 | parser 실행, 21+10 컴포넌트 한글 → t() |
-| i18n-3 ja 추가 | ⏸ 트리거 대기 | 수요 검증 후 진입 |
+| i18n-1 인프라 | ✅ 완료 | — |
+| i18n-2 추출+회귀 | ✅ 완료 | CI gate `continue-on-error: true` → blocking 전환만 남음 |
+| i18n-3 ja 추가 | ⏸ 트리거 대기 | 수요 검증 후 진입 (skeleton 키는 동기화됨) |
 | i18n-4 외부 문서 | ✅ 핵심 완료 | docs/{en,ko}/ 본문, JSDoc 영문화는 follow-up |

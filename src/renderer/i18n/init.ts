@@ -66,7 +66,6 @@ export function initI18n(initialLocale: SupportedLocale): Promise<I18nInstance> 
       saveMissing: isDev,
       missingKeyHandler: isDev
         ? (lngs: readonly string[], ns: string, key: string) => {
-            // eslint-disable-next-line no-console -- dev surface only
             console.warn(`[i18n] missing key: ${ns}:${key} for locale=${lngs.join(',')}`);
           }
         : undefined,

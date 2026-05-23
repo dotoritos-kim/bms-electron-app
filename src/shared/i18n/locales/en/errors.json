@@ -1,20 +1,20 @@
 {
+  "audio": {
+    "decodeFailed": "Failed to decode audio: {{name}}",
+    "loadFailed": "Failed to load audio: {{name}}"
+  },
   "bms": {
-    "fileNotFound": "File not found. It may have been moved or deleted.",
     "fileAccessDenied": "Cannot access file. Please check permissions.",
     "fileBusy": "File is in use by another program.",
+    "fileNotFound": "File not found. It may have been moved or deleted.",
     "fileReadFailed": "Failed to read file.",
     "parseError": "An error occurred while parsing the BMS file."
   },
   "file": {
-    "readFailed": "Failed to read file: {{path}}",
-    "saveFailed": "Failed to save file: {{path}}",
+    "decodeFailed": "Could not detect file encoding",
     "notFound": "File not found: {{path}}",
-    "decodeFailed": "Could not detect file encoding"
-  },
-  "audio": {
-    "loadFailed": "Failed to load audio: {{name}}",
-    "decodeFailed": "Failed to decode audio: {{name}}"
+    "readFailed": "Failed to read file: {{path}}",
+    "saveFailed": "Failed to save file: {{path}}"
   },
   "locale": {
     "namespaceLoadFailed": "Failed to load translations",

@@ -169,10 +169,10 @@
 - [x] **dead eslint-disable 정리** — `LanguageSwitcher.tsx`, `init.ts`, `main.tsx` 3건 제거
 - [x] **`.github/workflows/test.yml`** — `i18n:check` + `lint:i18n` blocking step 추가 (test.yml에서는 게이팅 활성화)
 
-### Pending (다음 fire 진행)
-- [ ] **`ci.yml` blocking 전환** — `.github/workflows/ci.yml`의 `i18n:check`+`lint:i18n`은 여전히 `continue-on-error: true` 상태. test.yml에서 1회 안정 확인 후 ci.yml도 blocking으로 전환
-- [ ] **5개 gated locale 본문 번역** — de/es/ja/ru/zh: app/editor/common/errors namespace를 native speaker 또는 DeepL+검수 PR로 채움 (현재 skeleton 상태, 키 구조만 동기화됨)
-- [ ] **trailing 주석 정책** — `// 한글 주석` 119건 처리 결정 (lint rule whitelist 또는 영문화)
+### Done (fire 16-18)
+- [x] **`ci.yml` lint:i18n blocking 전환** — fire 16 완료 (Tier 1-7 완료, 0 user-facing literals)
+- [x] **7개 locale 본문 번역** — ja fire 14, de/es/ru/zh fire 17 완료
+- [x] **trailing 주석 정책 결정** — fire 18: `// 한글 주석` 119건은 ESLint rule이 `Literal`/`JSXText`만 방문 (Comment node 제외), `lint:i18n` 이미 exit 0. 별도 처리 불필요 — 정책: 코드 내부 주석은 한국어 허용
 
 ---
 
@@ -280,8 +280,8 @@
 
 ---
 
-*Last updated: 2026-05-29 — fire 17: de/es/ru/zh 4개 gated locale 초안 번역 완료*
-*Next fire 진입점: de/es/ru/zh 네이티브 검수 PR + ENABLED_LOCALES 활성화 (각 locale 검수 완료 시)*
+*Last updated: 2026-05-29 — fire 18: trailing 주석 정책 확정 (ESLint comment 제외 확인, 별도 처리 불필요)*
+*Next fire 진입점: 네이티브 검수 완료 후 ENABLED_LOCALES에 de/es/ru/zh 추가 (외부 작업 대기 중)*
 
 ## 누적 변환 현황
 | 컴포넌트 | 한글 → t() 변환 | Fire |

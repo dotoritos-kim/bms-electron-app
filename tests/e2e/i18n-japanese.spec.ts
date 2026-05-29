@@ -37,20 +37,28 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow();
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(500);
-    // Use the __DEV_SET_LOCALE__ helper (exposed by App.tsx) to call
-    // localeService.change('ja') in the renderer. This is the correct path:
-    // window.api.locale.set() only persists to main process, it does NOT
-    // load i18next namespaces or update LocaleService.current.
-    await window.evaluate(() =>
-      (window as unknown as { __DEV_SET_LOCALE__(l: string): Promise<unknown> })
+    // Wait for App.tsx useEffect to expose __DEV_SET_LOCALE__ on window.
+    // NOTE: second arg to waitForFunction is passed as the fn argument,
+    //       third arg is options — use undefined as explicit arg placeholder.
+    await window.waitForFunction(
+      () => typeof (window as unknown as Record<string, unknown>).__DEV_SET_LOCALE__ === 'function',
+      undefined,
+      { timeout: 5000 }
+    );
+    // localeService.change('ja') via __DEV_SET_LOCALE__ (which awaits waitReady()
+    // internally so i18next is always initialized before the locale switches).
+    const result = await window.evaluate(async () =>
+      (window as unknown as { __DEV_SET_LOCALE__(l: string): Promise<{ ok: boolean }> })
         .__DEV_SET_LOCALE__('ja')
     );
-    // Wait until the LanguageSwitcher compact button actually shows 'JA',
-    // confirming i18next loaded ja namespaces and React re-rendered.
+    if (!result || !(result as { ok?: boolean }).ok) {
+      throw new Error(`__DEV_SET_LOCALE__('ja') failed: ${JSON.stringify(result)}`);
+    }
+    // Wait until LanguageSwitcher compact button shows 'JA'.
     await window.waitForFunction(
       () => Array.from(document.querySelectorAll('button'))
         .some((b) => (b.textContent ?? '').includes('JA')),
+      undefined,
       { timeout: 10000 }
     );
     await use(window);

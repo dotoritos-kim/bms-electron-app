@@ -45,8 +45,13 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
       (window as unknown as { api: { locale: { set(l: string): Promise<void> } } })
         .api.locale.set('ja')
     );
-    // Wait for i18next to load ja namespaces and React to re-render
-    await window.waitForTimeout(2000);
+    // Wait until the LanguageSwitcher compact button actually shows 'JA',
+    // confirming i18next loaded ja namespaces and React re-rendered.
+    await window.waitForFunction(
+      () => Array.from(document.querySelectorAll('button'))
+        .some((b) => (b.textContent ?? '').includes('JA')),
+      { timeout: 8000 }
+    );
     await use(window);
   },
 });

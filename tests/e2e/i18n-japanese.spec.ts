@@ -36,32 +36,23 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow();
     await window.waitForLoadState('domcontentloaded');
-    await window.waitForTimeout(3000); // allow LocaleService.init() + React re-render
+    await window.waitForTimeout(1000); // allow React to mount and useEffect to run
 
-    // Diagnostic: collect current state so CI logs are useful when tests fail.
-    const diag = await window.evaluate(() => {
-      const w = window as unknown as Record<string, unknown>;
-      const getLocale = w.__DEV_GET_LOCALE__ as (() => string) | undefined;
-      const currentLocale = getLocale ? getLocale() : 'HELPER_NOT_FOUND';
-      const btnTexts = Array.from(document.querySelectorAll('button'))
-        .map((b) => (b.textContent ?? '').trim()).filter(Boolean);
-      const hasJA = btnTexts.some((t) => t.includes('JA'));
-      return { currentLocale, btnTexts: btnTexts.slice(0, 10), hasJA };
+    // Session restoration from a prior test run may leave the app on an editor
+    // error screen (editor + invalid file path). Navigate home unconditionally.
+    await window.evaluate(() => {
+      const w = window as unknown as { __DEV_NAVIGATE__?: (r: string) => void };
+      w.__DEV_NAVIGATE__?.('home');
     });
-    console.log('[ja-fixture] locale:', diag.currentLocale, '| hasJA:', diag.hasJA,
-      '| buttons:', JSON.stringify(diag.btnTexts));
 
-    if (!diag.hasJA) {
-      // Fallback: try to force ja via __DEV_SET_LOCALE__ if available
-      const setResult = await window.evaluate(async () => {
-        const w = window as unknown as Record<string, unknown>;
-        const setFn = w.__DEV_SET_LOCALE__ as ((l: string) => Promise<{ ok: boolean }>) | undefined;
-        if (!setFn) return { ok: false, reason: 'helper_missing' };
-        return setFn('ja');
-      });
-      console.log('[ja-fixture] __DEV_SET_LOCALE__ result:', JSON.stringify(setResult));
-      await window.waitForTimeout(2000);
-    }
+    // Wait for LocaleService.init() + subscriber notification to propagate.
+    // The compact LanguageSwitcher button shows the locale code (e.g. 'JA').
+    await window.waitForFunction(
+      () => Array.from(document.querySelectorAll('button'))
+        .some((b) => (b.textContent ?? '').includes('JA')),
+      undefined,
+      { timeout: 10000 }
+    );
     await use(window);
   },
 });

@@ -1,12 +1,12 @@
 {
   "actions": {
-    "cancel": "",
-    "dismiss": "",
-    "retry": "",
-    "save": ""
+    "cancel": "Cancelar",
+    "dismiss": "Cerrar notificación",
+    "retry": "Reintentar",
+    "save": "Guardar"
   },
   "language": {
-    "current": "",
-    "label": ""
+    "current": "Idioma actual: {{name}}",
+    "label": "Idioma"
   }
 }

@@ -1,9 +1,9 @@
 {
   "bms": {
-    "fileAccessDenied": "",
-    "fileBusy": "",
-    "fileNotFound": "",
-    "fileReadFailed": "",
-    "parseError": ""
+    "fileAccessDenied": "无法访问文件，请检查权限。",
+    "fileBusy": "文件正被其他程序占用。",
+    "fileNotFound": "找不到文件，可能已被移动或删除。",
+    "fileReadFailed": "读取文件失败。",
+    "parseError": "解析 BMS 文件时发生错误。"
   }
 }

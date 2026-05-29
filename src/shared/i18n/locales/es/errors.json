@@ -1,9 +1,9 @@
 {
   "bms": {
-    "fileAccessDenied": "",
-    "fileBusy": "",
-    "fileNotFound": "",
-    "fileReadFailed": "",
-    "parseError": ""
+    "fileAccessDenied": "No se puede acceder al archivo. Verifique los permisos.",
+    "fileBusy": "El archivo está siendo usado por otro programa.",
+    "fileNotFound": "Archivo no encontrado. Es posible que haya sido movido o eliminado.",
+    "fileReadFailed": "Error al leer el archivo.",
+    "parseError": "Ocurrió un error al analizar el archivo BMS."
   }
 }

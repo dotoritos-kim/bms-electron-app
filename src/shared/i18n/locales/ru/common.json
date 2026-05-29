@@ -1,12 +1,12 @@
 {
   "actions": {
-    "cancel": "",
-    "dismiss": "",
-    "retry": "",
-    "save": ""
+    "cancel": "Отмена",
+    "dismiss": "Закрыть уведомление",
+    "retry": "Повторить",
+    "save": "Сохранить"
   },
   "language": {
-    "current": "",
-    "label": ""
+    "current": "Текущий язык: {{name}}",
+    "label": "Язык"
   }
 }

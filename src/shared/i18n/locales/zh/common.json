@@ -1,12 +1,12 @@
 {
   "actions": {
-    "cancel": "",
-    "dismiss": "",
-    "retry": "",
-    "save": ""
+    "cancel": "取消",
+    "dismiss": "关闭通知",
+    "retry": "重试",
+    "save": "保存"
   },
   "language": {
-    "current": "",
-    "label": ""
+    "current": "当前语言：{{name}}",
+    "label": "语言"
   }
 }

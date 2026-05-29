@@ -1,158 +1,158 @@
 {
   "audioSlicer": {
-    "addMarkerButton": "",
-    "autoDetectButton": "",
-    "autoDetectNoResults": "",
-    "autoDetectSuccess_other": "",
-    "clearMarkersButton": "",
-    "emptyFormats": "",
-    "emptyTitle": "",
-    "infoChannels": "",
-    "infoLength": "",
-    "infoSampleRate": "",
-    "infoSelection": "",
-    "infoView": "",
-    "loading": "",
-    "markerCountSummary": "",
-    "openButton": "",
-    "playButton": "",
-    "playSelectionButton": "",
-    "sensitivityLabel": "",
-    "sliceAndSaveButton": "",
-    "slicingButton": "",
-    "stopButton": "",
-    "title": "",
-    "viewportTooltip": ""
+    "addMarkerButton": "添加标记",
+    "autoDetectButton": "自动检测",
+    "autoDetectNoResults": "未检测到起音点，请尝试提高灵敏度。",
+    "autoDetectSuccess_other": "检测到 {{count}} 个片段。",
+    "clearMarkersButton": "清除标记",
+    "emptyFormats": "支持 WAV、MP3、OGG、FLAC",
+    "emptyTitle": "打开音频文件以开始",
+    "infoChannels": "声道",
+    "infoLength": "时长",
+    "infoSampleRate": "采样率",
+    "infoSelection": "选区",
+    "infoView": "视图",
+    "loading": "加载中…",
+    "markerCountSummary": "{{markerCount}} 个标记 → {{sliceCount}} 个切片",
+    "openButton": "打开音频",
+    "playButton": "播放",
+    "playSelectionButton": "播放选区",
+    "sensitivityLabel": "灵敏度",
+    "sliceAndSaveButton": "切片并保存",
+    "slicingButton": "切片中…",
+    "stopButton": "停止",
+    "title": "音频切片器",
+    "viewportTooltip": "当前视口在完整音频中的位置"
   },
   "dialogs": {
     "autoChart": {
-      "applyButton": "",
-      "audioLoaded": "",
-      "audioLoading": "",
-      "audioOpenButton": "",
-      "audioSection": "",
-      "difficultyLabel": "",
-      "generateButton": "",
-      "generatedSummary_other": "",
-      "gridSnapToggle": "",
-      "lnRatioLabel": "",
-      "minNotesWarning": "",
-      "noOnsetsWarning": "",
-      "previewLabel_other": "",
-      "scratchToggle": "",
-      "suggestButton": "",
-      "suggestCountLabel": "",
-      "suggestExplanation_other": "",
+      "applyButton": "应用",
+      "audioLoaded": "已加载（{{duration}}秒）",
+      "audioLoading": "加载中…",
+      "audioOpenButton": "打开音频文件",
+      "audioSection": "音频来源",
+      "difficultyLabel": "难度",
+      "generateButton": "生成谱面",
+      "generatedSummary_other": "已生成 {{count}} 个音符",
+      "gridSnapToggle": "网格吸附",
+      "lnRatioLabel": "长音符比例",
+      "minNotesWarning": "至少需要 4 个音符",
+      "noOnsetsWarning": "未检测到起音点，音频可能过安静或为静音。降低难度可提高灵敏度。",
+      "previewLabel_other": "预览（{{count}} 个音符）",
+      "scratchToggle": "包含皿轨",
+      "suggestButton": "建议排列",
+      "suggestCountLabel": "生成音符数",
+      "suggestExplanation_other": "分析现有音符并建议下一乐句。当前谱面共有 {{count}} 个音符。",
       "tabs": {
-        "generate": "",
-        "suggest": ""
+        "generate": "音频 → 谱面",
+        "suggest": "建议排列"
       },
-      "title": ""
+      "title": "AI 谱面生成器"
     },
     "bpmTap": {
-      "applyButton": "",
-      "resetButton": "",
-      "resetIndicator": "",
-      "tapButton": "",
-      "tapsCount_other": "",
-      "title": ""
+      "applyButton": "应用",
+      "resetButton": "重置",
+      "resetIndicator": "已重置",
+      "tapButton": "点击 (Space)",
+      "tapsCount_other": "BPM（{{count}} 次点击）",
+      "title": "BPM 点击检测"
     },
     "keyBindings": {
-      "conflictBadge": "",
-      "conflictSummary_other": "",
-      "listening": "",
-      "resetDefaults": "",
-      "saveButton": "",
-      "title": ""
+      "conflictBadge": "冲突",
+      "conflictSummary_other": "{{count}} 个快捷键冲突",
+      "listening": "请按下按键…",
+      "resetDefaults": "恢复默认",
+      "saveButton": "保存",
+      "title": "快捷键设置"
     },
     "midiMapping": {
-      "closeButton": "",
-      "connect": "",
-      "devicePlaceholder": "",
-      "deviceSection": "",
-      "disconnect": "",
-      "laneSection": "",
-      "lastInput": "",
-      "modeOff": "",
-      "modeOffHelp": "",
-      "modeRealtime": "",
-      "modeRealtimeHelp": "",
-      "modeStep": "",
-      "modeStepHelp": "",
-      "noDevices": "",
-      "presetSection": "",
-      "recordingSection": "",
-      "title": "",
-      "unmapped": "",
-      "waiting": ""
+      "closeButton": "关闭",
+      "connect": "连接",
+      "devicePlaceholder": "选择设备…",
+      "deviceSection": "设备",
+      "disconnect": "断开连接",
+      "laneSection": "轨道映射",
+      "lastInput": "最近输入：",
+      "modeOff": "关闭",
+      "modeOffHelp": "MIDI 录制已禁用",
+      "modeRealtime": "实时",
+      "modeRealtimeHelp": "实时模式：播放期间的 MIDI 输入将放置在播放头位置",
+      "modeStep": "步进",
+      "modeStepHelp": "步进模式：每次 MIDI 输入在光标处放置音符并向前移动",
+      "noDevices": "未检测到 MIDI 设备",
+      "presetSection": "预设",
+      "recordingSection": "录制模式",
+      "title": "MIDI 设置",
+      "unmapped": "未设置",
+      "waiting": "等待中…"
     },
     "noteColor": {
-      "applyButton": "",
-      "customBadge": "",
-      "description": "",
-      "resetAllButton": "",
-      "resetTooltip": "",
-      "swatchTooltip": "",
-      "title": ""
+      "applyButton": "应用",
+      "customBadge": "自定义",
+      "description": "自定义每种音符类型的颜色，点击色块选择颜色。",
+      "resetAllButton": "全部重置",
+      "resetTooltip": "恢复默认",
+      "swatchTooltip": "为 {{label}} 选择颜色",
+      "title": "音符颜色"
     },
     "patternLibrary": {
-      "applyTooltip_other": "",
-      "deleteTooltip": "",
-      "empty": "",
-      "noSearchResults": "",
-      "panelTitle": "",
-      "patternStats_other": "",
+      "applyTooltip_other": "点击以在当前位置应用\n{{count}} 个音符，{{beats}} 拍",
+      "deleteTooltip": "删除",
+      "empty": "无排列",
+      "noSearchResults": "无匹配结果",
+      "panelTitle": "排列库",
+      "patternStats_other": "{{count}} 个音符 · {{beats}} 拍",
       "saveDialog": {
-        "namePlaceholder": "",
-        "tagsPlaceholder": "",
-        "title": ""
+        "namePlaceholder": "排列名称",
+        "tagsPlaceholder": "标签（逗号分隔）",
+        "title": "保存排列"
       },
-      "saveSelectionButton": "",
-      "searchPlaceholder": ""
+      "saveSelectionButton": "将选中音符保存为排列",
+      "searchPlaceholder": "搜索…"
     }
   },
   "errors": {
-    "goHome": ""
+    "goHome": "返回主页"
   },
   "home": {
     "meta": {
-      "file": "",
-      "genre": ""
+      "file": "文件",
+      "genre": "曲风"
     },
     "newFile": {
-      "artistField": "",
-      "createButton": "",
-      "creating": "",
-      "keyModeField": "",
-      "title": "",
-      "titleField": ""
+      "artistField": "艺术家",
+      "createButton": "创建",
+      "creating": "创建中…",
+      "keyModeField": "键位模式",
+      "title": "新建 BMS 文件",
+      "titleField": "标题"
     },
-    "pinFile": "",
-    "recentFiles": "",
-    "removeFromList": "",
+    "pinFile": "固定",
+    "recentFiles": "最近文件",
+    "removeFromList": "从列表移除",
     "stats": {
-      "invisible": "",
-      "keyMode": "",
-      "keysounds": "",
-      "landmines": "",
-      "longNotes": "",
-      "scratch": "",
-      "totalNotes": ""
+      "invisible": "隐形音符",
+      "keyMode": "键位模式",
+      "keysounds": "键音",
+      "landmines": "地雷音符",
+      "longNotes": "长音符",
+      "scratch": "皿轨",
+      "totalNotes": "音符总数"
     },
-    "unpinFile": ""
+    "unpinFile": "取消固定"
   },
   "navigation": {
-    "discardLabel": "",
-    "leaveLabel": "",
-    "leaveTitle": "",
-    "saveAndLeaveLabel": ""
+    "discardLabel": "不保存",
+    "leaveLabel": "离开",
+    "leaveTitle": "离开页面",
+    "saveAndLeaveLabel": "保存并离开"
   },
   "player": {
-    "exitConfirm": "",
-    "keyBindingsHint": ""
+    "exitConfirm": "游戏进行中，确定要离开吗？",
+    "keyBindingsHint": "可在编辑器 > 工具 > 快捷键设置中修改键位绑定"
   },
   "stats": {
-    "duration": "",
-    "measures": ""
+    "duration": "时长",
+    "measures": "小节数"
   }
 }

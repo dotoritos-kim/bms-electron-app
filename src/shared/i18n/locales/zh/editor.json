@@ -1,208 +1,208 @@
 {
   "panels": {
     "beatKeysound": {
-      "current": "",
-      "empty": "",
-      "title": "",
-      "tooltip": ""
+      "current": "◀ 当前",
+      "empty": "当前位置附近没有键音",
+      "title": "键音时间轴",
+      "tooltip": "当前位置附近的键音（按时间顺序排列），点击可预览。"
     },
     "bgmManager": {
-      "channelStats": "",
-      "clickToSelect": "",
-      "muteOff": "",
-      "muteOn": "",
-      "soloOff": "",
-      "soloOn": "",
-      "title_other": ""
+      "channelStats": "{{notes}} 个音符，{{keysounds}} 个键音",
+      "clickToSelect": "点击：选择",
+      "muteOff": "取消静音",
+      "muteOn": "静音此轨道",
+      "soloOff": "取消独奏",
+      "soloOn": "独奏此轨道",
+      "title_other": "BGM 管理器（{{count}}）"
     }
   },
   "routes": {
     "editor": {
-      "audioLoading": "",
+      "audioLoading": "加载中 {{loaded}}/{{total}}",
       "autoSaveRecovery": {
-        "body": "",
-        "ignore": "",
-        "recover": "",
-        "title": ""
+        "body": "发现上次会话的自动保存数据，是否恢复？",
+        "ignore": "忽略",
+        "recover": "恢复",
+        "title": "自动保存恢复"
       },
       "backConfirm": {
-        "body": "",
-        "cancel": "",
-        "discard": "",
-        "saveAndLeave": "",
-        "title": ""
+        "body": "有未保存的更改，确定不保存就离开吗？",
+        "cancel": "取消",
+        "discard": "不保存",
+        "saveAndLeave": "保存并离开",
+        "title": "未保存的更改"
       },
       "bookmarkDialog": {
-        "add": "",
-        "addPrompt": "",
-        "addTitle": "",
-        "cancel": "",
-        "delete": "",
-        "editTitle": "",
-        "measureBookmark": "",
-        "namePlaceholder": "",
-        "renamePrompt": "",
-        "save": ""
+        "add": "添加",
+        "addPrompt": "请输入书签名称。",
+        "addTitle": "添加书签",
+        "cancel": "取消",
+        "delete": "删除",
+        "editTitle": "编辑书签",
+        "measureBookmark": "第 {{measure}} 小节书签",
+        "namePlaceholder": "书签名称",
+        "renamePrompt": "修改或删除书签名称。",
+        "save": "保存"
       },
       "canvas": {
-        "ariaLabel": "",
-        "keysoundIndicator": ""
+        "ariaLabel": "BMS 谱面编辑器",
+        "keysoundIndicator": "键音：{{id}}{{name}}"
       },
       "clipboardHistory": {
-        "close": "",
-        "currentLabel": "",
-        "hint": "",
-        "noKeysounds": "",
-        "noteCount_other": "",
-        "title": ""
+        "close": "关闭",
+        "currentLabel": "当前",
+        "hint": "选择一条记录以将其音符复制到剪贴板。",
+        "noKeysounds": "无键音",
+        "noteCount_other": "{{count}} 个音符",
+        "title": "剪贴板历史"
       },
-      "copyErrorTemplate": "",
-      "createGroupPrompt": "",
-      "deleteUnusedConfirm_other": "",
+      "copyErrorTemplate": "文件：{{path}}\n错误：{{error}}",
+      "createGroupPrompt": "组名称：",
+      "deleteUnusedConfirm_other": "此键音被 {{count}} 个音符使用。\n删除后这些音符将替换为静音（00）。\n\n确定删除吗？",
       "diff": {
-        "close": "",
-        "title": ""
+        "close": "关闭 (Esc)",
+        "title": "差异对比视图"
       },
       "error": {
-        "cannotOpenTitle": "",
-        "copyErrorInfo": "",
-        "errorDetail": "",
-        "fileCorrupt": "",
-        "filePath": "",
-        "goHome": "",
-        "openOtherFile": "",
-        "retry": ""
+        "cannotOpenTitle": "无法打开文件",
+        "copyErrorInfo": "复制错误信息",
+        "errorDetail": "错误详情：",
+        "fileCorrupt": "文件格式可能无效或文件已损坏。",
+        "filePath": "文件路径：",
+        "goHome": "返回主页",
+        "openOtherFile": "打开其他文件",
+        "retry": "重试"
       },
       "header": {
-        "aiChartLabel": "",
-        "audioSlicerLabel": "",
-        "deleteMeasureTitle": "",
-        "insertMeasureTitle": "",
-        "keyBindingsLabel": "",
-        "measureLabel": "",
-        "midiSettingsLabel": "",
-        "modifiedIndicator": "",
-        "noteColorLabel": "",
-        "saveBtnSaved": "",
-        "saveBtnUnsaved": "",
-        "saveTitle": "",
-        "settingsLabel": "",
-        "settingsTitle": ""
+        "aiChartLabel": "AI 谱面生成器",
+        "audioSlicerLabel": "音频切片器",
+        "deleteMeasureTitle": "删除小节 (Ctrl+Shift+D)",
+        "insertMeasureTitle": "插入小节 (Ctrl+Shift+I)",
+        "keyBindingsLabel": "快捷键设置",
+        "measureLabel": "小节",
+        "midiSettingsLabel": "MIDI 设置",
+        "modifiedIndicator": "已修改",
+        "noteColorLabel": "音符颜色设置",
+        "saveBtnSaved": "已保存",
+        "saveBtnUnsaved": "保存 (Ctrl+S)",
+        "saveTitle": "保存 (Ctrl+S)",
+        "settingsLabel": "设置",
+        "settingsTitle": "设置菜单"
       },
       "inputDialog": {
-        "bpmAdd": "",
-        "bpmEdit": "",
-        "cancel": "",
-        "confirm": "",
-        "stopAdd": "",
-        "stopEdit": "",
-        "stopHint": "",
-        "timeSig": "",
-        "timeSigHint": ""
+        "bpmAdd": "添加 BPM",
+        "bpmEdit": "编辑 BPM",
+        "cancel": "取消",
+        "confirm": "确定",
+        "stopAdd": "添加 STOP",
+        "stopEdit": "编辑 STOP",
+        "stopHint": "192 = 1 拍，输入 0 可删除",
+        "timeSig": "第 {{measure}} 小节拍号",
+        "timeSigHint": "1.0 = 4/4，0.75 = 3/4，1.25 = 5/4，0.875 = 7/8"
       },
-      "keysoundNoNotes": "",
+      "keysoundNoNotes": "没有音符使用此键音",
       "layerPanel": {
-        "hideAria": "",
-        "hideTitle": "",
-        "lockAria": "",
-        "lockTitle": "",
-        "opacityTitle": "",
-        "showAria": "",
-        "showTitle": "",
-        "unlockAria": "",
-        "unlockTitle": ""
+        "hideAria": "隐藏 {{layer}}",
+        "hideTitle": "隐藏",
+        "lockAria": "锁定 {{layer}}",
+        "lockTitle": "锁定",
+        "opacityTitle": "不透明度 {{percent}}%",
+        "showAria": "显示 {{layer}}",
+        "showTitle": "显示",
+        "unlockAria": "解锁 {{layer}}",
+        "unlockTitle": "解锁"
       },
       "leftPanel": {
-        "keysoundTab": "",
-        "openPanelTitle": "",
-        "patternTab": ""
+        "keysoundTab": "键音",
+        "openPanelTitle": "打开键音面板",
+        "patternTab": "排列"
       },
       "measureDialog": {
-        "cancel": "",
-        "currentMeasureLabel": "",
-        "delete": "",
-        "deleteCurrent": "",
-        "deleteTitle": "",
-        "dividerLabel": "",
-        "insert": "",
-        "insertAfter": "",
-        "insertBefore": "",
-        "insertTitle": "",
-        "measurePlaceholder": ""
+        "cancel": "取消",
+        "currentMeasureLabel": "（当前小节）",
+        "delete": "删除",
+        "deleteCurrent": "删除第 {{measure}} 小节",
+        "deleteTitle": "删除小节",
+        "dividerLabel": "手动输入",
+        "insert": "插入",
+        "insertAfter": "在第 {{measure}} 小节之后插入",
+        "insertBefore": "在第 {{measure}} 小节之前插入",
+        "insertTitle": "插入小节",
+        "measurePlaceholder": "小节编号"
       },
       "minimap": {
-        "closePopout": "",
-        "closePopoutAria": "",
-        "dockToSidebar": "",
-        "dockToSidebarAria": "",
-        "popoutTitle": ""
+        "closePopout": "关闭弹出窗口（返回内嵌）",
+        "closePopoutAria": "关闭小地图弹出窗口",
+        "dockToSidebar": "停靠到侧边栏",
+        "dockToSidebarAria": "将小地图停靠到侧边栏",
+        "popoutTitle": "分离小地图（可拖动）"
       },
-      "navGuardMessage": "",
+      "navGuardMessage": "有未保存的更改，确定要离开吗？",
       "playback": {
-        "bpmTapTitle": "",
-        "clearLoopTitle": "",
-        "diffTitle": "",
-        "infoPanelTitle": "",
-        "keysoundPanelTitle": "",
-        "loadAudio": "",
-        "minimapTitle": "",
-        "muteTitle": "",
-        "playPauseTitle": "",
-        "playTestTitle": "",
-        "speedPresetTitle": "",
-        "stopTitle": "",
-        "unmuteTitle": "",
-        "volumeTitle": ""
+        "bpmTapTitle": "BPM 点击检测",
+        "clearLoopTitle": "清除循环 (\\)",
+        "diffTitle": "切换差异视图 (Ctrl+D)",
+        "infoPanelTitle": "信息面板",
+        "keysoundPanelTitle": "键音面板",
+        "loadAudio": "加载音频",
+        "minimapTitle": "小地图",
+        "muteTitle": "静音",
+        "playPauseTitle": "播放 / 暂停 (Space)",
+        "playTestTitle": "试玩 (F5)",
+        "speedPresetTitle": "速度预设",
+        "stopTitle": "停止",
+        "unmuteTitle": "取消静音",
+        "volumeTitle": "音量：{{percent}}%"
       },
       "playTest": {
-        "label": "",
-        "returnToEditor": ""
+        "label": "试玩",
+        "returnToEditor": "返回编辑器 (Esc)"
       },
       "replaceKeysound": {
-        "cancel": "",
-        "noteCount_other": "",
-        "sourceLabel": "",
-        "targetPrompt": ""
+        "cancel": "取消",
+        "noteCount_other": "— {{count}} 个音符",
+        "sourceLabel": "来源：",
+        "targetPrompt": "选择目标键音："
       },
-      "replaceKeysoundTitle": "",
+      "replaceKeysoundTitle": "替换键音",
       "rightPanel": {
-        "artistLabel": "",
-        "chartInfoSection": "",
-        "layersSection": "",
-        "openPanelTitle": "",
-        "resetLayers": "",
-        "resetLayersTitle": "",
-        "statsSection": "",
-        "timelineSection": "",
-        "titleLabel": ""
+        "artistLabel": "艺术家",
+        "chartInfoSection": "谱面信息",
+        "layersSection": "图层",
+        "openPanelTitle": "打开信息面板",
+        "resetLayers": "重置",
+        "resetLayersTitle": "重置图层配置",
+        "statsSection": "统计",
+        "timelineSection": "键音时间轴",
+        "titleLabel": "标题"
       },
       "statusBar": {
-        "estimatedDifficulty": "",
-        "midiRealtime": "",
-        "midiStep": ""
+        "estimatedDifficulty": "预估难度：",
+        "midiRealtime": "实时",
+        "midiStep": "步进"
       },
       "toast": {
-        "highResWarning_other": "",
-        "keysoundDeleted": "",
-        "keysoundImportFailed": "",
-        "keysoundReplaced_other": "",
-        "keysoundsImported_other": "",
-        "notesGenerated_other": "",
-        "pasteConflicts_other": "",
-        "pasteDropped_other": "",
-        "redoAction": "",
-        "saved": "",
-        "savedAs": "",
-        "saveFailed": "",
-        "slicesSaved_other": "",
-        "undefinedWavWarning_other": "",
-        "undoAction": ""
+        "highResWarning_other": "{{count}} 个音符超出标准分辨率（192），可能导致兼容性问题",
+        "keysoundDeleted": "键音 {{id}} 已删除（Ctrl+Z 可撤销）",
+        "keysoundImportFailed": "键音导入失败",
+        "keysoundReplaced_other": "已在 {{count}} 个音符上将键音 {{from}} → {{to}} 替换（Ctrl+Z 可撤销）",
+        "keysoundsImported_other": "已导入 {{count}} 个键音",
+        "notesGenerated_other": "已生成 {{count}} 个音符",
+        "pasteConflicts_other": "已替换 {{count}} 个冲突音符",
+        "pasteDropped_other": "已排除 {{count}} 个超出键位模式范围的音符",
+        "redoAction": "重做：{{description}}",
+        "saved": "已保存",
+        "savedAs": "另存为",
+        "saveFailed": "保存失败：{{message}}",
+        "slicesSaved_other": "已保存 {{count}} 个切片",
+        "undefinedWavWarning_other": "警告：{{count}} 个未定义的 WAV 引用（{{ids}}）",
+        "undoAction": "撤销：{{description}}"
       }
     }
   },
   "store": {
-    "orphanNotes_other": "",
-    "removeUnusedKeysounds": "",
-    "replaceKeysound": ""
+    "orphanNotes_other": "{{count}} 个音符所在轨道不在 {{keyMode}} 模式中，现已隐藏。（数据已保留）",
+    "removeUnusedKeysounds": "删除未使用的键音",
+    "replaceKeysound": "替换键音"
   }
 }

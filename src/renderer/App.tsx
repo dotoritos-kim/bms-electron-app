@@ -7,6 +7,8 @@ import { Editor } from './routes/Editor';
 import { Layout } from './components/Layout';
 import { basename, dirname } from './lib/pathUtils';
 import { loadSession, saveSession } from './lib/sessionStorage';
+import { localeService } from './services/LocaleService';
+import type { SupportedLocale } from '../shared/i18n/types';
 
 export type AppRoute = 'home' | 'player' | 'editor';
 
@@ -121,7 +123,7 @@ export function App() {
     setRoute(targetRoute);
   }, [route]);
 
-  // Expose dev helpers for automated testing (Puppeteer)
+  // Expose dev helpers for automated testing (Playwright / Puppeteer)
   // Using refs to avoid stale closures — the functions always use current setters
   useEffect(() => {
     const w = window as unknown as Record<string, unknown>;
@@ -129,6 +131,11 @@ export function App() {
       setCurrentFile({ path, name, folderPath });
     };
     w.__DEV_NAVIGATE__ = (r: AppRoute) => { setRoute(r); };
+    // __DEV_SET_LOCALE__: call localeService.change() from E2E test fixtures.
+    // Direct window.api.locale.set() bypasses renderer i18next, so this helper
+    // is the correct path for locale-switching smoke tests.
+    w.__DEV_SET_LOCALE__ = (locale: string) =>
+      localeService.change(locale as SupportedLocale);
     // Don't clean up — these should persist for the lifetime of the app
   }, []);
 

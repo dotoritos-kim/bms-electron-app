@@ -38,19 +38,20 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
     const window = await electronApp.firstWindow();
     await window.waitForLoadState('domcontentloaded');
     await window.waitForTimeout(500);
-    // Explicitly switch to ja via IPC — more reliable than relying on
-    // APP_TEST_LANG boot-time resolution, which can lose the race against
-    // the first React render on slow CI runners.
+    // Use the __DEV_SET_LOCALE__ helper (exposed by App.tsx) to call
+    // localeService.change('ja') in the renderer. This is the correct path:
+    // window.api.locale.set() only persists to main process, it does NOT
+    // load i18next namespaces or update LocaleService.current.
     await window.evaluate(() =>
-      (window as unknown as { api: { locale: { set(l: string): Promise<void> } } })
-        .api.locale.set('ja')
+      (window as unknown as { __DEV_SET_LOCALE__(l: string): Promise<unknown> })
+        .__DEV_SET_LOCALE__('ja')
     );
     // Wait until the LanguageSwitcher compact button actually shows 'JA',
     // confirming i18next loaded ja namespaces and React re-rendered.
     await window.waitForFunction(
       () => Array.from(document.querySelectorAll('button'))
         .some((b) => (b.textContent ?? '').includes('JA')),
-      { timeout: 8000 }
+      { timeout: 10000 }
     );
     await use(window);
   },

@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.3.1](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.3.0...v0.3.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* **e2e:** add __DEV_SET_LOCALE__ helper; use it in ja smoke tests ([d9563cc](https://github.com/dotoritos-kim/bms-electron-app/commit/d9563ccc8982c2bdbcb32057e5b51d33988a82a0))
+* **e2e:** add diagnostic logging to ja fixture + __DEV_GET_LOCALE__ helper ([424be25](https://github.com/dotoritos-kim/bms-electron-app/commit/424be2583e042ab74890473bb7a87ea52c8216d7))
+* **e2e:** explicitly set ja locale via IPC in window fixture ([3ef2217](https://github.com/dotoritos-kim/bms-electron-app/commit/3ef22178b76e9d369a43e24c145204bc2dac81bc))
+* **e2e:** fix waitForFunction arg/options confusion + wait for helper ready ([bbfeb19](https://github.com/dotoritos-kim/bms-electron-app/commit/bbfeb19c42b6d6bbc172ba382bd351913b87e01e))
+* **e2e:** guard __DEV_SET_LOCALE__ with waitReady() to prevent race with init ([6c7d4ef](https://github.com/dotoritos-kim/bms-electron-app/commit/6c7d4ef0939966f7a5fc8ab36f99f5d58e3e9cf7))
+* **e2e:** navigate to home to clear session-restored error screen ([19fff41](https://github.com/dotoritos-kim/bms-electron-app/commit/19fff4164d640306b0f747c23e4fb45f0a890380))
+* **e2e:** use --bms-test-locale CLI arg as primary locale override ([be092fa](https://github.com/dotoritos-kim/bms-electron-app/commit/be092fa2db13de42aa795004dfa3fad974f47994))
+* **e2e:** use APP_TEST_LANG env var instead of --lang CLI for ja locale ([9b547f0](https://github.com/dotoritos-kim/bms-electron-app/commit/9b547f0a5b13277e00608606e728cde1adc6d3fb))
+* **e2e:** wait for JA button instead of fixed timeout ([b421709](https://github.com/dotoritos-kim/bms-electron-app/commit/b421709394db3052be52794cb3608590d7e55aab))
+* **i18n:** notify subscribers after init() completes ([9a360dc](https://github.com/dotoritos-kim/bms-electron-app/commit/9a360dc3d61aaf408c91b70648712b7e8e892bf5))
+* **i18n:** parse --lang from process.argv instead of app.commandLine ([bced596](https://github.com/dotoritos-kim/bms-electron-app/commit/bced5962e5ec7acfac9bebca7f4bf799c67df5e1))
+* **i18n:** resolve --lang CLI switch in main process locale init ([0b73d99](https://github.com/dotoritos-kim/bms-electron-app/commit/0b73d99e82ebb611c077d3330768dede8dc80ba4))
+* **vendor:** update bms-player submodule to rebased fire-12 commit (f7f67cc) ([52c0637](https://github.com/dotoritos-kim/bms-electron-app/commit/52c063760b08a1a6eed358b04ad02a5a08e50179))
+
 ## [0.3.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.2.2...v0.3.0) (2026-05-29)
 
 

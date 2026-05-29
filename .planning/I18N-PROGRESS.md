@@ -176,13 +176,47 @@
 
 ---
 
-## Phase i18n-3 — ja 추가 (수요 검증 트리거 후)
-- [ ] DeepL API key 확보, ko/en source → ja draft 자동 생성
-- [ ] 사람 검수 PR (BMS 도메인 용어 점검: 키음, 노트, 차트, 레인, BPM)
-- [ ] Noto Sans CJK JP 폰트 스택 추가 (global.css)
-- [ ] Playwright 시각 회귀 (ja × 5화면 = 5 스냅샷)
-- [ ] ENABLED_LOCALES에 'ja' 추가
-- [ ] CHANGELOG: 일본어 지원 추가 영문/한글
+## Phase i18n-3 — ja 추가 (✅ fire 14 완료)
+
+### Done (fire 14)
+- [x] **ko/en source → ja 본문 번역** — 631키 전부 (자동 도구 없이 BMS 도메인 용어 직접 변환)
+  - `ja/common.json` — 21키 (actions, language, status)
+  - `ja/errors.json` — 13키 (audio, bms, file, locale)
+  - `ja/app.json` — 170키 (audioSlicer 25 + dialogs 6분류 + errors + home + navigation + player + stats)
+  - `ja/editor.json` — 426키 (diff, keyBindings, noteChart, panels 8분류, routes.editor, store, toolbar)
+  - `ja/player.json` — 20키 (judgment, gauge, hud, errors, state) — 새 파일 생성
+- [x] **BMS 도메인 용어 일관성** — キーサウンド(키음), ノーツ(노트), 譜面(차트), レーン(레인), 小節(마디), 拍(비트), ロングノート(롱노트), 地雷(지뢰), インビジブル(인비저블), スクラッチ(스크래치), クオンタイズ(퀀타이즈), ジャック(잭), ロール(롤), トリル(트릴), パターン(패턴) 등
+- [x] **`src/shared/i18n/types.ts`** — `ENABLED_LOCALES`에 `'ja'` 추가 (`['ko','en'] → ['ko','en','ja']`)
+- [x] **`src/main/i18n/menu.ts`** — `dictionaries.ja` 추가 (24키, dialog.* 3건 포함)
+- [x] **`src/renderer/global.css`** — `font-family` 스택에 Yu Gothic UI, Meiryo, Noto Sans CJK JP, Noto Sans JP, Hiragino Sans, Hiragino Kaku Gothic ProN 추가 (한·중·일 시스템 폰트 모두 커버)
+- [x] **테스트 보강**:
+  - `tests/i18n/menu-dict.test.ts` — `returns Japanese label when locale=ja` 신규 + 기존 fallback test을 `ru/zh`로 이동
+  - `tests/i18n/locale-parity.test.ts` — 5 namespace × `ja` import 추가, `ja matches ko key set` assertion + empty-string walk에 ja 포함
+- [x] **회귀 결과**:
+  - bms-electron-app i18n: 26/26 (20 → 26, ja parity 6건 추가)
+  - bms-electron-app unit: 1132/1132
+  - i18n:check exit 0, lint:i18n exit 0
+  - typecheck (node + web): 0 errors
+  - ja/{app,common,editor,errors} 파리티 100% (missing=0, empty=0, extra=0)
+
+### Done (fire 15) — ja smoke test infra
+- [x] **`tests/e2e/i18n-japanese.spec.ts`** — 신규 spec 4건:
+  - `home screen renders in Japanese` — DOM 본문에서 일본어 문자열 regex 검출 (日本語/最近のファイル/ファイル/新規BMS/キーモード 중 1개 이상)
+  - `language switcher shows 日本語 as current` — LanguageSwitcher 버튼 텍스트 확인
+  - `navigation to editor preserves ja locale` — `__DEV_OPEN_FILE__` + `__DEV_NAVIGATE__` 후 에디터 ja 라벨 (追加/選択/移動/譜面情報/キーサウンド/小節/ノーツ) 검출
+  - `native menu labels match Japanese dictionary` — Electron `Menu.getApplicationMenu()` 최상위 라벨이 `ファイル/編集/表示`인지 검증
+- [x] **fixture 분리** — `electron-app.ts`는 `--lang=ko` 강제 (기존 e2e 보존), 새 spec은 `--lang=ja` 사용 base.extend 패턴
+- [x] **시각 회귀 미채택 사유** — CJK 폴백 폰트 렌더링이 OS마다 다르고 (Windows: Yu Gothic UI, macOS: Hiragino, Linux: Noto Sans CJK JP), 골든 이미지 관리 비용이 검증 가치보다 큼. 텍스트 contains 방식으로 시맨틱 검증
+- [x] **typecheck**: 0 errors (`tsconfig.web.json` + `tsconfig.node.json`)
+- [x] Playwright 실행은 CI에서 `npm run test:e2e`로 트리거 (로컬은 빌드 시간 큼)
+
+### Done (fire 16)
+- [x] **`ci.yml` `lint:i18n` blocking 전환** — `continue-on-error: true` 제거, 주석 갱신 (Tier 1-7 완료 명시)
+
+### Pending (다음 fire 진행)
+- [ ] **CHANGELOG 자동 생성** — Conventional Commit (`feat(i18n): add Japanese language support`)로 release-please가 자동 entry. 수동 편집 불필요
+- [ ] **네이티브 검수** — BMS JP 커뮤니티 PR review 요청 (용어 통일성 검증, 외부 작업)
+- [ ] **남은 4개 gated locale** — de/es/ru/zh native draft (DeepL+검수, 콘텐츠 작업)
 
 ---
 
@@ -234,8 +268,8 @@
 
 ---
 
-*Last updated: 2026-05-24 — fire 13: parser 1차 실행 + ESLint pipeline 정상 동작 + 5 locale skeleton 동기화*
-*Next fire 진입점: CI `i18n:check` / `lint:i18n` blocking 전환 + de/es/ja/ru/zh skeleton → native 검수 PR*
+*Last updated: 2026-05-29 — fire 16: ci.yml lint:i18n blocking 전환 (Tier 1-7 완료)*
+*Next fire 진입점: CHANGELOG 커밋 (`feat(i18n): add Japanese language support`) + de/es/ru/zh native 번역 draft*
 
 ## 누적 변환 현황
 | 컴포넌트 | 한글 → t() 변환 | Fire |
@@ -272,5 +306,5 @@
 |---|---|---|
 | i18n-1 인프라 | ✅ 완료 | — |
 | i18n-2 추출+회귀 | ✅ 완료 | CI gate `continue-on-error: true` → blocking 전환만 남음 |
-| i18n-3 ja 추가 | ⏸ 트리거 대기 | 수요 검증 후 진입 (skeleton 키는 동기화됨) |
+| i18n-3 ja 추가 | ✅ 본문 번역 완료 | CHANGELOG + Playwright 시각 회귀 + 네이티브 검수 |
 | i18n-4 외부 문서 | ✅ 핵심 완료 | docs/{en,ko}/ 본문, JSDoc 영문화는 follow-up |

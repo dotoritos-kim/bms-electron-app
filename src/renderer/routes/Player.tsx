@@ -55,7 +55,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
     if (!el) return;
     const observer = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
-      setContainerSize({ width: Math.round(width), height: Math.round(height) - 36 });
+      setContainerSize({ width: Math.round(width), height: Math.round(height) });
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -257,7 +257,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
 
   // Ready / Playing / Result — GamePlayer handles all game UI including ready screen and result screen
   return (
-    <div className="h-full flex flex-col bg-black" ref={containerRef}>
+    <div className="h-full flex flex-col bg-black">
       {/* Minimal header */}
       <div className="flex items-center gap-3 px-4 py-1.5 bg-zinc-900/80 border-b border-zinc-800 z-10">
         <button onClick={handleExit} className="p-1 rounded hover:bg-zinc-800 transition-colors">
@@ -278,7 +278,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
       </div>
 
       {/* Game canvas — GamePlayer renders ready screen, game, and result screen */}
-      <div className="flex-1 relative flex items-center justify-center">
+      <div className="flex-1 relative flex items-center justify-center" ref={containerRef}>
         <GamePlayer
           notechart={notechart}
           keysoundPlayer={keysoundPlayer}

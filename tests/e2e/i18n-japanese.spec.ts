@@ -37,8 +37,16 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow();
     await window.waitForLoadState('domcontentloaded');
-    // Ensure i18next + ja namespaces have loaded
-    await window.waitForTimeout(1500);
+    await window.waitForTimeout(500);
+    // Explicitly switch to ja via IPC — more reliable than relying on
+    // APP_TEST_LANG boot-time resolution, which can lose the race against
+    // the first React render on slow CI runners.
+    await window.evaluate(() =>
+      (window as unknown as { api: { locale: { set(l: string): Promise<void> } } })
+        .api.locale.set('ja')
+    );
+    // Wait for i18next to load ja namespaces and React to re-render
+    await window.waitForTimeout(2000);
     await use(window);
   },
 });
@@ -88,9 +96,10 @@ jaTest.describe('Japanese locale smoke', () => {
     expect(hasEditorJa).toBe(true);
   });
 
-  jaTest('native menu labels match Japanese dictionary', async ({ electronApp }) => {
-    // Read the application menu via Electron's IPC. The menu is built once at
-    // boot with the initial locale; APP_TEST_LANG=ja seeded the resolver.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  jaTest('native menu labels match Japanese dictionary', async ({ window: _w, electronApp }) => {
+    // _w triggers the window fixture which calls locale.set('ja') and causes
+    // the main process to rebuild the menu in Japanese before we read it.
     const menuLabels = await electronApp.evaluate(async ({ Menu }) => {
       const menu = Menu.getApplicationMenu();
       if (!menu) return [];

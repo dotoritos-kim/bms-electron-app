@@ -1,7 +1,7 @@
 /**
  * Japanese (ja) locale smoke test.
  *
- * Boots the app with `--lang=ja` and asserts that key user-facing strings
+ * Boots the app with APP_TEST_LANG=ja and asserts that key user-facing strings
  * render in Japanese. Avoids golden-image visual regression (font rendering
  * varies across OS) — checks text content instead. Visual diffs across OSs
  * are inherently flaky for CJK fallback fonts.
@@ -21,10 +21,14 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
     const appPath = resolve(__dirname, '../../out/main/index.js');
     const { ELECTRON_RUN_AS_NODE, ...cleanEnv } = process.env;
     const electronApp = await electron.launch({
-      args: [appPath, '--lang=ja'],
+      args: [appPath],
       env: {
         ...cleanEnv,
         NODE_ENV: 'test',
+        // APP_TEST_LANG is read by resolveInitialLocale() in the main process.
+        // Using --lang=ja is unreliable: it's a Chromium switch whose effect on
+        // app.getLocale() is not guaranteed before app.whenReady() on all platforms.
+        APP_TEST_LANG: 'ja',
       },
     });
     await use(electronApp);
@@ -86,7 +90,7 @@ jaTest.describe('Japanese locale smoke', () => {
 
   jaTest('native menu labels match Japanese dictionary', async ({ electronApp }) => {
     // Read the application menu via Electron's IPC. The menu is built once at
-    // boot with the initial locale; --lang=ja above seeded the resolver.
+    // boot with the initial locale; APP_TEST_LANG=ja seeded the resolver.
     const menuLabels = await electronApp.evaluate(async ({ Menu }) => {
       const menu = Menu.getApplicationMenu();
       if (!menu) return [];

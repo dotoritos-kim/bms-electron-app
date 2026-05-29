@@ -82,15 +82,11 @@ export async function resolveInitialLocale(): Promise<SupportedLocale> {
   const stored = await getStoredLocale();
   if (stored) return stored;
 
-  try {
-    // app.commandLine.getSwitchValue only works for Electron-level switches;
-    // --lang is a Chromium switch so we parse process.argv directly instead.
-    const langArg = process.argv.find((a) => a.startsWith('--lang='));
-    const fromCli = normalizeOsLocale(langArg?.slice('--lang='.length));
-    if (fromCli) return fromCli;
-  } catch {
-    // process.argv unavailable in some unit-test mocks
-  }
+  // APP_TEST_LANG is set by E2E test fixtures to force a specific locale
+  // without relying on --lang (a Chromium flag whose timing vs app.ready is
+  // not guaranteed on all platforms).
+  const fromTestEnv = normalizeOsLocale(process.env['APP_TEST_LANG']);
+  if (fromTestEnv) return fromTestEnv;
 
   try {
     const fromOs = normalizeOsLocale(app.getLocale());

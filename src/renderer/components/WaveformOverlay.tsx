@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useCallback } from 'react';
 import type { AudioPreloader } from '@rhythm-archive/bms-player';
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
 
@@ -61,8 +61,7 @@ export function WaveformOverlay({
     return result;
   }, [preloader, notes, bpm, enabled]);
 
-  // Render waveform
-  useEffect(() => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !enabled || segments.length === 0) return;
 
@@ -80,18 +79,15 @@ export function WaveformOverlay({
 
     ctx.clearRect(0, 0, w, h);
 
-    // Viewport: currentBeat - a few beats to currentBeat + viewportBeats
     const viewStart = Math.max(0, currentBeat - 2);
     const viewEnd = currentBeat + viewportBeats + 2;
-    const pxPerBeat = h / viewportBeats; // vertical layout (beats go up)
+    const pxPerBeat = h / viewportBeats;
 
     for (const seg of segments) {
       const segEndBeat = seg.startBeat + seg.data.length / seg.samplesPerBeat;
-
-      // Skip if outside viewport
       if (segEndBeat < viewStart || seg.startBeat > viewEnd) continue;
 
-      ctx.fillStyle = 'rgba(96, 165, 250, 0.12)'; // blue-400 very transparent
+      ctx.fillStyle = 'rgba(96, 165, 250, 0.12)';
 
       for (let i = 0; i < seg.data.length; i++) {
         const beat = seg.startBeat + i / seg.samplesPerBeat;
@@ -100,16 +96,26 @@ export function WaveformOverlay({
         const amp = seg.data[i];
         if (amp < 0.01) continue;
 
-        // Convert beat to Y position (bottom = currentBeat, top = currentBeat + viewportBeats)
         const y = h - ((beat - currentBeat) / viewportBeats) * h;
         const barH = Math.max(1, pxPerBeat / seg.samplesPerBeat);
-        const barW = amp * w * 0.4; // max 40% width
+        const barW = amp * w * 0.4;
 
-        // Draw centered
         ctx.fillRect((w - barW) / 2, y, barW, barH);
       }
     }
   }, [segments, currentBeat, viewportBeats, enabled]);
+
+  // Re-draw when data or viewport changes
+  useEffect(draw, [draw]);
+
+  // Re-draw when canvas is resized (window resize, panel resize, etc.)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const observer = new ResizeObserver(draw);
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, [draw]);
 
   if (!enabled || segments.length === 0) return null;
 

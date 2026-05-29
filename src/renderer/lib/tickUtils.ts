@@ -1,16 +1,16 @@
 /**
- * Tick Utilities — 960 ticks/beat 정수 기반 시간 표현
+ * Tick Utilities — integer-based time representation at 960 ticks/beat
  *
- * BMS 에디터의 모든 시간 연산을 정수 tick으로 수행하여
- * 부동소수점 오차를 완전히 제거합니다.
+ * All timing operations in the BMS editor use integer ticks,
+ * eliminating floating-point drift entirely.
  *
- * 해상도: 960 ticks/beat (MIDI 표준)
- * - 3840 ticks/measure (4/4 기준)
- * - 1/96 beat = 10 ticks (정확)
- * - 1/64 beat = 15 ticks (정확)
- * - 1/5 beat = 192 ticks (정확)
+ * Resolution: 960 ticks/beat (MIDI standard)
+ * - 3840 ticks/measure (4/4)
+ * - 1/96 beat = 10 ticks (exact)
+ * - 1/64 beat = 15 ticks (exact)
+ * - 1/5 beat = 192 ticks (exact)
  *
- * 지원하는 모든 분할:
+ * All supported subdivisions:
  * 1/2=480, 1/3=320, 1/4=240, 1/5=192, 1/6=160,
  * 1/8=120, 1/12=80, 1/16=60, 1/24=40, 1/32=30,
  * 1/48=20, 1/64=15, 1/96=10 ticks
@@ -24,7 +24,7 @@ export const TICKS_PER_MEASURE_4_4 = TICKS_PER_BEAT * 4;
 
 // --- Beat ↔ Tick Conversion ---
 
-/** Beat (float) → Tick (int). 가장 가까운 tick으로 반올림. */
+/** Beat (float) → Tick (int). Rounds to the nearest tick. */
 export function beatToTick(beat: number): number {
   return Math.round(beat * TICKS_PER_BEAT);
 }

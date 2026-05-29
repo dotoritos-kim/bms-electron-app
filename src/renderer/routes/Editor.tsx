@@ -132,17 +132,17 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-// ─── currentBeat 격리 구독 컴포넌트 ─────────────────────────────────────────
-// currentBeat가 useShallow에 있으면 스크롤마다 전체 Editor가 리렌더됨.
-// 아래 bridge 컴포넌트들이 대신 구독해서 Editor 본체의 리렌더를 차단.
+// ─── currentBeat isolated subscriber components ───────────────────────────
+// If currentBeat is included in useShallow, the entire Editor re-renders on every scroll.
+// The bridge components below subscribe instead, blocking re-renders of the Editor body.
 
-/** NoteChartEditor: scrollToBeat만 currentBeat 구독 */
+/** NoteChartEditor: subscribes to currentBeat only for scrollToBeat */
 function NoteChartEditorBridge(props: Omit<NoteChartEditorProps, 'scrollToBeat'>) {
   const scrollToBeat = useEditorStore(s => s.currentBeat);
   return <NoteChartEditor {...props} scrollToBeat={scrollToBeat} />;
 }
 
-/** Minimap: currentBeat 구독 격리 */
+/** Minimap: isolated currentBeat subscription */
 function MinimapBridge({ notes, totalBeats, viewportBeats, onNavigate, densityData, bookmarks, hideHeader }: {
   notes: import('@rhythm-archive/bms-core').EditableBMSNote[];
   totalBeats: number;
@@ -156,7 +156,7 @@ function MinimapBridge({ notes, totalBeats, viewportBeats, onNavigate, densityDa
   return <Minimap notes={notes} totalBeats={totalBeats} currentBeat={currentBeat} viewportBeats={viewportBeats} onNavigate={onNavigate} densityData={densityData} bookmarks={bookmarks} hideHeader={hideHeader} />;
 }
 
-/** StatusBar: currentBeat 구독 격리 */
+/** StatusBar: isolated currentBeat subscription */
 function StatusBarBridge({ gridSnap, selectedCount, totalNotes, bpm, noteHeight, audioReady }: {
   gridSnap: number; selectedCount: number; totalNotes: number; bpm: number; noteHeight: number; audioReady: boolean;
 }) {
@@ -164,13 +164,13 @@ function StatusBarBridge({ gridSnap, selectedCount, totalNotes, bpm, noteHeight,
   return <StatusBar currentBeat={currentBeat} gridSnap={gridSnap} selectedCount={selectedCount} totalNotes={totalNotes} bpm={bpm} noteHeight={noteHeight} audioReady={audioReady} />;
 }
 
-/** BeatKeysoundPanel: currentBeat 구독 격리 */
+/** BeatKeysoundPanel: isolated currentBeat subscription */
 function BeatKeysoundPanelBridge(props: Omit<React.ComponentPropsWithRef<typeof BeatKeysoundPanel>, 'currentBeat'>) {
   const currentBeat = useEditorStore(s => s.currentBeat);
   return <BeatKeysoundPanel {...props} currentBeat={currentBeat} />;
 }
 
-/** 레이어 가시성/잠금/불투명도 패널 */
+/** Layer visibility / lock / opacity panel */
 const LAYER_KEYS: (keyof LayerConfig)[] = ['playable', 'invisible', 'landmine', 'bgm'];
 
 function LayerPanel({ layerConfig, onVisibleToggle, onLockToggle, onOpacityChange }: {
@@ -313,7 +313,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     return () => document.removeEventListener('mousedown', handler);
   }, [showToolMenu]);
 
-  // 마디 다이얼로그 기본값용 — 열릴 때 currentBeat를 캡처 (구독 없이 getState 사용)
+  // For measure dialog default value — captures currentBeat at open time (using getState without subscription)
   const modalBeatRef = useRef(0);
   // Open modal (auto-closes any other modal)
   const openModal = useCallback((modal: ModalType) => {
@@ -486,7 +486,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     }));
   }, [bookmarks, chart]);
 
-  // 키음별 사용 횟수 (메인 + additionalKeysounds 포함)
+  // Usage count per keysound (main keysound + additionalKeysounds included)
   const keysoundUsageCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const id of Object.keys(keysoundRecord)) counts[id] = 0;
@@ -503,7 +503,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     return counts;
   }, [notes, keysoundRecord]);
 
-  // 키음 관리 콜백
+  // Keysound management callbacks
   const [replaceKeysoundTarget, setReplaceKeysoundTarget] = useState<string | null>(null);
 
   const handleFindNotes = useCallback((keysoundId: string) => {
@@ -1419,7 +1419,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           <ArrowLeft className="h-4 w-4" />
         </button>
         <span className="text-sm font-medium truncate">{chart?.songInfo?.title || file.name}</span>
-        {/* 저장 버튼 — 파일명 바로 옆, 변경 시 강조 */}
+        {/* Save button — next to filename, highlighted when there are unsaved changes */}
         <button
           onClick={handleSaveWithCleanup}
           disabled={!hasUnsavedChanges}
@@ -1441,7 +1441,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         )}
         <div className="flex-1" />
 
-        {/* === 마디 삽입/삭제 — 헤더에 직접 노출 === */}
+        {/* === Measure insert/delete — exposed directly in the header === */}
         <div className="flex items-center gap-0.5">
           <button
             onClick={() => openModal('measureInsert')}
@@ -1724,7 +1724,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 </button>
               </>
             )}
-            {/* View toggles — 항상 표시 (오디오 상태 무관) */}
+            {/* View toggles — always visible (regardless of audio state) */}
             <div className="ml-auto flex items-center gap-0.5 shrink-0">
               <div className="w-px h-4 bg-zinc-700 mx-0.5" />
               <button onClick={store.toggleLeftPanel} aria-pressed={showLeftPanel} aria-label={t('editor:routes.editor.playback.keysoundPanelTitle')} className="p-1.5 rounded hover:bg-zinc-800 transition-colors text-zinc-400" title={t('editor:routes.editor.playback.keysoundPanelTitle')} data-testid="toggle-left-panel">

@@ -88,14 +88,14 @@ export interface InputDialog {
   stopEvent?: BMSStopEvent;
 }
 
-/** 레이어별 설정 (가시성, 잠금, 불투명도) */
+/** Per-layer settings (visibility, lock, opacity) */
 export interface LayerSettings {
   visible: boolean;
   locked: boolean;
   opacity: number; // 0.0 ~ 1.0
 }
 
-/** 전체 레이어 설정 */
+/** Full layer configuration */
 export interface LayerConfig {
   playable: LayerSettings;
   invisible: LayerSettings;
@@ -110,17 +110,17 @@ export const DEFAULT_LAYER_CONFIG: LayerConfig = {
   bgm: { visible: true, locked: false, opacity: 0.6 },
 };
 
-/** 고급 선택 필터 조건 */
+/** Advanced selection filter conditions */
 export interface NoteSelectionFilter {
-  /** 레이어 필터 (null = 모든 레이어) */
+  /** Layer filter (null = all layers) */
   noteTypes?: Array<'playable' | 'invisible' | 'landmine' | 'bgm'>;
-  /** 마디 범위 (inclusive) */
+  /** Measure range (inclusive) */
   measureRange?: { from: number; to: number };
-  /** 컬럼 필터 (null = 모든 컬럼) */
+  /** Column filter (null = all columns) */
   columns?: string[];
-  /** 키음 필터 (null = 모든 키음) */
+  /** Keysound filter (null = all keysounds) */
   keysounds?: string[];
-  /** 기존 선택에 추가 (true) 또는 교체 (false) */
+  /** Add to existing selection (true) or replace (false) */
   additive?: boolean;
 }
 
@@ -135,41 +135,41 @@ export interface PasteAnalysis {
 
 // --- Helpers ---
 
-/** Store 내부에서 사용: get()으로 timeSignatures를 참조하여 beatToMF 수행 */
+/** Used internally by store: performs beatToMF using timeSignatures via get() */
 function storeBeatToMF(getState: () => EditorState, beat: number): MeasureFraction {
   const converter = getState()._beatConverter;
   if (converter) return converter.beatToMF(beat);
   return beatToMF44(beat);
 }
 
-/** Store 내부에서 사용: measure/fraction → beat */
+/** Used internally by store: measure/fraction → beat */
 function storeMfToBeat(getState: () => EditorState, measure: number, fraction: number): number {
   const converter = getState()._beatConverter;
   if (converter) return converter.mfToBeat(measure, fraction);
   return measure * 4 + fraction * 4;
 }
 
-/** converter를 직접 얻어 루프 내 캐시로 사용 */
+/** Obtain converter directly for use as a loop-local cache */
 function getConverter(getState: () => EditorState): BeatConverter {
   return getState()._beatConverter ?? createBeatConverter(new Map());
 }
 
-/** tick → { tick, beat, measure, fraction } 동기화 헬퍼. tick이 primary. */
+/** Sync helper: tick → { tick, beat, measure, fraction }. tick is the primary source. */
 function syncFromTick(tick: number, converter: BeatConverter): { tick: number; beat: number; measure: number; fraction: number } {
   const beat = tickToBeat(tick);
   const { measure, fraction } = converter.beatToMF(beat);
   return { tick, beat, measure, fraction };
 }
 
-/** beat → { tick, beat, measure, fraction } 동기화 헬퍼. beat에서 tick 파생 (레거시 호환). */
+/** Sync helper: beat → { tick, beat, measure, fraction }. tick is derived from beat (legacy compatibility). */
 function syncFromBeat(beat: number, converter: BeatConverter): { tick: number; beat: number; measure: number; fraction: number } {
   const tick = beatToTick(beat);
-  const resolvedBeat = tickToBeat(tick); // tick 기준으로 정규화
+  const resolvedBeat = tickToBeat(tick); // normalize to tick boundary
   const { measure, fraction } = converter.beatToMF(resolvedBeat);
   return { tick, beat: resolvedBeat, measure, fraction };
 }
 
-/** 공통: timeSignatures 변경 시 notes/bpmChanges/stopEvents의 measure/fraction 재계산 */
+/** Shared: recalculate measure/fraction for notes/bpmChanges/stopEvents when timeSignatures change */
 function recalcMeasureFractions(
   getState: () => EditorState,
   newTS: Map<number, number>,
@@ -243,16 +243,16 @@ interface EditorState {
   // Tool / Selection
   activeTool: EditorTool;
   gridSnap: GridSnap;
-  /** 마디별 gridSnap 오버라이드 (마디 번호 → gridSnap 값) */
+  /** Per-measure gridSnap overrides (measure number → gridSnap value) */
   gridSnapOverrides: Map<number, number>;
   snapEnabled: boolean;
-  /** 레이어별 가시성/잠금/불투명도 설정 */
+  /** Per-layer visibility / lock / opacity settings */
   layerConfig: LayerConfig;
-  /** 최소 롱노트 길이 (beat 단위, 기본 0.25 = 1/16 beat) */
+  /** Minimum long-note length (in beats, default 0.25 = 1/16 beat) */
   minLnLength: number;
-  /** 타임라인 북마크 */
+  /** Timeline bookmarks */
   bookmarks: Array<{ measure: number; name: string; color?: string }>;
-  /** 노트 그룹 */
+  /** Note groups */
   noteGroups: Array<{ id: string; name: string; noteIds: string[]; color?: string }>;
   selectedNotes: Set<string>;
   selectedNoteType: SelectedNoteType;
@@ -260,11 +260,11 @@ interface EditorState {
   currentBeat: number;
 
   // Keysound highlight
-  /** 하이라이트 중인 키음 ID (null = 비활성) */
+  /** Currently highlighted keysound ID (null = inactive) */
   highlightKeysound: string | null;
 
   // Custom Colors / Skin
-  /** 커스텀 노트 색상 (null = 기본 테마) */
+  /** Custom note colors (null = default theme) */
   customColors: {
     playable?: string;
     invisible?: string;
@@ -275,20 +275,20 @@ interface EditorState {
   };
 
   // BGM Channel Solo/Mute
-  /** 솔로 채널 번호 (null = 솔로 없음, 모든 채널 재생) */
+  /** Solo channel number (null = no solo, all channels play) */
   bgmSoloChannel: number | null;
-  /** 뮤트된 BGM 채널 번호 집합 */
+  /** Set of muted BGM channel numbers */
   bgmMutedChannels: Set<number>;
 
   // A/B Comparison
-  /** 비교용 스냅샷 (현재 상태와 교대 재생) */
+  /** Comparison snapshot (alternated with current state during playback) */
   comparisonSnapshot: { notes: EditableBMSNote[]; bpmChanges: BMSBpmChange[] } | null;
-  /** 비교 모드 활성화 여부 */
+  /** Whether comparison mode is active */
   comparisonActive: boolean;
 
   // Clipboard
   clipboard: EditableBMSNote[];
-  /** 클립보드 히스토리 (최대 10개) */
+  /** Clipboard history (up to 10 entries) */
   clipboardHistory: EditableBMSNote[][];
 
   // Undo / Redo
@@ -323,11 +323,11 @@ interface EditorState {
 
   // --- Computed ---
 
-  /** 현재 상태를 저장용 EditableBMSChart로 조립 */
+  /** Assemble current state into a saveable EditableBMSChart */
   savableChart: () => EditableBMSChart | null;
-  /** timeSignatures-aware beat→measure/fraction 변환 */
+  /** timeSignatures-aware beat → measure/fraction conversion */
   beatToMF: (beat: number) => MeasureFraction;
-  /** timeSignatures-aware measure/fraction→beat 변환 */
+  /** timeSignatures-aware measure/fraction → beat conversion */
   mfToBeat: (measure: number, fraction: number) => number;
 
   // --- Actions ---
@@ -352,7 +352,7 @@ interface EditorState {
   selectNotes: (noteIds: string[], additive?: boolean) => void;
   updateNote: (noteId: string, updates: Partial<EditableBMSNote>) => void;
   selectAll: () => void;
-  /** 조건 기반 노트 선택 (레이어/마디범위/컬럼/키음 필터) */
+  /** Condition-based note selection (layer / measure range / column / keysound filter) */
   selectByFilter: (filter: NoteSelectionFilter) => void;
   clearSelection: () => void;
   changeNoteType: (newType: NoteType, defaultColumn?: string) => void;
@@ -379,7 +379,7 @@ interface EditorState {
   preparePaste: (laneIds: string[]) => PasteAnalysis | null;
   /** Execute paste with user choice for conflicts */
   executePaste: (analysis: PasteAnalysis, choice: 'replace' | 'stack' | 'cancel') => void;
-  /** 클립보드 히스토리에서 특정 항목을 현재 클립보드로 설정 */
+  /** Set a specific clipboard history entry as the current clipboard */
   selectClipboardHistory: (index: number) => void;
 
   // BPM / STOP
@@ -421,7 +421,7 @@ interface EditorState {
   setSnapEnabled: (enabled: boolean) => void;
   toggleSnap: () => void;
   setGridSnapOverride: (measure: number, gridSnap: number | null) => void;
-  /** 특정 마디에서의 유효 gridSnap (override 있으면 override, 없으면 default) */
+  /** Effective gridSnap for a given measure (override if set, otherwise default) */
   getGridSnapForMeasure: (measure: number) => number;
   setSelectedNoteType: (type: SelectedNoteType) => void;
   setCurrentKeysound: (keysound: string) => void;
@@ -475,11 +475,11 @@ interface EditorState {
   toggleMetronome: () => void;
 
   // Keysound management
-  /** 키음 하이라이트 설정/해제 */
+  /** Set or clear the keysound highlight */
   setHighlightKeysound: (keysound: string | null) => void;
-  /** 키음 일괄 교체 (모든 노트의 fromId → toId, additionalKeysounds 포함) */
+  /** Bulk-replace keysound across all notes (fromId → toId, including additionalKeysounds) */
   replaceKeysound: (fromId: string, toId: string) => void;
-  /** WAV 정의 삭제 (미사용 키음 정리) */
+  /** Remove WAV definitions (cleanup of unused keysounds) */
   removeWavDefinitions: (keysoundIds: string[]) => void;
 
   // Patterns

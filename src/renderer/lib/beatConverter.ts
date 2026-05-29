@@ -1,10 +1,10 @@
 /**
- * Beat ↔ Measure/Fraction 변환 유틸리티
+ * Beat ↔ Measure/Fraction conversion utilities
  *
- * TimeSignatures를 인식하여 비표준 박자(3/4, 5/4, 7/8 등)에서도
- * 정확한 beat ↔ measure/fraction 변환을 수행합니다.
+ * TimeSignatures-aware: correctly converts beat ↔ measure/fraction
+ * for non-standard time signatures (3/4, 5/4, 7/8, etc.).
  *
- * 캐시를 통해 반복 호출 시 O(1) 성능을 보장합니다.
+ * Results are cached to guarantee O(1) performance on repeated calls.
  */
 
 import { TimeSignatures } from '@rhythm-archive/bms-core';
@@ -15,23 +15,23 @@ export interface MeasureFraction {
 }
 
 /**
- * TimeSignatures-aware beat 변환기를 생성합니다.
+ * Creates a TimeSignatures-aware beat converter.
  *
- * 반환된 객체는 beatToMF / mfToBeat 메서드를 제공하며,
- * 내부적으로 결과를 캐싱합니다.
+ * The returned object provides beatToMF / mfToBeat methods
+ * and caches results internally.
  *
- * @param timeSignatures 에디터의 Map<number, number> 형식 박자표
+ * @param timeSignatures Editor time signature map in Map<number, number> format
  */
 export function createBeatConverter(timeSignatures: Map<number, number>) {
   const ts = TimeSignatures.fromMap(timeSignatures);
 
-  // Memoize cache: beat (4자리 소수점 키) → { measure, fraction }
+  // Memoize cache: beat (6-decimal key) → { measure, fraction }
   const beatToMFCache = new Map<string, MeasureFraction>();
   // Memoize cache: "measure:fraction" → beat
   const mfToBeatCache = new Map<string, number>();
 
   /**
-   * Beat → { measure, fraction } 변환 (캐시 적용)
+   * Beat → { measure, fraction } conversion (cached)
    */
   function beatToMF(beat: number): MeasureFraction {
     const key = beat.toFixed(6);
@@ -44,7 +44,7 @@ export function createBeatConverter(timeSignatures: Map<number, number>) {
   }
 
   /**
-   * { measure, fraction } → Beat 변환 (캐시 적용)
+   * { measure, fraction } → Beat conversion (cached)
    */
   function mfToBeat(measure: number, fraction: number): number {
     const key = `${measure}:${fraction.toFixed(6)}`;
@@ -57,7 +57,7 @@ export function createBeatConverter(timeSignatures: Map<number, number>) {
   }
 
   /**
-   * 특정 마디의 비트 수를 반환합니다.
+   * Returns the number of beats in the given measure.
    * 4/4 → 4, 3/4 → 3, 5/4 → 5
    */
   function getBeatsInMeasure(measure: number): number {
@@ -65,8 +65,8 @@ export function createBeatConverter(timeSignatures: Map<number, number>) {
   }
 
   /**
-   * 캐시를 초기화합니다.
-   * timeSignatures가 변경되면 새 converter를 생성하므로 수동 초기화는 보통 불필요합니다.
+   * Clears the internal caches.
+   * Normally not needed manually — when timeSignatures change, create a new converter instead.
    */
   function clearCache() {
     beatToMFCache.clear();
@@ -78,7 +78,7 @@ export function createBeatConverter(timeSignatures: Map<number, number>) {
     mfToBeat,
     getBeatsInMeasure,
     clearCache,
-    /** 내부 TimeSignatures 인스턴스 접근 (테스트용) */
+    /** Access to the internal TimeSignatures instance (for testing) */
     _ts: ts,
   };
 }
@@ -86,7 +86,7 @@ export function createBeatConverter(timeSignatures: Map<number, number>) {
 export type BeatConverter = ReturnType<typeof createBeatConverter>;
 
 /**
- * 4/4 전용 빠른 변환 (fallback / timeSignatures 없을 때)
+ * Fast 4/4-only conversion (fallback when no timeSignatures are available)
  */
 export function beatToMF44(beat: number): MeasureFraction {
   const measure = Math.floor(beat / 4);
@@ -95,7 +95,7 @@ export function beatToMF44(beat: number): MeasureFraction {
 }
 
 /**
- * 4/4 전용 역변환 (fallback)
+ * Fast 4/4-only inverse conversion (fallback)
  */
 export function mfToBeat44(measure: number, fraction: number): number {
   return measure * 4 + fraction * 4;

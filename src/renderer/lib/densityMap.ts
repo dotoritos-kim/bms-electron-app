@@ -1,8 +1,8 @@
 /**
- * Note Density Map — 마디별 노트 밀도 계산
+ * Note Density Map — per-measure note density calculation
  *
- * 미니맵/스크롤바 옆에 히트맵으로 표시하기 위한 유틸리티.
- * useMemo 캐시로 노트 변경 시에만 재계산.
+ * Utility for rendering a heatmap alongside the minimap/scrollbar.
+ * Recomputes only when notes change via useMemo caching.
  */
 
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
@@ -15,11 +15,11 @@ export interface MeasureDensity {
 }
 
 /**
- * 마디별 노트 밀도를 계산합니다.
+ * Computes note density per measure.
  *
- * @param notes 노트 배열
- * @param totalMeasures 총 마디 수
- * @returns 마디별 밀도 배열
+ * @param notes array of notes
+ * @param totalMeasures total number of measures
+ * @returns array of per-measure density entries
  */
 export function computeDensityMap(
   notes: EditableBMSNote[],
@@ -51,7 +51,7 @@ export function computeDensityMap(
 }
 
 /**
- * 밀도 값을 색상으로 변환 (green → yellow → red)
+ * Converts a density value to a color (green → yellow → red)
  *
  * @param normalized 0.0 ~ 1.0
  * @returns hex color string (#rrggbb)

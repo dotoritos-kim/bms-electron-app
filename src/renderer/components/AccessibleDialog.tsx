@@ -9,25 +9,25 @@ interface AccessibleDialogProps {
 }
 
 /**
- * 접근성을 갖춘 다이얼로그 래퍼.
+ * Accessible dialog wrapper.
  * - role="dialog", aria-modal, aria-labelledby
- * - 포커스 트랩 (Tab/Shift+Tab 순환)
- * - Escape 키로 닫기
- * - 배경 클릭으로 닫기
- * - 열릴 때 첫 포커스 가능 요소에 자동 포커스
- * - 닫힐 때 트리거 요소로 포커스 복원
+ * - Focus trap (Tab/Shift+Tab cycle)
+ * - Close on Escape key
+ * - Close on backdrop click
+ * - Auto-focus first focusable element on open
+ * - Restore focus to trigger element on close
  */
 export function AccessibleDialog({ open, onClose, title, children, className }: AccessibleDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const titleId = `dialog-title-${title.replace(/\s+/g, '-').toLowerCase()}`;
 
-  // 열릴 때 이전 포커스 저장 + 다이얼로그 내부로 포커스 이동
+  // Save previous focus on open + move focus inside the dialog
   useEffect(() => {
     if (!open) return;
     previousFocusRef.current = document.activeElement as HTMLElement | null;
 
-    // 다이얼로그 내 첫 포커스 가능 요소로 포커스
+    // Focus the first focusable element inside the dialog
     requestAnimationFrame(() => {
       const dialog = dialogRef.current;
       if (!dialog) return;
@@ -42,12 +42,12 @@ export function AccessibleDialog({ open, onClose, title, children, className }: 
     });
 
     return () => {
-      // 닫힐 때 포커스 복원
+      // Restore focus on close
       previousFocusRef.current?.focus();
     };
   }, [open]);
 
-  // 포커스 트랩
+  // Focus trap
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {

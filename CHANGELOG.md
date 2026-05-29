@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.3.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.2.2...v0.3.0) (2026-05-29)
+
+
+### Features
+
+* **i18n:** fire 14 — Japanese full translation (631 keys) ([6010aaa](https://github.com/dotoritos-kim/bms-electron-app/commit/6010aaa1dd4626a6c532456a460af6c283e58d16))
+* **i18n:** fire 17 — de/es/ru/zh draft translations (4 gated locales) ([4680ea3](https://github.com/dotoritos-kim/bms-electron-app/commit/4680ea3af89ff791c7288da7d109c8fc460eb476))
+
+
+### Bug Fixes
+
+* **editor:** save correct panel width after drag-resize (closure bug) ([d85cf00](https://github.com/dotoritos-kim/bms-electron-app/commit/d85cf007a4deb71f46a4b3969bbf42542d331e23))
+* **player:** move containerRef to game canvas div, remove hardcoded -36 header offset ([a4b4644](https://github.com/dotoritos-kim/bms-electron-app/commit/a4b4644f1bf4420d7b3870e4e997251afbd6b495))
+* **waveform-overlay:** redraw on canvas resize via ResizeObserver ([521147a](https://github.com/dotoritos-kim/bms-electron-app/commit/521147a4c9bfd3c4aafb2c75f09c2bdaa258d38b))
+
 ## [0.2.2](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.2.1...v0.2.2) (2026-05-06)
 
 

@@ -73,12 +73,22 @@ export async function setStoredLocale(locale: SupportedLocale): Promise<boolean>
 /**
  * Resolve the initial locale at boot:
  *   1. value persisted by a previous session
- *   2. OS locale, if it maps to a SupportedLocale
- *   3. fallback to 'en'
+ *   2. --lang CLI switch (e.g. tests pass --lang=ja; Electron itself doesn't
+ *      surface this through app.getLocale() on all platforms)
+ *   3. OS locale, if it maps to a SupportedLocale
+ *   4. fallback to 'en'
  */
 export async function resolveInitialLocale(): Promise<SupportedLocale> {
   const stored = await getStoredLocale();
   if (stored) return stored;
+
+  try {
+    const cliLang = app.commandLine?.getSwitchValue('lang');
+    const fromCli = normalizeOsLocale(cliLang);
+    if (fromCli) return fromCli;
+  } catch {
+    // commandLine may be unavailable in unit-test mocks
+  }
 
   try {
     const fromOs = normalizeOsLocale(app.getLocale());

@@ -21,13 +21,12 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
     const appPath = resolve(__dirname, '../../out/main/index.js');
     const { ELECTRON_RUN_AS_NODE, ...cleanEnv } = process.env;
     const electronApp = await electron.launch({
-      args: [appPath],
+      // --bms-test-locale is a custom (non-Chromium) flag that stays in
+      // process.argv unmodified. APP_TEST_LANG is kept as a secondary fallback.
+      args: [appPath, '--bms-test-locale=ja'],
       env: {
         ...cleanEnv,
         NODE_ENV: 'test',
-        // APP_TEST_LANG is read by resolveInitialLocale() in the main process.
-        // Using --lang=ja is unreliable: it's a Chromium switch whose effect on
-        // app.getLocale() is not guaranteed before app.whenReady() on all platforms.
         APP_TEST_LANG: 'ja',
       },
     });

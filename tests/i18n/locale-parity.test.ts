@@ -1,14 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import koCommon from '../../src/shared/i18n/locales/ko/common.json';
 import enCommon from '../../src/shared/i18n/locales/en/common.json';
+import jaCommon from '../../src/shared/i18n/locales/ja/common.json';
 import koApp from '../../src/shared/i18n/locales/ko/app.json';
 import enApp from '../../src/shared/i18n/locales/en/app.json';
+import jaApp from '../../src/shared/i18n/locales/ja/app.json';
 import koErrors from '../../src/shared/i18n/locales/ko/errors.json';
 import enErrors from '../../src/shared/i18n/locales/en/errors.json';
+import jaErrors from '../../src/shared/i18n/locales/ja/errors.json';
 import koEditor from '../../src/shared/i18n/locales/ko/editor.json';
 import enEditor from '../../src/shared/i18n/locales/en/editor.json';
+import jaEditor from '../../src/shared/i18n/locales/ja/editor.json';
 import koPlayer from '../../src/shared/i18n/locales/ko/player.json';
 import enPlayer from '../../src/shared/i18n/locales/en/player.json';
+import jaPlayer from '../../src/shared/i18n/locales/ja/player.json';
 
 /**
  * Parity test: ko and en must define exactly the same keys for every
@@ -34,20 +39,26 @@ function stripKoUnneededPlurals(enKeys: string[], koKeys: readonly string[]): st
 }
 
 describe.each([
-  { ns: 'common', ko: koCommon, en: enCommon },
-  { ns: 'app', ko: koApp, en: enApp },
-  { ns: 'errors', ko: koErrors, en: enErrors },
-  { ns: 'editor', ko: koEditor, en: enEditor },
-  { ns: 'player', ko: koPlayer, en: enPlayer },
-])('locale parity — namespace=$ns', ({ ko, en }) => {
+  { ns: 'common', ko: koCommon, en: enCommon, ja: jaCommon },
+  { ns: 'app', ko: koApp, en: enApp, ja: jaApp },
+  { ns: 'errors', ko: koErrors, en: enErrors, ja: jaErrors },
+  { ns: 'editor', ko: koEditor, en: enEditor, ja: jaEditor },
+  { ns: 'player', ko: koPlayer, en: enPlayer, ja: jaPlayer },
+])('locale parity — namespace=$ns', ({ ko, en, ja }) => {
   it('ko and en define the same keys', () => {
     const koKeys = flatten(ko).sort();
     const enKeys = stripKoUnneededPlurals(flatten(en), koKeys).sort();
     expect(koKeys).toEqual(enKeys);
   });
 
+  it('ja matches ko key set (same CLDR plural rule)', () => {
+    const koKeys = flatten(ko).sort();
+    const jaKeys = flatten(ja).sort();
+    expect(jaKeys).toEqual(koKeys);
+  });
+
   it('no key resolves to an empty string', () => {
-    for (const [bundle, name] of [[ko, 'ko'], [en, 'en']] as const) {
+    for (const [bundle, name] of [[ko, 'ko'], [en, 'en'], [ja, 'ja']] as const) {
       const empties: string[] = [];
       const walk = (obj: unknown, path = ''): void => {
         if (obj == null || typeof obj !== 'object') return;

@@ -16,7 +16,7 @@ export type SupportedLocale = IpcSupportedLocale;
  *
  * Mutate this constant — never `SupportedLocale` — to enable a new language.
  */
-export const ENABLED_LOCALES: readonly SupportedLocale[] = ['ko', 'en'] as const;
+export const ENABLED_LOCALES: readonly SupportedLocale[] = ['ko', 'en', 'ja'] as const;
 
 export const DEFAULT_LOCALE: SupportedLocale = 'en';
 export const FALLBACK_LOCALE: SupportedLocale = 'en';

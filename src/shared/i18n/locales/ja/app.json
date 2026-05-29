@@ -1,158 +1,226 @@
 {
   "audioSlicer": {
-    "addMarkerButton": "",
-    "autoDetectButton": "",
-    "autoDetectNoResults": "",
-    "autoDetectSuccess_other": "",
-    "clearMarkersButton": "",
-    "emptyFormats": "",
-    "emptyTitle": "",
-    "infoChannels": "",
-    "infoLength": "",
-    "infoSampleRate": "",
-    "infoSelection": "",
-    "infoView": "",
-    "loading": "",
-    "markerCountSummary": "",
-    "openButton": "",
-    "playButton": "",
-    "playSelectionButton": "",
-    "sensitivityLabel": "",
-    "sliceAndSaveButton": "",
-    "slicingButton": "",
-    "stopButton": "",
-    "title": "",
-    "viewportTooltip": ""
+    "addMarkerButton": "マーカー追加",
+    "autoDetectButton": "自動検出",
+    "autoDetectNoResults": "検出された区間がありません。感度スライダーを上げて再試行してください。",
+    "autoDetectSuccess_one": "{{count}}個の区間を検出しました。",
+    "autoDetectSuccess_other": "{{count}}個の区間を検出しました。",
+    "clearMarkersButton": "マーカーをクリア",
+    "emptyFormats": "WAV、MP3、OGG、FLACに対応",
+    "emptyTitle": "オーディオファイルを開いて開始してください",
+    "infoChannels": "チャンネル",
+    "infoLength": "長さ",
+    "infoSampleRate": "サンプルレート",
+    "infoSelection": "選択",
+    "infoView": "ビュー",
+    "loading": "読み込み中...",
+    "markerCountSummary": "{{markerCount}}個のマーカー → {{sliceCount}}個のスライス",
+    "openButton": "オーディオを開く",
+    "playButton": "再生",
+    "playSelectionButton": "選択区間を再生",
+    "sensitivityLabel": "感度",
+    "sliceAndSaveButton": "スライス & 保存",
+    "slicingButton": "スライス中...",
+    "stopButton": "停止",
+    "title": "オーディオスライサー",
+    "viewportTooltip": "オーディオ全体における現在のビューポート位置"
   },
   "dialogs": {
     "autoChart": {
-      "applyButton": "",
-      "audioLoaded": "",
-      "audioLoading": "",
-      "audioOpenButton": "",
-      "audioSection": "",
-      "difficultyLabel": "",
-      "generateButton": "",
-      "generatedSummary_other": "",
-      "gridSnapToggle": "",
-      "lnRatioLabel": "",
-      "minNotesWarning": "",
-      "noOnsetsWarning": "",
-      "previewLabel_other": "",
-      "scratchToggle": "",
-      "suggestButton": "",
-      "suggestCountLabel": "",
-      "suggestExplanation_other": "",
+      "applyButton": "適用",
+      "audioLoaded": "ロード済み ({{duration}}秒)",
+      "audioLoading": "読み込み中...",
+      "audioOpenButton": "オーディオファイルを開く",
+      "audioSection": "オーディオソース",
+      "difficultyLabel": "難易度",
+      "generateButton": "譜面生成",
+      "generatedSummary": "{{count}}個のノーツを生成しました",
+      "generatedSummary_other": "{{count}}個のノーツを生成しました",
+      "gridSnapToggle": "グリッドスナップ",
+      "lnRatioLabel": "LN比率",
+      "minNotesWarning": "最低4個以上のノーツが必要です",
+      "noOnsetsWarning": "検出されたオンセットがありません。オーディオの音量が低すぎるか無音の可能性があります。難易度を下げると感度が上がります。",
+      "previewLabel": "プレビュー ({{count}}個のノーツ)",
+      "previewLabel_other": "プレビュー ({{count}}個のノーツ)",
+      "scratchToggle": "スクラッチを含む",
+      "suggestButton": "パターン提案を生成",
+      "suggestCountLabel": "生成するノーツ数",
+      "suggestExplanation": "既存のノートパターンを解析して次の小節のノーツを提案します。現在の譜面には{{count}}個のノーツがあります。",
+      "suggestExplanation_other": "既存のノートパターンを解析して次の小節のノーツを提案します。現在の譜面には{{count}}個のノーツがあります。",
       "tabs": {
-        "generate": "",
-        "suggest": ""
+        "generate": "オーディオ → 譜面生成",
+        "suggest": "パターン提案"
       },
-      "title": ""
+      "title": "AI譜面生成"
     },
     "bpmTap": {
-      "applyButton": "",
-      "resetButton": "",
-      "resetIndicator": "",
-      "tapButton": "",
-      "tapsCount_other": "",
-      "title": ""
+      "applyButton": "適用",
+      "resetButton": "リセット",
+      "resetIndicator": "リセット済み",
+      "tapButton": "タップ (Space)",
+      "tapsCount": "BPM ({{count}} taps)",
+      "tapsCount_one": "BPM ({{count}} tap)",
+      "tapsCount_other": "BPM ({{count}} taps)",
+      "title": "BPMタップ"
     },
     "keyBindings": {
-      "conflictBadge": "",
-      "conflictSummary_other": "",
-      "listening": "",
-      "resetDefaults": "",
-      "saveButton": "",
-      "title": ""
+      "conflictBadge": "競合",
+      "conflictSummary": "{{count}}項目でキー競合",
+      "conflictSummary_one": "{{count}}項目でキー競合",
+      "conflictSummary_other": "{{count}}項目でキー競合",
+      "listening": "キー入力待機中...",
+      "resetDefaults": "デフォルトに戻す",
+      "saveButton": "保存",
+      "title": "キーバインド設定"
     },
     "midiMapping": {
-      "closeButton": "",
-      "connect": "",
-      "devicePlaceholder": "",
-      "deviceSection": "",
-      "disconnect": "",
-      "laneSection": "",
-      "lastInput": "",
-      "modeOff": "",
-      "modeOffHelp": "",
-      "modeRealtime": "",
-      "modeRealtimeHelp": "",
-      "modeStep": "",
-      "modeStepHelp": "",
-      "noDevices": "",
-      "presetSection": "",
-      "recordingSection": "",
-      "title": "",
-      "unmapped": "",
-      "waiting": ""
+      "closeButton": "閉じる",
+      "connect": "接続",
+      "devicePlaceholder": "デバイスを選択...",
+      "deviceSection": "デバイス",
+      "disconnect": "切断",
+      "laneSection": "レーンマッピング",
+      "lastInput": "最終入力:",
+      "modeOff": "オフ",
+      "modeOffHelp": "MIDIレコーディングを無効化",
+      "modeRealtime": "リアルタイム",
+      "modeRealtimeHelp": "リアルタイム: 再生中のMIDI入力 → 再生位置に配置",
+      "modeStep": "ステップ",
+      "modeStepHelp": "ステップ: MIDI入力 → 現在位置にノーツ配置後、自動進行",
+      "noDevices": "MIDIデバイスが検出されません",
+      "presetSection": "プリセット",
+      "recordingSection": "レコーディングモード",
+      "title": "MIDI設定",
+      "unmapped": "未設定",
+      "waiting": "待機中..."
     },
     "noteColor": {
-      "applyButton": "",
-      "customBadge": "",
-      "description": "",
-      "resetAllButton": "",
-      "resetTooltip": "",
-      "swatchTooltip": "",
-      "title": ""
+      "applyButton": "適用",
+      "customBadge": "カスタム",
+      "description": "ノーツタイプ別の色を変更します。色の欄をクリックして色を選択してください。",
+      "fields": {
+        "background": {
+          "description": "エディタキャンバスの背景色",
+          "label": "キャンバス背景"
+        },
+        "bgm": {
+          "description": "BGMノーツ",
+          "label": "BGMノーツ"
+        },
+        "invisible": {
+          "description": "見えないノーツ",
+          "label": "インビジブルノーツ"
+        },
+        "landmine": {
+          "description": "レーンに触れると判定減少",
+          "label": "地雷ノーツ"
+        },
+        "playable": {
+          "description": "通常ノーツ (レーン色をオーバーライド)",
+          "label": "プレイアブルノーツ"
+        },
+        "selection": {
+          "description": "選択されたノーツの輪郭",
+          "label": "選択ハイライト"
+        }
+      },
+      "resetAllButton": "すべてリセット",
+      "resetTooltip": "デフォルト値にリセット",
+      "swatchTooltip": "{{label}}の色を選択",
+      "title": "ノーツ色設定"
     },
     "patternLibrary": {
-      "applyTooltip_other": "",
-      "deleteTooltip": "",
-      "empty": "",
-      "noSearchResults": "",
-      "panelTitle": "",
-      "patternStats_other": "",
-      "saveDialog": {
-        "namePlaceholder": "",
-        "tagsPlaceholder": "",
-        "title": ""
+      "applyTooltip": "クリックして現在位置に適用\n{{count}}個のノーツ、{{beats}}拍",
+      "applyTooltip_other": "クリックして現在位置に適用\n{{count}}個のノーツ、{{beats}}拍",
+      "builtIn": {
+        "chord2": "2重同時",
+        "chord3": "3重同時",
+        "chord4": "4重同時",
+        "chordStream": "同時押しストリーム",
+        "jack16th": "16分ジャック",
+        "jack8th": "8分ジャック",
+        "jackDouble": "ダブルジャック",
+        "roll16th": "16分ロール",
+        "roll8th": "8分ロール",
+        "scratchPlusKey": "スクラッチ + キー",
+        "scratchRepeat": "スクラッチ連打",
+        "stairs16th": "16分階段 (上昇)",
+        "stairsAsc": "階段 (上昇)",
+        "stairsDesc": "階段 (下降)",
+        "stream16th": "16分ストリーム",
+        "stream8th": "8分ストリーム",
+        "trill16th": "16分トリル",
+        "trill32thBurst": "32分トリルバースト"
       },
-      "saveSelectionButton": "",
-      "searchPlaceholder": ""
+      "categories": {
+        "chord": "同時押し",
+        "custom": "ユーザー定義",
+        "jack": "ジャック",
+        "roll": "ロール",
+        "scratch": "スクラッチ",
+        "stairs": "階段",
+        "stream": "ストリーム",
+        "trill": "トリル"
+      },
+      "deleteTooltip": "削除",
+      "empty": "パターンなし",
+      "noSearchResults": "検索結果なし",
+      "panelTitle": "パターンライブラリ",
+      "patternStats": "{{count}}ノーツ · {{beats}}拍",
+      "patternStats_other": "{{count}}ノーツ · {{beats}}拍",
+      "saveDialog": {
+        "namePlaceholder": "パターン名",
+        "tagsPlaceholder": "タグ (カンマ区切り)",
+        "title": "パターン保存"
+      },
+      "saveSelectionButton": "選択ノーツをパターンとして保存",
+      "searchPlaceholder": "検索..."
     }
   },
   "errors": {
-    "goHome": ""
+    "goHome": "ホームへ",
+    "renderingTitle": "レンダリングエラー"
   },
   "home": {
     "meta": {
-      "file": "",
-      "genre": ""
+      "file": "ファイル",
+      "genre": "ジャンル"
     },
     "newFile": {
-      "artistField": "",
-      "createButton": "",
-      "creating": "",
-      "keyModeField": "",
-      "title": "",
-      "titleField": ""
+      "artistField": "アーティスト",
+      "createButton": "作成",
+      "creating": "作成中...",
+      "keyModeField": "キーモード",
+      "title": "新規BMSファイル",
+      "titleField": "タイトル"
     },
-    "pinFile": "",
-    "recentFiles": "",
-    "removeFromList": "",
+    "pinFile": "ピン留め",
+    "recentFiles": "最近のファイル",
+    "removeFromList": "リストから削除",
     "stats": {
-      "invisible": "",
-      "keyMode": "",
-      "keysounds": "",
-      "landmines": "",
-      "longNotes": "",
-      "scratch": "",
-      "totalNotes": ""
+      "invisible": "見えないノーツ",
+      "keyMode": "キーモード",
+      "keysounds": "キーサウンド",
+      "landmines": "地雷",
+      "longNotes": "ロングノート",
+      "scratch": "スクラッチ",
+      "totalNotes": "総ノーツ数"
     },
-    "unpinFile": ""
+    "unpinFile": "ピン留め解除"
   },
   "navigation": {
-    "discardLabel": "",
-    "leaveLabel": "",
-    "leaveTitle": "",
-    "saveAndLeaveLabel": ""
+    "discardLabel": "保存しない",
+    "leaveLabel": "離れる",
+    "leaveTitle": "画面遷移",
+    "saveAndLeaveLabel": "保存して離れる",
+    "saveBeforeLeave": "保存されていない変更があります。保存して移動しますか?"
   },
   "player": {
-    "exitConfirm": "",
-    "keyBindingsHint": ""
+    "exitConfirm": "ゲームプレイ中です。終了しますか?",
+    "keyBindingsHint": "キー設定は編集画面 > ツール > キーバインド設定から変更できます"
   },
   "stats": {
-    "duration": "",
-    "measures": ""
+    "duration": "再生時間",
+    "measures": "小節"
   }
 }

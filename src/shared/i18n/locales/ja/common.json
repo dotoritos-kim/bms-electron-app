@@ -1,12 +1,29 @@
 {
   "actions": {
-    "cancel": "",
-    "dismiss": "",
-    "retry": "",
-    "save": ""
+    "back": "戻る",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "delete": "削除",
+    "discard": "変更を破棄",
+    "dismiss": "通知を閉じる",
+    "next": "次へ",
+    "ok": "OK",
+    "open": "開く",
+    "retry": "再試行",
+    "save": "保存",
+    "saveAs": "名前を付けて保存"
   },
   "language": {
-    "current": "",
-    "label": ""
+    "changed": "言語を{{name}}に変更しました",
+    "changeTo": "{{name}}に変更",
+    "changing": "言語を変更中...",
+    "current": "現在の言語: {{name}}",
+    "label": "言語",
+    "loadFailed": "{{name}}の言語データを読み込めませんでした。以前の言語を維持します。"
+  },
+  "status": {
+    "modified": "変更済み",
+    "saved": "保存済み",
+    "saving": "保存中..."
   }
 }

@@ -1,0 +1,34 @@
+{
+  "judgment": {
+    "pgreat": "PGREAT",
+    "great": "GREAT",
+    "good": "GOOD",
+    "bad": "BAD",
+    "poor": "POOR",
+    "miss": "MISS",
+    "early": "早い",
+    "late": "遅い"
+  },
+  "gauge": {
+    "cleared": "クリア",
+    "failed": "失敗"
+  },
+  "hud": {
+    "bpm": "BPM",
+    "score": "スコア",
+    "combo": "コンボ",
+    "accuracy": "精度"
+  },
+  "errors": {
+    "audioLoadFailed": "オーディオを読み込めませんでした",
+    "decodeFailed": "オーディオデコード失敗",
+    "keysoundMissing": "キーサウンド欠落: {{name}}"
+  },
+  "state": {
+    "ready": "準備完了",
+    "playing": "再生中",
+    "paused": "一時停止",
+    "completed": "完了",
+    "failed": "失敗"
+  }
+}

@@ -14,10 +14,16 @@ describe('main process menu dictionary', () => {
     expect(t('en', 'menu.openFile')).toBe('Open File...');
   });
 
+  it('returns Japanese label when locale=ja', () => {
+    expect(t('ja', 'menu.file')).toBe('ファイル');
+    expect(t('ja', 'menu.save')).toBe('保存');
+    expect(t('ja', 'menu.openFile')).toBe('ファイルを開く...');
+  });
+
   it('falls back to English for unsupported locale', () => {
-    // ja is in SupportedLocale but not yet in the menu dictionary
-    expect(t('ja', 'menu.file')).toBe('File');
+    // ru is in SupportedLocale but not yet in the menu dictionary
     expect(t('ru', 'menu.save')).toBe('Save');
+    expect(t('zh', 'menu.file')).toBe('File');
   });
 
   it('every menu key has a translation in en (the fallback)', () => {

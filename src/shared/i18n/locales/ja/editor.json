@@ -1,208 +1,564 @@
 {
+  "contextMenu": {
+    "copy": "コピー",
+    "cut": "切り取り",
+    "delete": "削除",
+    "paste": "貼り付け",
+    "selectAll": "すべて選択"
+  },
+  "diff": {
+    "ariaLabel": "変更比較",
+    "empty": {
+      "after": "ファイルが削除されました",
+      "before": "ファイルなし"
+    },
+    "filter": {
+      "changesOnlyShort": "変更のみ",
+      "changesOnlyTooltip": "変更のみ表示"
+    },
+    "legend": {
+      "added": "追加 ({{count}})",
+      "modified": "変更 ({{count}})",
+      "removed": "削除 ({{count}})",
+      "unchangedDimmed": "変更なしノーツは半透明表示"
+    },
+    "measureCount": "({{count}}小節)",
+    "nav": {
+      "next": "次の変更",
+      "nextTooltip": "次の変更 (F8)",
+      "prev": "前の変更",
+      "prevTooltip": "前の変更 (F7)"
+    },
+    "noChanges": {
+      "detail": "オリジナルと同一です",
+      "title": "変更なし"
+    },
+    "sidebar": {
+      "heading": "変更箇所",
+      "measureLabel": "小節 {{measure}}"
+    },
+    "viewModeAria": "表示モード"
+  },
+  "keyBindings": {
+    "actions": {
+      "addBookmark": "ブックマーク追加",
+      "clearLoop": "ループ解除",
+      "clipboardHistory": "クリップボード履歴",
+      "copy": "コピー",
+      "createGroup": "グループ作成",
+      "cut": "切り取り",
+      "delete": "削除",
+      "deleteMeasure": "小節削除",
+      "escape": "キャンセル/選択解除",
+      "insertMeasure": "小節挿入",
+      "mirror": "ミラー",
+      "moveDown": "下に移動",
+      "moveLeft": "左に移動",
+      "moveRight": "右に移動",
+      "moveToBgm": "選択ノーツ → BGM",
+      "moveToPlay": "選択ノーツ → プレイ",
+      "moveUp": "上に移動",
+      "noteSearch": "ノーツ検索",
+      "paste": "貼り付け",
+      "playTest": "プレイテスト",
+      "playToggle": "再生/一時停止",
+      "quantize": "クオンタイズ",
+      "random": "ランダム",
+      "redo": "やり直し",
+      "save": "保存",
+      "saveAs": "名前を付けて保存",
+      "selectAll": "すべて選択",
+      "setLoopA": "ループ開始点",
+      "setLoopB": "ループ終了点",
+      "toggleDiff": "変更比較",
+      "togglePatternPanel": "パターンパネル切替",
+      "toggleSnap": "スナップ切替",
+      "toolAddNote": "ノーツ追加ツール",
+      "toolBpm": "BPMツール",
+      "toolDelete": "削除ツール",
+      "toolKeysound": "キーサウンドツール",
+      "toolMove": "移動ツール",
+      "toolSelect": "選択ツール",
+      "toolStop": "STOPツール",
+      "undo": "元に戻す"
+    },
+    "categories": {
+      "bookmark": "ブックマーク/グループ",
+      "clipboard": "クリップボード",
+      "edit": "編集",
+      "file": "ファイル",
+      "layer": "レイヤー",
+      "loop": "ループ",
+      "measure": "小節",
+      "move": "移動",
+      "panel": "パネル",
+      "playback": "再生",
+      "search": "検索",
+      "tools": "ツール",
+      "transform": "変換"
+    }
+  },
+  "noteChart": {
+    "error": {
+      "webglLost": "WebGLコンテキスト消失"
+    },
+    "layout": {
+      "horizontalColumns": "横カラム",
+      "verticalSingle": "縦1列"
+    },
+    "measureProgress": "{{current}}/{{total}} 小節",
+    "measureUnit": "小節",
+    "settings": {
+      "clickToSeekHint": "(クリックでその位置へ移動)",
+      "dragSensitivityHint": "(ドラッグ感度)",
+      "lanePerBeatHint": "(拍あたりのライン)",
+      "noteWidthHint": "(スクロール速度に応じたノーツ幅)",
+      "resetLabel": "(リセット)"
+    }
+  },
   "panels": {
     "beatKeysound": {
-      "current": "",
-      "empty": "",
-      "title": "",
-      "tooltip": ""
+      "current": "◀ 現在",
+      "empty": "現在位置付近にキーサウンドなし",
+      "title": "キーサウンドタイムライン",
+      "tooltip": "現在位置付近のキーサウンドを時系列で表示します。クリックで該当キーサウンドを選択します。"
     },
     "bgmManager": {
-      "channelStats": "",
-      "clickToSelect": "",
-      "muteOff": "",
-      "muteOn": "",
-      "soloOff": "",
-      "soloOn": "",
-      "title_other": ""
+      "channelStats": "{{notes}}ノーツ、{{keysounds}}種キーサウンド",
+      "clickToSelect": "クリック: 選択",
+      "muteOff": "ミュート解除",
+      "muteOn": "このチャンネルをミュート",
+      "soloOff": "ソロ解除",
+      "soloOn": "このチャンネルのみソロ",
+      "title": "BGMマネージャ ({{count}})",
+      "title_other": "BGMマネージャ ({{count}})"
+    },
+    "header": {
+      "artistField": "アーティスト",
+      "bpmField": "BPM",
+      "common": {
+        "applyButton": "適用",
+        "deleteTooltip": "削除",
+        "empty": "項目なし",
+        "noSearchResults": "検索結果なし",
+        "rawHelp": "すべてのヘッダーを直接編集。適用時に現在の内容で置き換えられます。",
+        "searchPlaceholder": "検索...",
+        "valuePlaceholder": "値"
+      },
+      "fields": {
+        "artist": "アーティスト",
+        "difficulty": "難易度",
+        "genre": "ジャンル",
+        "level": "レベル",
+        "rank": "判定",
+        "subartist": "サブアーティスト",
+        "subtitle": "サブタイトル",
+        "title": "タイトル"
+      },
+      "genreField": "ジャンル",
+      "tabs": {
+        "basic": "基本",
+        "bmp": "BMP",
+        "custom": "カスタム",
+        "raw": "Raw",
+        "wav": "WAV"
+      },
+      "title": "譜面情報",
+      "titleField": "タイトル"
+    },
+    "keysound": {
+      "contextMenu": {
+        "deleteUnused": "未使用キーサウンドを削除",
+        "findNotes": "このキーサウンドを使うノーツを検索",
+        "highlightOff": "ハイライト解除",
+        "highlightOn": "譜面でハイライト",
+        "replace": "キーサウンド一括置換...",
+        "selectBgm": "このキーサウンドのBGMノーツを選択"
+      },
+      "countSummary": "{{count}}個のキーサウンド",
+      "empty": "キーサウンドなし",
+      "filteredSummary": "({{count}}個フィルタ)",
+      "noSearchResults": "検索結果なし",
+      "noSilent": "無音 / No Sound",
+      "searchPlaceholder": "検索...",
+      "title": "キーサウンド",
+      "uploadButton": "アップロード",
+      "uploadDialog": {
+        "cancel": "キャンセル",
+        "commitMessage": "キーサウンドファイルをアップロード ({{count}}個)",
+        "confirm": "アップロード",
+        "dropPrompt": "ファイルをドラッグまたはクリックして選択",
+        "duplicateWavId": "WAV ID重複: {{id}}",
+        "fileCountSummary": "{{count}}個のファイル ({{size}})",
+        "fileTooLarge": "ファイルサイズ超過: {{name}} (最大10MB)",
+        "formatHint": "WAV、OGG、MP3 (個別最大10MB、合計50MB)",
+        "title": "キーサウンドファイルアップロード",
+        "totalTooLarge": "合計アップロードサイズが50MBを超えています",
+        "unsupportedFormat": "対応していない形式: {{name}} (WAV/OGG/MP3のみ)",
+        "uploadFailed": "アップロード失敗"
+      },
+      "uploadTooltip": "キーサウンドファイルをアップロード"
+    },
+    "minimap": {
+      "navigationTooltip": "クリック/ドラッグで移動",
+      "title": "ミニマップ"
+    },
+    "noteInfo": {
+      "empty": "ノーツを選択すると情報が表示されます",
+      "labels": {
+        "beat": "拍",
+        "beatRange": "拍範囲",
+        "channel": "チャンネル",
+        "column": "カラム",
+        "endBeat": "終了拍",
+        "endTime": "終了時刻",
+        "grid": "グリッド",
+        "keysound": "キーサウンド",
+        "layer": "レイヤー",
+        "length": "長さ",
+        "longNote": "ロングノート",
+        "measure": "小節",
+        "playTime": "再生時刻",
+        "position": "位置",
+        "selection": "選択",
+        "timing": "タイミング",
+        "type": "タイプ"
+      },
+      "multiTitle": "選択サマリ",
+      "title": "ノーツ情報",
+      "tooltips": {
+        "addLayer": "キーサウンド {{id}} レイヤーを追加",
+        "deleteLayer": "レイヤー削除"
+      },
+      "values": {
+        "gridAligned": "1/{{snap}} 整列",
+        "gridUnaligned": "非整列",
+        "notesCount": "{{count}}ノーツ",
+        "silentKeysound": "00 (無音)",
+        "uniqueKeysoundsCount": "{{count}}種類"
+      }
+    },
+    "noteSearch": {
+      "noResults": "結果なし",
+      "placeholder": "検索...",
+      "title": "ノーツ検索"
+    },
+    "statusBar": {
+      "audioMissingTooltip": "オーディオ未ロード",
+      "audioOff": "ミュート",
+      "audioOn": "オーディオ",
+      "audioReadyTooltip": "オーディオ準備完了",
+      "beat": "拍",
+      "beatLabel": "拍",
+      "currentPositionTooltip": "現在位置 (小節・拍)",
+      "gridSnapTooltip": "グリッドスナップ",
+      "measureLabel": "小節",
+      "noSelection": "選択なし",
+      "noteHeightTooltip": "ノーツの太さ",
+      "notes": "ノーツ",
+      "selectedCount": "{{count}}個選択",
+      "selectedNotesTooltip": "選択中のノーツ",
+      "time": "時間",
+      "totalCount": "合計{{count}}個",
+      "totalNotesTooltip": "総ノーツ数"
     }
   },
   "routes": {
     "editor": {
-      "audioLoading": "",
+      "audioLoading": "読み込み中 {{loaded}}/{{total}}",
       "autoSaveRecovery": {
-        "body": "",
-        "ignore": "",
-        "recover": "",
-        "title": ""
+        "body": "前回セッションの自動保存データが見つかりました。復元しますか?",
+        "ignore": "無視",
+        "recover": "復元",
+        "title": "自動保存復元"
       },
       "backConfirm": {
-        "body": "",
-        "cancel": "",
-        "discard": "",
-        "saveAndLeave": "",
-        "title": ""
+        "body": "保存されていない変更があります。保存せずに終了しますか?",
+        "cancel": "キャンセル",
+        "discard": "保存しない",
+        "saveAndLeave": "保存して終了",
+        "title": "未保存の変更"
       },
       "bookmarkDialog": {
-        "add": "",
-        "addPrompt": "",
-        "addTitle": "",
-        "cancel": "",
-        "delete": "",
-        "editTitle": "",
-        "measureBookmark": "",
-        "namePlaceholder": "",
-        "renamePrompt": "",
-        "save": ""
+        "add": "追加",
+        "addPrompt": "ブックマーク名を入力してください。",
+        "addTitle": "ブックマーク追加",
+        "cancel": "キャンセル",
+        "delete": "削除",
+        "editTitle": "ブックマーク編集",
+        "measureBookmark": "小節 #{{measure}} ブックマーク",
+        "namePlaceholder": "ブックマーク名",
+        "renamePrompt": "ブックマーク名を変更または削除してください。",
+        "save": "保存"
       },
       "canvas": {
-        "ariaLabel": "",
-        "keysoundIndicator": ""
+        "ariaLabel": "BMS譜面エディタ",
+        "keysoundIndicator": "キーサウンド: {{id}}{{name}}",
+        "silentKeysound": " (無音)"
       },
       "clipboardHistory": {
-        "close": "",
-        "currentLabel": "",
-        "hint": "",
-        "noKeysounds": "",
-        "noteCount_other": "",
-        "title": ""
+        "close": "閉じる",
+        "currentLabel": "現在",
+        "hint": "項目を選択すると該当ノーツがクリップボードにコピーされます。",
+        "noKeysounds": "キーサウンドなし",
+        "noteCount": "{{count}}ノーツ",
+        "noteCount_other": "{{count}}ノーツ",
+        "title": "クリップボード履歴"
       },
-      "copyErrorTemplate": "",
-      "createGroupPrompt": "",
-      "deleteUnusedConfirm_other": "",
+      "copyErrorTemplate": "ファイル: {{path}}\nエラー: {{error}}",
+      "createGroupPrompt": "グループ名:",
+      "deleteUnusedConfirm": "このキーサウンドは{{count}}個のノーツで使用中です。\n削除すると該当ノーツのキーサウンドが無音(00)に置き換えられます。\n\n削除しますか?",
+      "deleteUnusedConfirm_other": "このキーサウンドは{{count}}個のノーツで使用中です。\n削除すると該当ノーツのキーサウンドが無音(00)に置き換えられます。\n\n削除しますか?",
       "diff": {
-        "close": "",
-        "title": ""
+        "close": "閉じる (Esc)",
+        "title": "変更比較"
       },
       "error": {
-        "cannotOpenTitle": "",
-        "copyErrorInfo": "",
-        "errorDetail": "",
-        "fileCorrupt": "",
-        "filePath": "",
-        "goHome": "",
-        "openOtherFile": "",
-        "retry": ""
+        "cannotOpenTitle": "ファイルを開けません",
+        "copyErrorInfo": "エラー情報をコピー",
+        "errorDetail": "エラー詳細:",
+        "fileCorrupt": "このファイルの形式が正しくないか、破損している可能性があります。",
+        "filePath": "ファイルパス:",
+        "goHome": "ホームへ",
+        "openOtherFile": "他のファイルを開く",
+        "retry": "再試行"
       },
       "header": {
-        "aiChartLabel": "",
-        "audioSlicerLabel": "",
-        "deleteMeasureTitle": "",
-        "insertMeasureTitle": "",
-        "keyBindingsLabel": "",
-        "measureLabel": "",
-        "midiSettingsLabel": "",
-        "modifiedIndicator": "",
-        "noteColorLabel": "",
-        "saveBtnSaved": "",
-        "saveBtnUnsaved": "",
-        "saveTitle": "",
-        "settingsLabel": "",
-        "settingsTitle": ""
+        "aiChartLabel": "AI譜面生成",
+        "audioSlicerLabel": "オーディオスライサー",
+        "deleteMeasureTitle": "小節削除 (Ctrl+Shift+D)",
+        "insertMeasureTitle": "小節挿入 (Ctrl+Shift+I)",
+        "keyBindingsLabel": "キーバインド設定",
+        "measureLabel": "小節",
+        "midiSettingsLabel": "MIDI設定",
+        "modifiedIndicator": "編集中",
+        "noteColorLabel": "ノーツ色設定",
+        "saveBtnSaved": "保存済み",
+        "saveBtnUnsaved": "保存 (Ctrl+S)",
+        "saveTitle": "保存 (Ctrl+S)",
+        "settingsLabel": "設定",
+        "settingsTitle": "設定メニュー"
       },
       "inputDialog": {
-        "bpmAdd": "",
-        "bpmEdit": "",
-        "cancel": "",
-        "confirm": "",
-        "stopAdd": "",
-        "stopEdit": "",
-        "stopHint": "",
-        "timeSig": "",
-        "timeSigHint": ""
+        "bpmAdd": "BPM追加",
+        "bpmEdit": "BPM編集",
+        "cancel": "キャンセル",
+        "confirm": "確定",
+        "stopAdd": "STOP追加",
+        "stopEdit": "STOP編集",
+        "stopHint": "192 = 1拍、0入力で削除",
+        "timeSig": "小節 {{measure}} 拍子",
+        "timeSigHint": "1.0 = 4/4、0.75 = 3/4、1.25 = 5/4、0.875 = 7/8"
       },
-      "keysoundNoNotes": "",
+      "keysoundNoNotes": "このキーサウンドを使うノーツはありません",
       "layerPanel": {
-        "hideAria": "",
-        "hideTitle": "",
-        "lockAria": "",
-        "lockTitle": "",
-        "opacityTitle": "",
-        "showAria": "",
-        "showTitle": "",
-        "unlockAria": "",
-        "unlockTitle": ""
+        "hideAria": "{{layer}} を隠す",
+        "hideTitle": "隠す",
+        "labels": {
+          "bgm": "BGM",
+          "invisible": "インビジブル",
+          "landmine": "地雷",
+          "playable": "プレイアブル"
+        },
+        "lockAria": "{{layer}} ロック",
+        "lockTitle": "ロック",
+        "opacityTitle": "不透明度 {{percent}}%",
+        "showAria": "{{layer}} 表示",
+        "showTitle": "表示",
+        "unlockAria": "{{layer}} ロック解除",
+        "unlockTitle": "ロック解除"
       },
       "leftPanel": {
-        "keysoundTab": "",
-        "openPanelTitle": "",
-        "patternTab": ""
+        "keysoundTab": "キーサウンド",
+        "openPanelTitle": "キーサウンドパネルを開く",
+        "patternTab": "パターン"
       },
       "measureDialog": {
-        "cancel": "",
-        "currentMeasureLabel": "",
-        "delete": "",
-        "deleteCurrent": "",
-        "deleteTitle": "",
-        "dividerLabel": "",
-        "insert": "",
-        "insertAfter": "",
-        "insertBefore": "",
-        "insertTitle": "",
-        "measurePlaceholder": ""
+        "cancel": "キャンセル",
+        "currentMeasureLabel": "(現在の小節)",
+        "delete": "削除",
+        "deleteCurrent": "小節 {{measure}} を削除",
+        "deleteTitle": "小節削除",
+        "dividerLabel": "直接入力",
+        "insert": "挿入",
+        "insertAfter": "小節 {{measure}} の後に挿入",
+        "insertBefore": "小節 {{measure}} の前に挿入",
+        "insertTitle": "小節挿入",
+        "measurePlaceholder": "小節番号"
       },
       "minimap": {
-        "closePopout": "",
-        "closePopoutAria": "",
-        "dockToSidebar": "",
-        "dockToSidebarAria": "",
-        "popoutTitle": ""
+        "closePopout": "ポップアウト閉じる (インラインに戻す)",
+        "closePopoutAria": "ミニマップポップアウトを閉じる",
+        "dockToSidebar": "サイドバーに戻す",
+        "dockToSidebarAria": "ミニマップをサイドバーに戻す",
+        "popoutTitle": "ミニマップ分離 (ドラッグ可能)"
       },
-      "navGuardMessage": "",
+      "navGuardMessage": "保存されていない変更があります。移動しますか?",
       "playback": {
-        "bpmTapTitle": "",
-        "clearLoopTitle": "",
-        "diffTitle": "",
-        "infoPanelTitle": "",
-        "keysoundPanelTitle": "",
-        "loadAudio": "",
-        "minimapTitle": "",
-        "muteTitle": "",
-        "playPauseTitle": "",
-        "playTestTitle": "",
-        "speedPresetTitle": "",
-        "stopTitle": "",
-        "unmuteTitle": "",
-        "volumeTitle": ""
+        "bpmTapTitle": "BPMタップ",
+        "clearLoopTitle": "ループ解除 (\\)",
+        "diffTitle": "変更比較 (Ctrl+D)",
+        "infoPanelTitle": "情報パネル",
+        "keysoundPanelTitle": "キーサウンドパネル",
+        "loadAudio": "オーディオ読み込み",
+        "minimapTitle": "ミニマップ",
+        "muteTitle": "ミュート",
+        "playPauseTitle": "再生/一時停止 (Space)",
+        "playTestTitle": "プレイテスト (F5)",
+        "speedPresetTitle": "再生速度プリセット",
+        "stopTitle": "停止",
+        "unmuteTitle": "ミュート解除",
+        "volumeTitle": "音量: {{percent}}%"
       },
       "playTest": {
-        "label": "",
-        "returnToEditor": ""
+        "label": "プレイテスト",
+        "returnToEditor": "編集に戻る (Esc)"
       },
       "replaceKeysound": {
-        "cancel": "",
-        "noteCount_other": "",
-        "sourceLabel": "",
-        "targetPrompt": ""
+        "cancel": "キャンセル",
+        "noteCount": "— {{count}}ノーツ",
+        "noteCount_other": "— {{count}}ノーツ",
+        "sourceLabel": "元:",
+        "targetPrompt": "対象キーサウンドを選択してください:"
       },
-      "replaceKeysoundTitle": "",
+      "replaceKeysoundTitle": "キーサウンド一括置換",
       "rightPanel": {
-        "artistLabel": "",
-        "chartInfoSection": "",
-        "layersSection": "",
-        "openPanelTitle": "",
-        "resetLayers": "",
-        "resetLayersTitle": "",
-        "statsSection": "",
-        "timelineSection": "",
-        "titleLabel": ""
+        "artistLabel": "アーティスト",
+        "chartInfoSection": "譜面情報",
+        "layersSection": "レイヤー",
+        "openPanelTitle": "情報パネルを開く",
+        "resetLayers": "リセット",
+        "resetLayersTitle": "レイヤー設定をリセット",
+        "statsSection": "統計",
+        "timelineSection": "キーサウンドタイムライン",
+        "titleLabel": "タイトル"
       },
       "statusBar": {
-        "estimatedDifficulty": "",
-        "midiRealtime": "",
-        "midiStep": ""
+        "estimatedDifficulty": "推定難易度:",
+        "midiRealtime": "リアルタイム",
+        "midiStep": "ステップ"
       },
       "toast": {
-        "highResWarning_other": "",
-        "keysoundDeleted": "",
-        "keysoundImportFailed": "",
-        "keysoundReplaced_other": "",
-        "keysoundsImported_other": "",
-        "notesGenerated_other": "",
-        "pasteConflicts_other": "",
-        "pasteDropped_other": "",
-        "redoAction": "",
-        "saved": "",
-        "savedAs": "",
-        "saveFailed": "",
-        "slicesSaved_other": "",
-        "undefinedWavWarning_other": "",
-        "undoAction": ""
+        "highResWarning": "{{count}}ノーツが標準解像度(192)範囲外 — 一部プレイヤーで互換性問題の可能性",
+        "highResWarning_other": "{{count}}ノーツが標準解像度(192)範囲外 — 一部プレイヤーで互換性問題の可能性",
+        "keysoundDeleted": "キーサウンド {{id}} を削除しました (Ctrl+Zで復元可能)",
+        "keysoundImportFailed": "キーサウンドインポート失敗",
+        "keysoundReplaced": "{{count}}ノーツのキーサウンドを {{from}} → {{to}} に置換 (Ctrl+Zで復元可能)",
+        "keysoundReplaced_other": "{{count}}ノーツのキーサウンドを {{from}} → {{to}} に置換 (Ctrl+Zで復元可能)",
+        "keysoundsImported": "{{count}}個のキーサウンドをインポートしました",
+        "keysoundsImported_other": "{{count}}個のキーサウンドをインポートしました",
+        "notesGenerated": "{{count}}ノーツを生成しました",
+        "notesGenerated_other": "{{count}}ノーツを生成しました",
+        "pasteConflicts": "{{count}}個の重複ノーツを置換しました",
+        "pasteConflicts_other": "{{count}}個の重複ノーツを置換しました",
+        "pasteDropped": "{{count}}個のノーツが現在のキーモード範囲外のため除外",
+        "pasteDropped_other": "{{count}}個のノーツが現在のキーモード範囲外のため除外",
+        "redoAction": "やり直し: {{description}}",
+        "saved": "保存完了",
+        "savedAs": "名前を付けて保存完了",
+        "saveFailed": "保存失敗: {{message}}",
+        "slicesSaved": "{{count}}個のスライスを保存しました",
+        "slicesSaved_other": "{{count}}個のスライスを保存しました",
+        "undefinedWavWarning": "警告: {{count}}個の未定義WAV参照 ({{ids}})",
+        "undefinedWavWarning_other": "警告: {{count}}個の未定義WAV参照 ({{ids}})",
+        "undoAction": "元に戻す: {{description}}"
       }
     }
   },
   "store": {
-    "orphanNotes_other": "",
-    "removeUnusedKeysounds": "",
-    "replaceKeysound": ""
+    "orphanNotes": "{{keyMode}} モードに存在しないレーンのノーツ {{count}}個が非表示になりました。(データは保持されます)",
+    "orphanNotes_other": "{{keyMode}} モードに存在しないレーンのノーツ {{count}}個が非表示になりました。(データは保持されます)",
+    "removeUnusedKeysounds": "未使用キーサウンドを削除",
+    "replaceKeysound": "キーサウンド一括置換"
+  },
+  "toolbar": {
+    "actions": {
+      "copyAria": "コピー (Ctrl+C)",
+      "pasteAria": "貼り付け (Ctrl+V)",
+      "redoAria": "やり直し (Ctrl+Y)",
+      "saveTooltip": "保存 (Ctrl+S)",
+      "undoAria": "元に戻す (Ctrl+Z)",
+      "zoomFitAria": "譜面全体を表示",
+      "zoomInAria": "拡大",
+      "zoomInTooltip": "拡大 (=)",
+      "zoomOutAria": "縮小",
+      "zoomOutTooltip": "縮小 (-)"
+    },
+    "keys": "キー",
+    "labels": {
+      "customGridSnapTooltip": "カスタムグリッドスナップ",
+      "grid": "Grid:",
+      "keyMode": "モード",
+      "keyModeTooltip": "キーモード",
+      "snapAriaOff": "グリッドスナップオフ",
+      "snapAriaOn": "グリッドスナップオン",
+      "snapOff": "Snap OFF",
+      "snapOn": "Snap ON",
+      "snapStateOff": "OFF",
+      "snapStateOn": "ON",
+      "snapToggleTooltip": "Snap to Grid: {{state}} (Shift ドラッグ=一時解除)",
+      "thickness": "太さ",
+      "thicknessTooltip": "ノーツの太さ",
+      "thicknessValueTooltip": "ノーツの太さ: {{value}}",
+      "zoom": "ズーム",
+      "zoomFitTooltip": "譜面全体を表示",
+      "zoomScalePresetTooltip": "ズーム倍率 (クリック: プリセット)",
+      "zoomTooltip": "ズーム倍率"
+    },
+    "layer": {
+      "ariaState": "{{layer}} レイヤー {{state}}{{lockSuffix}}",
+      "contextHint": "左クリック=表示、右クリック=ロック",
+      "hidden": "非表示",
+      "lockedSuffix": " (ロック)",
+      "titleHidden": "hidden",
+      "titleLocked": " (locked)",
+      "titleVisible": "visible",
+      "visible": "表示中"
+    },
+    "play": "再生",
+    "presets": {
+      "detail": "Detail",
+      "overview": "Overview",
+      "work": "Work"
+    },
+    "redo": "やり直し",
+    "save": "保存",
+    "saved": "保存済み",
+    "snap": "スナップ",
+    "stop": "停止",
+    "tools": {
+      "addNote": {
+        "description": "クリックした位置に新規ノーツを配置します。",
+        "label": "追加"
+      },
+      "bpm": {
+        "description": "クリックした位置にBPM変化を追加/編集します。",
+        "label": "BPM"
+      },
+      "delete": {
+        "description": "クリックしたノーツを削除します。",
+        "label": "削除"
+      },
+      "keysound": {
+        "description": "ノーツをクリックして現在のキーサウンドを割り当てます。",
+        "label": "キーサウンド"
+      },
+      "move": {
+        "description": "選択したノーツをドラッグまたは方向キーで移動します。",
+        "label": "移動"
+      },
+      "select": {
+        "description": "クリック/ドラッグでノーツを選択。Shift+クリックで追加選択。",
+        "label": "選択"
+      },
+      "stop": {
+        "description": "クリックした位置にSTOPイベントを追加/編集します。",
+        "label": "STOP"
+      }
+    },
+    "undo": "元に戻す",
+    "zoomFit": "フィット",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小"
   }
 }

@@ -1,9 +1,23 @@
 {
+  "audio": {
+    "decodeFailed": "オーディオのデコードに失敗しました: {{name}}",
+    "loadFailed": "オーディオを読み込めませんでした: {{name}}"
+  },
   "bms": {
-    "fileAccessDenied": "",
-    "fileBusy": "",
-    "fileNotFound": "",
-    "fileReadFailed": "",
-    "parseError": ""
+    "fileAccessDenied": "ファイルにアクセスできません。権限を確認してください。",
+    "fileBusy": "ファイルが他のプログラムで使用中です。",
+    "fileNotFound": "ファイルが見つかりません。移動または削除された可能性があります。",
+    "fileReadFailed": "ファイルを読み込めませんでした。",
+    "parseError": "BMSの解析中にエラーが発生しました。"
+  },
+  "file": {
+    "decodeFailed": "ファイルのエンコーディングを認識できませんでした",
+    "notFound": "ファイルが見つかりません: {{path}}",
+    "readFailed": "ファイルを読み込めませんでした: {{path}}",
+    "saveFailed": "ファイルを保存できませんでした: {{path}}"
+  },
+  "locale": {
+    "namespaceLoadFailed": "翻訳データの読み込みに失敗しました",
+    "persistFailed": "言語設定を保存できませんでした。次回起動時にリセットされる可能性があります。"
   }
 }

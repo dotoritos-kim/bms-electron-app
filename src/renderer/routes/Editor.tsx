@@ -1582,14 +1582,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               e.preventDefault();
               const startX = e.clientX;
               const startW = leftPanelWidth;
+              let lastW = startW;
               const onMove = (ev: MouseEvent) => {
-                const w = Math.max(150, Math.min(400, startW + ev.clientX - startX));
-                setLeftPanelWidth(w);
+                lastW = Math.max(150, Math.min(400, startW + ev.clientX - startX));
+                setLeftPanelWidth(lastW);
               };
               const onUp = () => {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
-                localStorage.setItem('editor-left-w', String(leftPanelWidth));
+                localStorage.setItem('editor-left-w', String(lastW));
               };
               document.addEventListener('mousemove', onMove);
               document.addEventListener('mouseup', onUp);
@@ -1858,14 +1859,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               e.preventDefault();
               const startX = e.clientX;
               const startW = rightPanelWidth;
+              let lastW = startW;
               const onMove = (ev: MouseEvent) => {
-                const w = Math.max(180, Math.min(400, startW - (ev.clientX - startX)));
-                setRightPanelWidth(w);
+                lastW = Math.max(180, Math.min(400, startW - (ev.clientX - startX)));
+                setRightPanelWidth(lastW);
               };
               const onUp = () => {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
-                localStorage.setItem('editor-right-w', String(rightPanelWidth));
+                localStorage.setItem('editor-right-w', String(lastW));
               };
               document.addEventListener('mousemove', onMove);
               document.addEventListener('mouseup', onUp);

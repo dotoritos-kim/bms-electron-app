@@ -134,8 +134,14 @@ export function App() {
     // __DEV_SET_LOCALE__: call localeService.change() from E2E test fixtures.
     // Direct window.api.locale.set() bypasses renderer i18next, so this helper
     // is the correct path for locale-switching smoke tests.
-    w.__DEV_SET_LOCALE__ = (locale: string) =>
-      localeService.change(locale as SupportedLocale);
+    // Wait for localeService.init() to complete, then change locale.
+    // Calling change() before init() is dangerous: i18next isn't initialized yet.
+    w.__DEV_SET_LOCALE__ = async (locale: string) => {
+      await localeService.waitReady();
+      return localeService.change(locale as SupportedLocale);
+    };
+    // Resolves when the service is fully booted (i18next initialized).
+    w.__DEV_WAIT_LOCALE_READY__ = () => localeService.waitReady();
     // Don't clean up — these should persist for the lifetime of the app
   }, []);
 

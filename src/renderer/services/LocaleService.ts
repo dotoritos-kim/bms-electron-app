@@ -30,6 +30,7 @@ class LocaleServiceImpl {
   private isComposing = false;
   private listeners = new Set<LocaleListener>();
   private initialized = false;
+  private _initPromise: Promise<void> | null = null;
 
   /**
    * Boot the service. Must be awaited before any UI renders that depends on
@@ -39,20 +40,29 @@ class LocaleServiceImpl {
     if (this.initialized) return;
     this.initialized = true;
 
-    const initialLocale = await window.api.locale.getInitial();
-    this.current = initialLocale;
-    await initI18n(initialLocale);
+    this._initPromise = (async () => {
+      const initialLocale = await window.api.locale.getInitial();
+      this.current = initialLocale;
+      await initI18n(initialLocale);
 
-    // Listen for IME composition globally so a switch mid-input is deferred.
-    window.addEventListener('compositionstart', this.onCompositionStart);
-    window.addEventListener('compositionend', this.onCompositionEnd);
+      // Listen for IME composition globally so a switch mid-input is deferred.
+      window.addEventListener('compositionstart', this.onCompositionStart);
+      window.addEventListener('compositionend', this.onCompositionEnd);
 
-    // Reflect changes initiated from main (e.g., another window).
-    window.api.on('locale:changed', (locale) => {
-      if (locale !== this.current) {
-        void this.applyLocaleInternal(locale, /* persist */ false);
-      }
-    });
+      // Reflect changes initiated from main (e.g., another window).
+      window.api.on('locale:changed', (locale) => {
+        if (locale !== this.current) {
+          void this.applyLocaleInternal(locale, /* persist */ false);
+        }
+      });
+    })();
+
+    await this._initPromise;
+  }
+
+  /** Resolves once init() has fully completed. Safe to call before init(). */
+  waitReady(): Promise<void> {
+    return this._initPromise ?? Promise.resolve();
   }
 
   getCurrent(): SupportedLocale {

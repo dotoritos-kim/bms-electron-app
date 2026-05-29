@@ -37,29 +37,17 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow();
     await window.waitForLoadState('domcontentloaded');
-    // Wait for App.tsx useEffect to expose __DEV_SET_LOCALE__ on window.
-    // NOTE: second arg to waitForFunction is passed as the fn argument,
-    //       third arg is options — use undefined as explicit arg placeholder.
-    await window.waitForFunction(
-      () => typeof (window as unknown as Record<string, unknown>).__DEV_SET_LOCALE__ === 'function',
-      undefined,
-      { timeout: 5000 }
-    );
-    // localeService.change('ja') via __DEV_SET_LOCALE__ (which awaits waitReady()
-    // internally so i18next is always initialized before the locale switches).
-    const result = await window.evaluate(async () =>
-      (window as unknown as { __DEV_SET_LOCALE__(l: string): Promise<{ ok: boolean }> })
-        .__DEV_SET_LOCALE__('ja')
-    );
-    if (!result || !(result as { ok?: boolean }).ok) {
-      throw new Error(`__DEV_SET_LOCALE__('ja') failed: ${JSON.stringify(result)}`);
-    }
-    // Wait until LanguageSwitcher compact button shows 'JA'.
+    // LocaleService.init() runs in parallel with React in main.tsx. When init()
+    // completes it now fires subscribers so the LanguageSwitcher re-renders with
+    // the real locale. APP_TEST_LANG=ja causes getInitial() to return 'ja', so
+    // the compact button should show 'JA' once init and i18next loading finish.
+    // NOTE: waitForFunction(fn, arg?, options?) — pass undefined as arg so the
+    //       options object is treated as options, not as the fn argument.
     await window.waitForFunction(
       () => Array.from(document.querySelectorAll('button'))
         .some((b) => (b.textContent ?? '').includes('JA')),
       undefined,
-      { timeout: 10000 }
+      { timeout: 15000 }
     );
     await use(window);
   },

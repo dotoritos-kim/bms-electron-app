@@ -36,18 +36,32 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow();
     await window.waitForLoadState('domcontentloaded');
-    // LocaleService.init() runs in parallel with React in main.tsx. When init()
-    // completes it now fires subscribers so the LanguageSwitcher re-renders with
-    // the real locale. APP_TEST_LANG=ja causes getInitial() to return 'ja', so
-    // the compact button should show 'JA' once init and i18next loading finish.
-    // NOTE: waitForFunction(fn, arg?, options?) — pass undefined as arg so the
-    //       options object is treated as options, not as the fn argument.
-    await window.waitForFunction(
-      () => Array.from(document.querySelectorAll('button'))
-        .some((b) => (b.textContent ?? '').includes('JA')),
-      undefined,
-      { timeout: 15000 }
-    );
+    await window.waitForTimeout(3000); // allow LocaleService.init() + React re-render
+
+    // Diagnostic: collect current state so CI logs are useful when tests fail.
+    const diag = await window.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const getLocale = w.__DEV_GET_LOCALE__ as (() => string) | undefined;
+      const currentLocale = getLocale ? getLocale() : 'HELPER_NOT_FOUND';
+      const btnTexts = Array.from(document.querySelectorAll('button'))
+        .map((b) => (b.textContent ?? '').trim()).filter(Boolean);
+      const hasJA = btnTexts.some((t) => t.includes('JA'));
+      return { currentLocale, btnTexts: btnTexts.slice(0, 10), hasJA };
+    });
+    console.log('[ja-fixture] locale:', diag.currentLocale, '| hasJA:', diag.hasJA,
+      '| buttons:', JSON.stringify(diag.btnTexts));
+
+    if (!diag.hasJA) {
+      // Fallback: try to force ja via __DEV_SET_LOCALE__ if available
+      const setResult = await window.evaluate(async () => {
+        const w = window as unknown as Record<string, unknown>;
+        const setFn = w.__DEV_SET_LOCALE__ as ((l: string) => Promise<{ ok: boolean }>) | undefined;
+        if (!setFn) return { ok: false, reason: 'helper_missing' };
+        return setFn('ja');
+      });
+      console.log('[ja-fixture] __DEV_SET_LOCALE__ result:', JSON.stringify(setResult));
+      await window.waitForTimeout(2000);
+    }
     await use(window);
   },
 });

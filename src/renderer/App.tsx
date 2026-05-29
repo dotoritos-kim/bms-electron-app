@@ -142,6 +142,8 @@ export function App() {
     };
     // Resolves when the service is fully booted (i18next initialized).
     w.__DEV_WAIT_LOCALE_READY__ = () => localeService.waitReady();
+    // Returns the current active locale code (for E2E diagnostics).
+    w.__DEV_GET_LOCALE__ = () => localeService.getCurrent();
     // Don't clean up — these should persist for the lifetime of the app
   }, []);
 

@@ -213,10 +213,22 @@
 ### Done (fire 16)
 - [x] **`ci.yml` `lint:i18n` blocking 전환** — `continue-on-error: true` 제거, 주석 갱신 (Tier 1-7 완료 명시)
 
+### Done (fire 17) — de/es/ru/zh 4개 gated locale 초안 번역
+- [x] **de (German)**: 308 empty keys → 0 (Speichern, Abbrechen, Takt, Spur 등)
+- [x] **es (Spanish)**: 329 empty keys → 0 (Guardar, Cancelar, compás, carril 등)
+- [x] **ru (Russian)**: 350 empty keys → 0 (Сохранить, Отмена, такт, дорожка 등)
+- [x] **zh (Simplified Chinese)**: 287 empty keys → 0 (保存, 取消, 小节, 轨道, 键音 등)
+- [x] **Parser 안정화** — `npm run i18n:extract` 2회 실행 후 git diff 없음 (stable state)
+- [x] **bms-editor fire 12 미커밋 변경 커밋** — BmsChartDiff, NoteChartViewer, EditorToolbar, HeaderEditorPanel, Minimap + defaults.ts
+- [x] **bms-player fire 12 미커밋 변경 커밋** — judgements invariant English
+- [x] **submodule 포인터 bump** — bms-editor 8d0e9c2→62bd0d2, bms-player e80bb39→9980696
+- [x] **버그 수정 커밋**: Player.tsx containerRef 이동 + 헤더 오프셋 -36 제거, Editor.tsx 패널 너비 클로저 버그, WaveformOverlay.tsx ResizeObserver 추가
+- [x] Locales remain gated (ENABLED_LOCALES = ['ko','en','ja']). 각 locale 네이티브 검수 후 활성화
+
 ### Pending (다음 fire 진행)
-- [ ] **CHANGELOG 자동 생성** — Conventional Commit (`feat(i18n): add Japanese language support`)로 release-please가 자동 entry. 수동 편집 불필요
-- [ ] **네이티브 검수** — BMS JP 커뮤니티 PR review 요청 (용어 통일성 검증, 외부 작업)
-- [ ] **남은 4개 gated locale** — de/es/ru/zh native draft (DeepL+검수, 콘텐츠 작업)
+- [ ] **네이티브 검수** — de/es/ru/zh BMS 커뮤니티 PR review 요청 (용어 통일성 검증, 외부 작업)
+- [ ] **ENABLED_LOCALES 활성화** — 검수 완료 locale → types.ts + menu.ts dict 추가
+- [ ] **BMS JP 커뮤니티 검수** — ja 네이티브 검수 (용어 통일성)
 
 ---
 
@@ -268,8 +280,8 @@
 
 ---
 
-*Last updated: 2026-05-29 — fire 16: ci.yml lint:i18n blocking 전환 (Tier 1-7 완료)*
-*Next fire 진입점: CHANGELOG 커밋 (`feat(i18n): add Japanese language support`) + de/es/ru/zh native 번역 draft*
+*Last updated: 2026-05-29 — fire 17: de/es/ru/zh 4개 gated locale 초안 번역 완료*
+*Next fire 진입점: de/es/ru/zh 네이티브 검수 PR + ENABLED_LOCALES 활성화 (각 locale 검수 완료 시)*
 
 ## 누적 변환 현황
 | 컴포넌트 | 한글 → t() 변환 | Fire |

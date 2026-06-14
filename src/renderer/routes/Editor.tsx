@@ -296,10 +296,52 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   // showWaveform removed — WaveformOverlay needs NoteChartEditor coordinate integration
   const [leftPanelWidth, setLeftPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-left-w') || '208'));
   const [rightPanelWidth, setRightPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-right-w') || '224'));
+  const panelWidthsRef = useRef({ left: leftPanelWidth, right: rightPanelWidth });
+  panelWidthsRef.current = { left: leftPanelWidth, right: rightPanelWidth };
   const [minimapPopout, setMinimapPopout] = useState(false);
   const [popoutPos, setPopoutPos] = useState({ x: typeof window !== 'undefined' ? window.innerWidth - 220 : 800, y: typeof window !== 'undefined' ? window.innerHeight - 300 : 400 });
   const popoutDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
   const toolMenuRef = useRef<HTMLDivElement>(null);
+  const [windowHeight, setWindowHeight] = useState(() => (typeof window !== 'undefined' ? window.innerHeight : 768));
+
+  // Clamp minimap popout within window bounds on open and on window resize
+  useEffect(() => {
+    const PW = 180, PH = 260;
+    const clamp = () => {
+      setPopoutPos(prev => ({
+        x: Math.max(0, Math.min(prev.x, window.innerWidth - PW)),
+        y: Math.max(0, Math.min(prev.y, window.innerHeight - PH)),
+      }));
+    };
+    if (minimapPopout) clamp();
+    window.addEventListener('resize', clamp);
+    return () => window.removeEventListener('resize', clamp);
+  }, [minimapPopout]);
+
+  // Track window height for reactive viewerHeight
+  useEffect(() => {
+    const handleResize = () => setWindowHeight(window.innerHeight);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Clamp side panels so the center canvas always has at least 200px on window resize
+  useEffect(() => {
+    const NAV_W = 56, HANDLES_W = 6, MIN_CENTER_W = 200;
+    const clampPanels = () => {
+      const available = window.innerWidth - NAV_W - HANDLES_W - MIN_CENTER_W;
+      const { left: lw, right: rw } = panelWidthsRef.current;
+      const total = lw + rw;
+      if (total <= available) return;
+      const ratio = lw / (total || 1);
+      const newLw = Math.max(150, Math.floor(available * ratio));
+      const newRw = Math.max(180, available - newLw);
+      if (newLw < lw) setLeftPanelWidth(newLw);
+      if (newRw < rw) setRightPanelWidth(newRw);
+    };
+    window.addEventListener('resize', clampPanels);
+    return () => window.removeEventListener('resize', clampPanels);
+  }, []);
 
   // Close tool menu on outside click
   useEffect(() => {
@@ -2016,7 +2058,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               const wasDragging = dr !== null && (Math.abs(e.clientX - dr.startX) > 5 || Math.abs(e.clientY - dr.startY) > 5);
               popoutDragRef.current = null;
               // Auto-dock only when actually dragged to right edge (not on plain click)
-              if (wasDragging && popoutPos.x + 180 >= window.innerWidth - 184) {
+              if (wasDragging && popoutPos.x + 180 >= window.innerWidth - rightPanelWidth - 6) {
                 setMinimapPopout(false);
               }
             }}
@@ -2391,7 +2433,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               }}
               filePath={file.path}
               className="h-full"
-              viewerHeight={Math.max(400, window.innerHeight - 140)}
+              viewerHeight={Math.max(400, windowHeight - 140)}
             />
           </div>
         </div>

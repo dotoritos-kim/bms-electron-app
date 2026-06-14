@@ -210,8 +210,11 @@
   },
   "navigation": {
     "discardLabel": "保存しない",
+    "editLabel": "編集",
+    "homeLabel": "ホーム",
     "leaveLabel": "離れる",
     "leaveTitle": "画面遷移",
+    "playLabel": "プレイ",
     "saveAndLeaveLabel": "保存して離れる",
     "saveBeforeLeave": "保存されていない変更があります。保存して移動しますか?"
   },
@@ -220,7 +223,13 @@
     "keyBindingsHint": "キー設定は編集画面 > ツール > キーバインド設定から変更できます"
   },
   "stats": {
+    "bgm": "BGM",
     "duration": "再生時間",
-    "measures": "小節"
+    "invisible": "不可視",
+    "landmine": "地雷",
+    "ln": "LN",
+    "measures": "小節",
+    "nps": "NPS",
+    "playable": "通常ノーツ"
   }
 }

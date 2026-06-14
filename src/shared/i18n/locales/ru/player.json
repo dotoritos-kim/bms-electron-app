@@ -1,0 +1,34 @@
+{
+  "judgment": {
+    "pgreat": "PGREAT",
+    "great": "GREAT",
+    "good": "GOOD",
+    "bad": "BAD",
+    "poor": "POOR",
+    "miss": "MISS",
+    "early": "Рано",
+    "late": "Поздно"
+  },
+  "gauge": {
+    "cleared": "Пройдено",
+    "failed": "Провалено"
+  },
+  "hud": {
+    "bpm": "BPM",
+    "score": "Очки",
+    "combo": "Комбо",
+    "accuracy": "Точность"
+  },
+  "errors": {
+    "audioLoadFailed": "Не удалось загрузить аудио",
+    "decodeFailed": "Ошибка декодирования аудио",
+    "keysoundMissing": "Отсутствует ключевой звук: {{name}}"
+  },
+  "state": {
+    "ready": "Готово",
+    "playing": "Воспроизведение",
+    "paused": "Пауза",
+    "completed": "Завершено",
+    "failed": "Провалено"
+  }
+}

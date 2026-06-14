@@ -1,0 +1,34 @@
+{
+  "judgment": {
+    "pgreat": "PGREAT",
+    "great": "GREAT",
+    "good": "GOOD",
+    "bad": "BAD",
+    "poor": "POOR",
+    "miss": "MISS",
+    "early": "Temprano",
+    "late": "Tarde"
+  },
+  "gauge": {
+    "cleared": "Completado",
+    "failed": "Fallido"
+  },
+  "hud": {
+    "bpm": "BPM",
+    "score": "Puntuación",
+    "combo": "Combo",
+    "accuracy": "Precisión"
+  },
+  "errors": {
+    "audioLoadFailed": "Error al cargar el audio",
+    "decodeFailed": "Error de decodificación de audio",
+    "keysoundMissing": "Keysound faltante: {{name}}"
+  },
+  "state": {
+    "ready": "Listo",
+    "playing": "Reproduciendo",
+    "paused": "Pausado",
+    "completed": "Completado",
+    "failed": "Fallido"
+  }
+}

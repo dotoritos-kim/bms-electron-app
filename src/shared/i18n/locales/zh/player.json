@@ -1,0 +1,34 @@
+{
+  "judgment": {
+    "pgreat": "PGREAT",
+    "great": "GREAT",
+    "good": "GOOD",
+    "bad": "BAD",
+    "poor": "POOR",
+    "miss": "MISS",
+    "early": "早",
+    "late": "晚"
+  },
+  "gauge": {
+    "cleared": "通关",
+    "failed": "失败"
+  },
+  "hud": {
+    "bpm": "BPM",
+    "score": "分数",
+    "combo": "连击",
+    "accuracy": "精准度"
+  },
+  "errors": {
+    "audioLoadFailed": "无法加载音频",
+    "decodeFailed": "音频解码失败",
+    "keysoundMissing": "缺少键音: {{name}}"
+  },
+  "state": {
+    "ready": "准备",
+    "playing": "播放中",
+    "paused": "已暂停",
+    "completed": "完成",
+    "failed": "失败"
+  }
+}

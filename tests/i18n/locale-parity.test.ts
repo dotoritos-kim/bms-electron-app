@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import koCommon from '../../src/shared/i18n/locales/ko/common.json';
 import enCommon from '../../src/shared/i18n/locales/en/common.json';
 import jaCommon from '../../src/shared/i18n/locales/ja/common.json';

@@ -215,8 +215,11 @@
   },
   "navigation": {
     "discardLabel": "Don't save",
+    "editLabel": "Edit",
+    "homeLabel": "Home",
     "leaveLabel": "Leave",
     "leaveTitle": "Leave page",
+    "playLabel": "Play",
     "saveAndLeaveLabel": "Save and leave",
     "saveBeforeLeave": "You have unsaved changes. Save before leaving?"
   },
@@ -225,7 +228,13 @@
     "keyBindingsHint": "Key bindings can be changed in Editor > Tools > Key Bindings"
   },
   "stats": {
+    "bgm": "BGM",
     "duration": "Duration",
-    "measures": "Measures"
+    "invisible": "Invisible",
+    "landmine": "Landmine",
+    "ln": "LN",
+    "measures": "Measures",
+    "nps": "NPS",
+    "playable": "Playable"
   }
 }

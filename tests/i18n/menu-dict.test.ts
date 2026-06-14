@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import { t } from '../../src/main/i18n/menu';
 
 describe('main process menu dictionary', () => {

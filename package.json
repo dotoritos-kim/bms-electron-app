@@ -31,7 +31,9 @@
     "i18n:extract": "i18next --config .i18next-parser.config.cjs \"src/{renderer,shared}/**/*.{ts,tsx}\" && node scripts/i18n-fill-plurals.cjs",
     "i18n:check": "i18next --config .i18next-parser.config.cjs --fail-on-update \"src/{renderer,shared}/**/*.{ts,tsx}\"",
     "i18n:fill-plurals": "node scripts/i18n-fill-plurals.cjs",
-    "lint:i18n": "eslint \"src/**/*.{ts,tsx}\""
+    "lint:i18n": "eslint \"src/**/*.{ts,tsx}\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@epic-web/invariant": "^1.0.0",
@@ -74,6 +76,7 @@
     "eslint": "^10.3.0",
     "i18next-parser": "^9.3.0",
     "jsdom": "^29.0.1",
+    "prettier": "^3.4.0",
     "puppeteer-core": "^24.40.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.2",

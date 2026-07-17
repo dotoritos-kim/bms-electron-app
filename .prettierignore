@@ -1,0 +1,9 @@
+dist
+build
+out
+release
+coverage
+node_modules
+vendor
+*.min.js
+package-lock.json

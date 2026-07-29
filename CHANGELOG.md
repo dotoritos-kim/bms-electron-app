@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.3.2](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.3.1...v0.3.2) (2026-07-29)
+
+
+### Bug Fixes
+
+* **editor:** window resize bugs — popout 이탈, 패널 압박, viewerHeight 미반응 ([4f20c05](https://github.com/dotoritos-kim/bms-electron-app/commit/4f20c052dd7803e8c4f98bbed3a316a5154c8d24))
+* **i18n:** i18n 테스트 수정, 하드코딩 문자열 번역, 누락 locale 파일 추가 ([06aad73](https://github.com/dotoritos-kim/bms-electron-app/commit/06aad73e1e29742e1730c845385328ed50c4325c))
+
 ## [0.3.1](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.3.0...v0.3.1) (2026-05-29)
 
 

@@ -213,7 +213,16 @@ export function detectOnsetsFromBuffer(
   buffer: AudioBuffer,
   threshold = 0.1,
 ): number[] {
-  const channelData = buffer.getChannelData(0);
+  // Mix every channel down so a hard-panned hit is still detected.
+  let channelData = buffer.getChannelData(0);
+  if (buffer.numberOfChannels > 1) {
+    const mono = new Float32Array(buffer.length);
+    for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+      const d = buffer.getChannelData(ch);
+      for (let i = 0; i < d.length; i++) mono[i] += d[i] / buffer.numberOfChannels;
+    }
+    channelData = mono;
+  }
   const sampleRate = buffer.sampleRate;
   const hopSize = Math.floor(sampleRate * 0.01);
   const windowSize = Math.floor(sampleRate * 0.02);
@@ -264,7 +273,8 @@ export function buildMarkovModel(
   for (let i = 1; i < sorted.length; i++) {
     const prev = sorted[i - 1];
     const curr = sorted[i];
-    const timeDelta = Math.round((curr.beat - prev.beat) / gridStep);
+    // Chords (delta 0) would freeze the suggested pattern on one beat; always advance.
+    const timeDelta = Math.max(1, Math.round((curr.beat - prev.beat) / gridStep));
 
     const fromKey = `${prev.columnIndex}`;
     const toKey = `${curr.columnIndex}_${Math.min(timeDelta, 8)}`; // cap delta at 8 steps
@@ -319,7 +329,7 @@ export function suggestPattern(
       timeDelta = 1;
     }
 
-    currentBeat += timeDelta * gridStep;
+    currentBeat += Math.max(1, timeDelta) * gridStep;
     currentCol = nextCol % columnCount;
 
     result.push({

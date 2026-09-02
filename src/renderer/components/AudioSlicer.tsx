@@ -50,6 +50,30 @@ function detectOnsets(channelData: Float32Array, sampleRate: number, threshold =
   return onsets;
 }
 
+/** Average all channels into one signal so hard-panned hits are neither invisible nor undetected. */
+function mixdownToMono(buffer: AudioBuffer): Float32Array {
+  const n = buffer.numberOfChannels;
+  if (n === 1) return buffer.getChannelData(0);
+  const out = new Float32Array(buffer.length);
+  for (let ch = 0; ch < n; ch++) {
+    const data = buffer.getChannelData(ch);
+    for (let i = 0; i < data.length; i++) out[i] += data[i] / n;
+  }
+  return out;
+}
+
+/**
+ * Sensitivity (0..1, higher = more onsets) → energy threshold used by
+ * detectOnsets. 0.5 maps to the historical default of 0.15.
+ */
+function thresholdFromSensitivity(sensitivity: number): number {
+  const s = Math.max(0, Math.min(1, sensitivity));
+  return 0.005 + (1 - s) * 0.29;
+}
+
+/** Fade length applied at both ends of every slice to avoid clicks. */
+const SLICE_FADE_SEC = 0.002;
+
 function downsampleWaveform(channelData: Float32Array, targetPoints: number): { min: Float32Array; max: Float32Array } {
   const samplesPerPoint = Math.max(1, Math.floor(channelData.length / targetPoints));
   const actualPoints = Math.ceil(channelData.length / samplesPerPoint);
@@ -85,7 +109,21 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   const [viewDuration, setViewDuration] = useState(10);
   const [isPlaying, setIsPlaying] = useState(false);
   const [slicing, setSlicing] = useState(false);
-  const [onsetThreshold, setOnsetThreshold] = useState(0.15);
+  const [sensitivity, setSensitivity] = useState(0.5);
+  const onsetThreshold = thresholdFromSensitivity(sensitivity);
+  /** Marker history for local undo (Ctrl+Z inside the slicer). */
+  const markerHistoryRef = useRef<SliceMarker[][]>([]);
+  const pushMarkerHistory = useCallback((prev: SliceMarker[]) => {
+    markerHistoryRef.current = [...markerHistoryRef.current.slice(-49), prev];
+  }, []);
+  const undoMarkers = useCallback(() => {
+    const hist = markerHistoryRef.current;
+    if (hist.length === 0) return false;
+    const last = hist[hist.length - 1];
+    markerHistoryRef.current = hist.slice(0, -1);
+    setMarkers(last);
+    return true;
+  }, []);
   // isDragging removed — use isDraggingRef only to avoid toolbar re-render flicker
   const [autoSliceMsgType, setAutoSliceMsgType] = useState<'warning' | 'success' | null>(null);
   const [autoSliceCount, setAutoSliceCount] = useState(0);
@@ -97,6 +135,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const isDraggingRef = useRef(false);
   const waveformRef = useRef<{ min: Float32Array; max: Float32Array } | null>(null);
+  const monoRef = useRef<Float32Array | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 300 });
 
   // Keep canvas resolution in sync with display size
@@ -154,10 +193,12 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       setFileName(path.split(/[/\\]/).pop() || '');
       setViewStart(0);
       setViewDuration(Math.min(10, buffer.duration));
-      setMarkers([]);
+      setMarkers((prev) => { pushMarkerHistory(prev); return []; });
       setSelStart(null);
       setSelEnd(null);
-      waveformRef.current = downsampleWaveform(buffer.getChannelData(0), 4000);
+      monoRef.current = mixdownToMono(buffer);
+      waveformRef.current = downsampleWaveform(monoRef.current, 4000);
+      markerHistoryRef.current = [];
     } catch (err) {
       console.error('[AudioSlicer] Failed to load:', err);
       onError?.('load', err instanceof Error ? err.message : String(err));
@@ -169,17 +210,17 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   // Auto onset detection
   const handleAutoSlice = useCallback(() => {
     if (!audioBuffer) return;
-    const channelData = audioBuffer.getChannelData(0);
+    const channelData = monoRef.current ?? mixdownToMono(audioBuffer);
     const onsets = detectOnsets(channelData, audioBuffer.sampleRate, onsetThreshold);
     if (onsets.length === 0) {
       setAutoSliceMsgType('warning');
       setAutoSliceCount(0);
     } else {
-      setMarkers(onsets.map((ts, i) => ({ time: ts, label: `${i + 1}` })));
+      setMarkers((prev) => { pushMarkerHistory(prev); return onsets.map((ts, i) => ({ time: ts, label: `${i + 1}` })); });
       setAutoSliceMsgType('success');
       setAutoSliceCount(onsets.length);
     }
-  }, [audioBuffer, onsetThreshold]);
+  }, [audioBuffer, onsetThreshold, pushMarkerHistory]);
 
   // Draw waveform
   useEffect(() => {
@@ -315,7 +356,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       return;
     }
     if (draggingMarkerRef.current !== null) {
-      const t = Math.max(0, getTimeFromX(e.clientX));
+      const t = Math.min(audioBuffer?.duration ?? Infinity, Math.max(0, getTimeFromX(e.clientX)));
       setMarkers((prev) => {
         const updated = [...prev];
         updated[draggingMarkerRef.current!] = { ...updated[draggingMarkerRef.current!], time: t };
@@ -342,31 +383,36 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
 
   // Double-click: toggle marker at click position (add if none nearby, delete if near existing)
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
-    const t = getTimeFromX(e.clientX);
+    const t = Math.min(audioBuffer?.duration ?? Infinity, Math.max(0, getTimeFromX(e.clientX)));
     const tolerance = viewDuration * 0.01; // 1% of view as tolerance
     const nearIdx = markers.findIndex((m) => Math.abs(m.time - t) < tolerance);
     if (nearIdx >= 0) {
       // Delete marker
-      setMarkers((prev) => prev.filter((_, i) => i !== nearIdx).map((m, i) => ({ ...m, label: `${i + 1}` })));
+      setMarkers((prev) => { pushMarkerHistory(prev); return prev.filter((_, i) => i !== nearIdx).map((m, i) => ({ ...m, label: `${i + 1}` })); });
     } else {
       // Add marker
       setMarkers((prev) => {
+        pushMarkerHistory(prev);
         const newMarkers = [...prev, { time: t, label: `${prev.length + 1}` }];
         newMarkers.sort((a, b) => a.time - b.time);
         return newMarkers.map((m, i) => ({ ...m, label: `${i + 1}` }));
       });
     }
-  }, [getTimeFromX, markers, viewDuration]);
+  }, [getTimeFromX, markers, viewDuration, audioBuffer, pushMarkerHistory]);
 
-  const handleZoomIn = useCallback(() => {
+  // Zoom around the centre of the current view and keep the view inside the file.
+  const zoomTo = useCallback((next: number) => {
     if (!audioBuffer) return;
-    setViewDuration((prev) => Math.max(0.5, prev * 0.7));
-  }, [audioBuffer]);
-
-  const handleZoomOut = useCallback(() => {
-    if (!audioBuffer) return;
-    setViewDuration((prev) => Math.min(audioBuffer.duration, prev * 1.4));
-  }, [audioBuffer]);
+    const clamped = Math.max(0.5, Math.min(audioBuffer.duration, next));
+    setViewStart((vs) => {
+      const centre = vs + viewDuration / 2;
+      const maxStart = Math.max(0, audioBuffer.duration - clamped);
+      return Math.max(0, Math.min(maxStart, centre - clamped / 2));
+    });
+    setViewDuration(clamped);
+  }, [audioBuffer, viewDuration]);
+  const handleZoomIn = useCallback(() => zoomTo(viewDuration * 0.7), [zoomTo, viewDuration]);
+  const handleZoomOut = useCallback(() => zoomTo(viewDuration * 1.4), [zoomTo, viewDuration]);
 
   // Play selection or full
   const handlePlay = useCallback(() => {
@@ -396,11 +442,36 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   const handleAddMarker = useCallback(() => {
     if (selStart === null) return;
     setMarkers((prev) => {
-      const newMarkers = [...prev, { time: selStart, label: `${prev.length + 1}` }];
+      pushMarkerHistory(prev);
+      const time = Math.min(audioBuffer?.duration ?? Infinity, Math.max(0, selStart));
+      const newMarkers = [...prev, { time, label: `${prev.length + 1}` }];
       newMarkers.sort((a, b) => a.time - b.time);
       return newMarkers.map((m, i) => ({ ...m, label: `${i + 1}` }));
     });
-  }, [selStart]);
+  }, [selStart, audioBuffer, pushMarkerHistory]);
+
+  // Keyboard shortcuts while the slicer is open (capture phase so the
+  // editor's global shortcuts don't also fire): Space play/stop, M add marker,
+  // Ctrl+Z undo markers, +/- zoom.
+  useEffect(() => {
+    if (!open || !audioBuffer) return;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && e.key.toLowerCase() === 'z') { e.preventDefault(); e.stopImmediatePropagation(); undoMarkers(); return; }
+      if (ctrl) return; // leave Ctrl+S etc. to the editor
+      switch (e.key) {
+        case ' ': e.preventDefault(); e.stopImmediatePropagation(); handlePlay(); break;
+        case 'm': case 'M': e.preventDefault(); e.stopImmediatePropagation(); handleAddMarker(); break;
+        case '+': case '=': e.preventDefault(); e.stopImmediatePropagation(); handleZoomIn(); break;
+        case '-': case '_': e.preventDefault(); e.stopImmediatePropagation(); handleZoomOut(); break;
+        default: break;
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open, audioBuffer, undoMarkers, handlePlay, handleAddMarker, handleZoomIn, handleZoomOut]);
 
   // Slice and save
   const handleSliceAndSave = useCallback(async () => {
@@ -444,10 +515,17 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
         const length = endSample - startSample;
         const pcm = new Float32Array(length * channels);
 
+        // Short linear fade in/out so cuts made mid-waveform don't click.
+        const fadeLen = Math.min(Math.floor(SLICE_FADE_SEC * sampleRate), Math.floor(length / 2));
         for (let ch = 0; ch < channels; ch++) {
           const channelData = audioBuffer.getChannelData(ch);
           for (let s = 0; s < length; s++) {
-            pcm[s * channels + ch] = channelData[startSample + s];
+            let gain = 1;
+            if (fadeLen > 0) {
+              if (s < fadeLen) gain = s / fadeLen;
+              else if (s >= length - fadeLen) gain = (length - 1 - s) / fadeLen;
+            }
+            pcm[s * channels + ch] = channelData[startSample + s] * gain;
           }
         }
 
@@ -550,25 +628,27 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
               {t('audioSlicer.sensitivityLabel')}:
               <input
                 type="range"
-                min={0.005}
-                max={1.0}
-                step={0.005}
-                value={onsetThreshold}
-                onChange={(e) => setOnsetThreshold(parseFloat(e.target.value))}
+                min={0}
+                max={100}
+                step={1}
+                value={Math.round(sensitivity * 100)}
+                onChange={(e) => setSensitivity(parseInt(e.target.value, 10) / 100)}
                 className="w-20 h-1 accent-orange-500"
+                title={t('audioSlicer.sensitivityHint')}
               />
               <input
                 type="number"
-                min={0.005}
-                max={1.0}
-                step={0.005}
-                value={onsetThreshold}
+                min={0}
+                max={100}
+                step={1}
+                value={Math.round(sensitivity * 100)}
                 onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  if (!isNaN(v) && v >= 0.005 && v <= 1.0) setOnsetThreshold(v);
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v) && v >= 0 && v <= 100) setSensitivity(v / 100);
                 }}
                 className="w-14 px-1 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-300 font-mono text-center"
               />
+              <span className="text-zinc-600">%</span>
             </label>
             {autoSliceMsgType && (
               <span className={`text-xs px-2 py-1 rounded font-medium ${autoSliceMsgType === 'warning' ? 'text-yellow-300 bg-yellow-800/60 border border-yellow-600/50 animate-pulse' : 'text-green-400 bg-green-950/40'}`}>

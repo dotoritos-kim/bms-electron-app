@@ -106,6 +106,17 @@ export interface LayerConfig {
   bgm: LayerSettings;
 }
 
+/** Layer a note belongs to (by its note type). */
+function noteLayer(n: { noteType?: string }): keyof LayerConfig {
+  const t = n.noteType || 'playable';
+  return (t === 'invisible' || t === 'landmine' || t === 'bgm') ? t : 'playable';
+}
+
+/** True when the note's layer is locked (edits must leave it alone). */
+function isNoteLocked(layerConfig: LayerConfig, n: { noteType?: string }): boolean {
+  return layerConfig[noteLayer(n)]?.locked === true;
+}
+
 export const DEFAULT_LAYER_CONFIG: LayerConfig = {
   playable: { visible: true, locked: false, opacity: 1.0 },
   invisible: { visible: true, locked: false, opacity: 0.4 },
@@ -399,7 +410,9 @@ interface EditorState {
   changeHeader: (field: string, value: string | number) => void;
 
   // Keysound import
-  updateHeadersWithWavDefs: (newWavDefs: Record<string, string>) => void;
+  updateHeadersWithWavDefs: (newWavDefs: Record<string, string>, description?: string) => void;
+  /** Append many notes at once (auto-chart, pattern apply) with one undo entry; beats are normalised to ticks and the note index is rebuilt. */
+  addNotesBulk: (notes: EditableBMSNote[], description?: string) => void;
 
   // Header Map mutations
   setCustomHeader: (key: string, value: string) => void;
@@ -730,8 +743,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   deleteNotes: (noteIds) => {
     const s = get();
+    // Locked layers are read-only: drop those ids before doing anything.
+    const requested = new Set(noteIds);
+    const idsSet = new Set(s.notes.filter((n) => requested.has(n.id) && !isNoteLocked(s.layerConfig, n)).map((n) => n.id));
+    if (idsSet.size === 0) return;
     s.pushUndo('Delete notes');
-    const idsSet = new Set(noteIds);
     // Incremental index update: remove deleted playable notes
     const newIndex = new Map(s._noteIndex);
     for (const n of s.notes) {
@@ -750,8 +766,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   moveNotes: (noteIds, delta, laneIds) => {
     const s = get();
+    const requested = new Set(noteIds);
+    const idsSet = new Set(s.notes.filter((n) => requested.has(n.id) && !isNoteLocked(s.layerConfig, n)).map((n) => n.id));
+    if (idsSet.size === 0) return;
     s.pushUndo('Move notes');
-    const idsSet = new Set(noteIds);
     const gridStep = 4 / s.gridSnap;
     const converter = getConverter(get);
     const newIndex = new Map(s._noteIndex);
@@ -832,7 +850,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  selectAll: () => set((s) => ({ selectedNotes: new Set(s.notes.map((n) => n.id)) })),
+  // Select everything that can actually be edited: hidden and locked layers are skipped.
+  selectAll: () => set((s) => ({
+    selectedNotes: new Set(
+      s.notes
+        .filter((n) => { const l = s.layerConfig[noteLayer(n)]; return l ? l.visible && !l.locked : true; })
+        .map((n) => n.id),
+    ),
+  })),
   clearSelection: () => set({ selectedNotes: new Set() }),
 
   selectByFilter: (filter) => {
@@ -890,7 +915,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     set({
       notes: s.notes.map((n) => {
-        if (!s.selectedNotes.has(n.id)) return n;
+        if (!s.selectedNotes.has(n.id) || isNoteLocked(s.layerConfig, n)) return n;
         const updated = { ...n, noteType: newType };
         if (newType === 'bgm') {
           updated.column = undefined;
@@ -1453,10 +1478,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({ headers: { ...s.headers, [field]: value }, hasUnsavedChanges: true });
   },
 
-  updateHeadersWithWavDefs: (newWavDefs) => {
+  addNotesBulk: (incoming, description = 'Add notes') => {
+    const s = get();
+    if (incoming.length === 0) return;
+    s.pushUndo(description);
+    const converter = getConverter(get);
+    const normalised = incoming.map((n) => {
+      const sync = syncFromBeat(n.beat, converter);
+      const endTick = n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined;
+      return { ...n, ...sync, endTick, endBeat: endTick !== undefined ? tickToBeat(endTick) : undefined };
+    });
+    const notes = [...s.notes, ...normalised];
+    set({ notes, _noteIndex: buildNoteIndex(notes), hasUnsavedChanges: true });
+  },
+
+  updateHeadersWithWavDefs: (newWavDefs, description = 'Import keysounds') => {
     const s = get();
     if (!s.headers) return;
-    s.pushUndo('Import keysounds');
+    s.pushUndo(description);
     const newWav = new Map(s.headers.wav);
     for (const [id, filename] of Object.entries(newWavDefs)) {
       newWav.set(id, filename);

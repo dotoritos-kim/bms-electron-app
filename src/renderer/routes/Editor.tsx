@@ -980,6 +980,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       if (action === 'saveAs') { e.preventDefault(); handleSaveAs(); return; }
       if (isInput) return;
       if (!action) return;
+      // A full-screen overlay (slicer, diff, play test) or a modal owns the
+      // keyboard: chart-editing shortcuts must not fire behind it.
+      if ((activeOverlay !== null || activeModal !== null) && action !== 'escape') return;
 
       e.preventDefault();
       const s = useEditorStore.getState();
@@ -2643,7 +2646,6 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             const skipped = allGenerated.length - generatedNotes.length;
             if (skipped > 0) showToast(t('editor:routes.editor.toast.autoChartSkipped', { count: skipped }), 'info');
             if (generatedNotes.length === 0) return;
-            store.pushUndo('Auto-generate chart');
             let nextId = s.nextNoteId;
             const newNotes: EditableBMSNote[] = generatedNotes.map((gn) => {
               const col = laneIds[gn.columnIndex] || laneIds[0] || '';
@@ -2664,11 +2666,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 endTick,
               };
             });
-            useEditorStore.setState({
-              notes: [...s.notes, ...newNotes],
-              nextNoteId: nextId,
-              hasUnsavedChanges: true,
-            });
+            // Single undo entry; beats normalised to ticks and the note index rebuilt.
+            useEditorStore.setState({ nextNoteId: nextId });
+            store.addNotesBulk(newNotes, 'Auto-generate chart');
             showToast(t('editor:routes.editor.toast.notesGenerated', { count: newNotes.length }), 'success');
           }}
         />
@@ -2685,7 +2685,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             showToast(t(kind === 'load' ? 'editor:routes.editor.toast.sliceLoadFailed' : 'editor:routes.editor.toast.sliceSaveFailed', { message }), 'error');
           }}
           onSlicesCreated={(wavDefs) => {
-            store.updateHeadersWithWavDefs(wavDefs);
+            store.updateHeadersWithWavDefs(wavDefs, 'Add sliced keysounds');
+            // Make the first new slice the active keysound so it can be placed right away.
+            const firstId = Object.keys(wavDefs).sort()[0];
+            if (firstId) store.setCurrentKeysound(firstId);
             showToast(t('editor:routes.editor.toast.slicesSaved', { count: Object.keys(wavDefs).length }), 'success');
             setActiveOverlay(null);
           }}

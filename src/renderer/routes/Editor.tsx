@@ -324,6 +324,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const popoutDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
   const toolMenuRef = useRef<HTMLDivElement>(null);
   const [windowHeight, setWindowHeight] = useState(() => (typeof window !== 'undefined' ? window.innerHeight : 768));
+  const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1400));
 
   // Clamp minimap popout within window bounds on open and on window resize
   useEffect(() => {
@@ -341,14 +342,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
   // Track window height for reactive viewerHeight
   useEffect(() => {
-    const handleResize = () => setWindowHeight(window.innerHeight);
+    const handleResize = () => { setWindowHeight(window.innerHeight); setWindowWidth(window.innerWidth); };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Clamp side panels so the center canvas always has at least 200px on window resize
+  // Clamp side panels so the center column (toolbar + canvas) keeps a usable
+  // width on window resize; below this the wrapped toolbar eats the canvas.
   useEffect(() => {
-    const NAV_W = 56, HANDLES_W = 6, MIN_CENTER_W = 200;
+    const NAV_W = 56, HANDLES_W = 6, MIN_CENTER_W = 420;
     const clampPanels = () => {
       const available = window.innerWidth - NAV_W - HANDLES_W - MIN_CENTER_W;
       const { left: lw, right: rw } = panelWidthsRef.current;
@@ -360,9 +362,18 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       if (newLw < lw) setLeftPanelWidth(newLw);
       if (newRw < rw) setRightPanelWidth(newRw);
     };
+    clampPanels(); // also apply to the initial window size (restored small window)
     window.addEventListener('resize', clampPanels);
     return () => window.removeEventListener('resize', clampPanels);
   }, []);
+
+  // Below this center width the 80px minimap sidebar is dropped so the
+  // toolbar/canvas keep a usable width; the popout minimap remains available.
+  const narrowCenter = (
+    windowWidth - 56
+    - (showLeftPanel ? leftPanelWidth + 6 : 0)
+    - (showRightPanel ? rightPanelWidth + 6 : 0)
+  ) < 480;
 
   // Close tool menu on outside click
   useEffect(() => {
@@ -1730,7 +1741,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           />
 
           {/* Playback Controls */}
-          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-zinc-800 bg-muted/30 shrink-0 text-xs" data-testid="playback-controls">
+          <div className="flex flex-wrap items-center gap-2 px-3 py-1.5 border-b border-zinc-800 bg-muted/30 shrink-0 text-xs min-w-0 overflow-hidden" data-testid="playback-controls">
             {audioPhase === 'idle' && (!chart || Object.keys(chart.keysounds).length > 0) ? (
               // Chart not loaded yet or auto-load pending — show spinner to prevent button flicker
               <AudioLoadingProgress />
@@ -1910,7 +1921,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         </div>
 
         {/* ===== MINIMAP SIDEBAR (togglable, between canvas and right panel) ===== */}
-        {chart && showMinimap && !minimapPopout && (
+        {chart && showMinimap && !minimapPopout && !narrowCenter && (
           <div className="w-20 border-l border-zinc-800 flex flex-col bg-zinc-950 shrink-0 min-h-0" data-testid="minimap-sidebar">
             <div className="px-1.5 py-1 flex items-center justify-between border-b border-zinc-800 shrink-0">
               <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">{t('editor:routes.editor.minimap.sidebarLabel')}</span>
@@ -1969,7 +1980,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           >
             <GripVertical className="h-4 w-2.5 text-zinc-600" />
           </div>
-          <div style={{ width: rightPanelWidth }} className="border-l border-zinc-800 flex flex-col bg-zinc-900 shrink-0 min-h-0 overflow-hidden" data-testid="right-panel">
+          <div style={{ width: rightPanelWidth }} className="border-l border-zinc-800 flex flex-col bg-zinc-900 shrink-0 min-h-0 overflow-y-auto overflow-x-hidden" data-testid="right-panel">
           {selectedNotesList.length > 0 && (
             <div className="border-b border-zinc-800 shrink-0">
               <NoteInfoPanel
@@ -2035,7 +2046,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               />
             )}
           </div>
-          <div className={headerCollapsed ? 'shrink-0' : 'flex-1 min-h-0 flex flex-col'}>
+          <div className={headerCollapsed ? 'shrink-0' : 'flex-1 min-h-[220px] flex flex-col'}>
             <button
               onClick={store.toggleHeaderCollapsed}
               className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800 shrink-0"

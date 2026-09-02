@@ -19,7 +19,7 @@ export function ToastStack({ toasts, onDismiss }: ToastStackProps) {
   if (toasts.length === 0) return null;
 
   return (
-    <div role="status" aria-live="polite" aria-atomic="false" className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-sm">
+    <div role="status" aria-live="polite" aria-atomic="false" className="fixed bottom-16 left-1/2 -translate-x-1/2 z-[70] flex flex-col gap-2 max-w-sm">
       {toasts.map((toast) => (
         <div
           key={toast.id}

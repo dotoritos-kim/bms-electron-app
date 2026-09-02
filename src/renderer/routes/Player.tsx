@@ -51,17 +51,32 @@ export function Player({ file, onBack, onRequestBack, onClearFile, onRegisterGua
   });
   const [containerSize, setContainerSize] = useState({ width: 500, height: 700 });
 
-  // Track container size with ResizeObserver
-  useLayoutEffect(() => {
-    const el = containerRef.current;
+  // Track container size with a ResizeObserver attached through a callback
+  // ref. The game container only mounts once the chart + audio are ready, so
+  // an effect that reads `containerRef.current` on first render sees null and
+  // the canvas stayed at 500x700 no matter how the window was resized.
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const attachContainer = useCallback((el: HTMLDivElement | null) => {
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
+    containerRef.current = el;
     if (!el) return;
+    const apply = (width: number, height: number) => {
+      setContainerSize((prev) => {
+        const next = { width: Math.max(1, Math.round(width)), height: Math.max(1, Math.round(height)) };
+        return prev.width === next.width && prev.height === next.height ? prev : next;
+      });
+    };
+    const rect = el.getBoundingClientRect();
+    apply(rect.width, rect.height);
     const observer = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
-      setContainerSize({ width: Math.round(width), height: Math.round(height) });
+      apply(width, height);
     });
     observer.observe(el);
-    return () => observer.disconnect();
+    resizeObserverRef.current = observer;
   }, []);
+  useLayoutEffect(() => () => resizeObserverRef.current?.disconnect(), []);
 
   // Load chart
   useEffect(() => {
@@ -287,7 +302,7 @@ export function Player({ file, onBack, onRequestBack, onClearFile, onRegisterGua
       </div>
 
       {/* Game canvas — GamePlayer renders ready screen, game, and result screen */}
-      <div className="flex-1 relative flex items-center justify-center" ref={containerRef}>
+      <div className="flex-1 min-h-0 min-w-0 relative flex items-center justify-center overflow-hidden" ref={attachContainer}>
         <GamePlayer
           notechart={notechart}
           keysoundPlayer={keysoundPlayer}

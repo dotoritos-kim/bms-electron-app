@@ -166,6 +166,7 @@
     "discardLabel": "不保存",
     "leaveLabel": "离开",
     "leaveTitle": "离开页面",
+    "quitTitle": "退出应用",
     "saveAndLeaveLabel": "保存并离开"
   },
   "player": {

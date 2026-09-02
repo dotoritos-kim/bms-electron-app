@@ -109,6 +109,8 @@ export interface IpcInvokeMap {
   // locale
   'locale:getInitial': { in: []; out: SupportedLocale };
   'locale:set': { in: [locale: SupportedLocale]; out: boolean };
+  // app lifecycle — renderer answers a close request once unsaved work is settled
+  'app:confirmClose': { in: []; out: boolean };
 }
 
 /**
@@ -122,6 +124,8 @@ export interface IpcSendMap {
   'menu:save': [];
   'menu:saveAs': [];
   'locale:changed': [locale: SupportedLocale];
+  /** Main asked to close the window; renderer must call `app:confirmClose` to proceed. */
+  'app:closeRequested': [];
 }
 
 export type IpcInvokeChannel = keyof IpcInvokeMap;
@@ -137,6 +141,7 @@ export const ALLOWED_RECV_CHANNELS: readonly IpcSendChannel[] = [
   'menu:save',
   'menu:saveAs',
   'locale:changed',
+  'app:closeRequested',
 ] as const;
 
 export function isAllowedRecvChannel(channel: string): channel is IpcSendChannel {

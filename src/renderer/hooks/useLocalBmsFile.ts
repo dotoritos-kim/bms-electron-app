@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import i18next from 'i18next';
 import { BMSParser, Timing, Positioning, Spacing, SongInfo, KeySounds, Notes } from '@rhythm-archive/bms-core';
 import type { BMSChart, BMSNote, ISongInfoData } from '@rhythm-archive/bms-core';
@@ -41,7 +41,15 @@ export function useLocalBmsFile() {
     error: null,
   });
 
+  // Each load() gets a ticket; responses from superseded or unmounted loads
+  // are dropped so a slow earlier file cannot overwrite a newer one.
+  const requestIdRef = useRef(0);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
+
   const load = useCallback(async (filePath: string) => {
+    const requestId = ++requestIdRef.current;
+    const isCurrent = () => mountedRef.current && requestIdRef.current === requestId;
     setState({ chart: null, isLoading: true, error: null });
 
     try {
@@ -54,6 +62,7 @@ export function useLocalBmsFile() {
       const chart = parser.compileString(bmsString);
       // Yield one frame so the loading spinner can animate before sync work continues
       await new Promise<void>((r) => setTimeout(r, 0));
+      if (!isCurrent()) return;
       const songInfo = parser.getSongInfo();
       const notesObj = parser.getNotes();
 
@@ -172,6 +181,7 @@ export function useLocalBmsFile() {
         if (endBeat > maxBeat) maxBeat = endBeat;
       }
 
+      if (!isCurrent()) return;
       setState({
         chart: {
           songInfo: songInfo
@@ -220,6 +230,7 @@ export function useLocalBmsFile() {
           message = err.message;
         }
       }
+      if (!isCurrent()) return;
       setState({
         chart: null,
         isLoading: false,

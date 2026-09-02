@@ -86,10 +86,20 @@ export function App() {
     saveSession({ lastRoute: route, lastFile: currentFile });
   }, [route, currentFile]);
   const [navConfirm, setNavConfirm] = useState<{
-    targetRoute: AppRoute;
+    /** Destination route, or 'quit' when the window is being closed. */
+    targetRoute: AppRoute | 'quit';
     message: string;
     onSave?: () => Promise<boolean | void>;
   } | null>(null);
+
+  /** Complete a confirmed navigation — either switch route or let the window close. */
+  const completeNavigation = useCallback((target: AppRoute | 'quit') => {
+    if (target === 'quit') {
+      void window.api.app.confirmClose();
+      return;
+    }
+    setRoute(target);
+  }, []);
 
   const handleOpenFile = useCallback((file: CurrentFile) => {
     setCurrentFile(file);
@@ -186,6 +196,20 @@ export function App() {
       }),
     );
 
+    // Window close: run the same guard as in-app navigation. Unsaved work
+    // opens the leave dialog with a 'quit' target; otherwise close right away.
+    cleanups.push(
+      window.api.on('app:closeRequested', () => {
+        const guard = navigationGuardRef.current;
+        const result = guard?.();
+        if (result?.blocked) {
+          setNavConfirm({ targetRoute: 'quit', message: result.message, onSave: result.onSave });
+          return;
+        }
+        void window.api.app.confirmClose();
+      }),
+    );
+
     return () => cleanups.forEach((fn) => fn());
   }, []);
 
@@ -217,11 +241,11 @@ export function App() {
         <AccessibleDialog
           open
           onClose={() => setNavConfirm(null)}
-          title={t('navigation.leaveTitle')}
+          title={navConfirm.targetRoute === 'quit' ? t('navigation.quitTitle') : t('navigation.leaveTitle')}
           className="border border-zinc-700 p-4 w-80"
         >
           <div>
-            <h3 className="text-sm font-semibold text-zinc-200 mb-2">{t('navigation.leaveTitle')}</h3>
+            <h3 className="text-sm font-semibold text-zinc-200 mb-2">{navConfirm.targetRoute === 'quit' ? t('navigation.quitTitle') : t('navigation.leaveTitle')}</h3>
             <p className="text-xs text-zinc-400 mb-4">{navConfirm.message}</p>
             <div className="flex justify-end gap-2">
               <button
@@ -235,7 +259,7 @@ export function App() {
                   onClick={() => {
                     const target = navConfirm.targetRoute;
                     setNavConfirm(null);
-                    setRoute(target);
+                    completeNavigation(target);
                   }}
                   className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
                 >
@@ -249,14 +273,14 @@ export function App() {
                     if (result === false) return;
                     const target = navConfirm.targetRoute;
                     setNavConfirm(null);
-                    setRoute(target);
+                    completeNavigation(target);
                   } catch (err) {
                     console.error('[Nav] Save failed:', err);
                   }
                 } : () => {
                   const target = navConfirm.targetRoute;
                   setNavConfirm(null);
-                  setRoute(target);
+                  completeNavigation(target);
                 }}
                 className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
               >

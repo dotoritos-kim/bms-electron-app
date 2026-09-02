@@ -48,6 +48,9 @@ export interface ElectronAPI {
     getInitial: () => Promise<SupportedLocale>;
     set: (locale: SupportedLocale) => Promise<boolean>;
   };
+  app: {
+    confirmClose: () => Promise<boolean>;
+  };
   /**
    * Subscribe to a typed main → renderer channel.
    * The channel must be one of the values declared in `IpcSendMap`.

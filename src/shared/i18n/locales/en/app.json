@@ -241,6 +241,7 @@
     "leaveLabel": "Leave",
     "leaveTitle": "Leave page",
     "playLabel": "Play",
+    "quitTitle": "Quit",
     "saveAndLeaveLabel": "Save and leave",
     "saveBeforeLeave": "You have unsaved changes. Save before leaving?"
   },

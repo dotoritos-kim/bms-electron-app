@@ -419,6 +419,14 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
   // Toast stack (replaces single toast)
   const { toasts: toastStack, show: showToast, dismiss: dismissToast } = useToastStack();
+  // Store actions (e.g. setKeyMode's orphan-note warning) publish through
+  // `state.toast`; surface it here and clear it so it shows exactly once.
+  useEffect(() => useEditorStore.subscribe((s, prev) => {
+    if (s.toast && s.toast !== prev.toast) {
+      showToast(s.toast.message, s.toast.type);
+      useEditorStore.getState().setToast(null);
+    }
+  }), [showToast]);
 
   useEffect(() => {
     store.reset();

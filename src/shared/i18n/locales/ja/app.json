@@ -236,6 +236,7 @@
     "leaveLabel": "離れる",
     "leaveTitle": "画面遷移",
     "playLabel": "プレイ",
+    "quitTitle": "アプリを終了",
     "saveAndLeaveLabel": "保存して離れる",
     "saveBeforeLeave": "保存されていない変更があります。保存して移動しますか?"
   },

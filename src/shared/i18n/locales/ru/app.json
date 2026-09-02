@@ -190,6 +190,7 @@
     "discardLabel": "Не сохранять",
     "leaveLabel": "Покинуть",
     "leaveTitle": "Покинуть страницу",
+    "quitTitle": "Выход",
     "saveAndLeaveLabel": "Сохранить и покинуть"
   },
   "player": {

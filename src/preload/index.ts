@@ -73,6 +73,10 @@ const api = {
     getInitial: () => invoke('locale:getInitial'),
     set: (locale: import('../shared/ipc-contract').SupportedLocale) => invoke('locale:set', locale),
   },
+  app: {
+    /** Let the main process complete a pending window close. */
+    confirmClose: () => invoke('app:confirmClose'),
+  },
   on,
 };
 

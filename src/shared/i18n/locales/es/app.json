@@ -182,6 +182,7 @@
     "discardLabel": "No guardar",
     "leaveLabel": "Salir",
     "leaveTitle": "Salir de la página",
+    "quitTitle": "Salir",
     "saveAndLeaveLabel": "Guardar y salir"
   },
   "player": {

@@ -221,6 +221,8 @@
         "saveFailed": "Error al guardar: {{message}}",
         "saved": "Guardado",
         "savedAs": "Guardado como",
+        "sliceLoadFailed": "No se pudo cargar el archivo de audio: {{message}}",
+        "sliceSaveFailed": "No se pudieron guardar los cortes: {{message}}",
         "slicesSaved_many": "{{count}} fragmentos guardados",
         "slicesSaved_one": "{{count}} fragmento guardado",
         "slicesSaved_other": "{{count}} fragmentos guardados",

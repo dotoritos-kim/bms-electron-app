@@ -211,6 +211,8 @@
         "saveFailed": "Speichern fehlgeschlagen: {{message}}",
         "saved": "Gespeichert",
         "savedAs": "Gespeichert als",
+        "sliceLoadFailed": "Audiodatei konnte nicht geladen werden: {{message}}",
+        "sliceSaveFailed": "Slices konnten nicht gespeichert werden: {{message}}",
         "slicesSaved_one": "{{count}} Segment gespeichert",
         "slicesSaved_other": "{{count}} Segmente gespeichert",
         "undefinedWavWarning_one": "Warnung: {{count}} undefinierter WAV-Verweis ({{ids}})",

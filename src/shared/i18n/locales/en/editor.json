@@ -475,6 +475,8 @@
         "saveFailed": "Save failed: {{message}}",
         "saved": "Saved",
         "savedAs": "Saved as",
+        "sliceLoadFailed": "Failed to load audio file: {{message}}",
+        "sliceSaveFailed": "Failed to save slices: {{message}}",
         "slicesSaved": "{{count}} slices saved",
         "slicesSaved_one": "{{count}} slices saved",
         "slicesSaved_other": "{{count}} slices saved",

@@ -464,6 +464,8 @@
         "saveFailed": "保存失敗: {{message}}",
         "saved": "保存完了",
         "savedAs": "名前を付けて保存完了",
+        "sliceLoadFailed": "オーディオファイルの読み込みに失敗: {{message}}",
+        "sliceSaveFailed": "スライスの保存に失敗: {{message}}",
         "slicesSaved": "{{count}}個のスライスを保存しました",
         "slicesSaved_other": "{{count}}個のスライスを保存しました",
         "undefinedWavWarning": "警告: {{count}}個の未定義WAV参照 ({{ids}})",

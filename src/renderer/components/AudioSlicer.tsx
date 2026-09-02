@@ -14,6 +14,8 @@ interface AudioSlicerProps {
   bmsFilePath: string;
   usedWavIds: Set<string>;
   onSlicesCreated: (wavDefs: Record<string, string>) => void;
+  /** Decode / write failures — the host shows them (the slicer has no toast of its own). */
+  onError?: (kind: 'load' | 'save', message: string) => void;
 }
 
 interface SliceMarker {
@@ -70,9 +72,11 @@ function downsampleWaveform(channelData: Float32Array, targetPoints: number): { 
   return { min, max };
 }
 
-export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCreated }: AudioSlicerProps) {
+export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCreated, onError }: AudioSlicerProps) {
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [fileName, setFileName] = useState('');
+  /** Safe file-name stem used to prefix generated slice files. */
+  const sliceBaseName = (fileName.replace(/\.[^.]+$/, '').replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 24) || 'slice');
   const [loading, setLoading] = useState(false);
   const [markers, setMarkers] = useState<SliceMarker[]>([]);
   const [selStart, setSelStart] = useState<number | null>(null);
@@ -156,10 +160,11 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       waveformRef.current = downsampleWaveform(buffer.getChannelData(0), 4000);
     } catch (err) {
       console.error('[AudioSlicer] Failed to load:', err);
+      onError?.('load', err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onError]);
 
   // Auto onset detection
   const handleAutoSlice = useCallback(() => {
@@ -446,7 +451,9 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
           }
         }
 
-        const filename = `slice_${String(i + 1).padStart(3, '0')}.wav`;
+        // Prefix with the source name so slicing a second file into the same
+        // folder does not overwrite slice_001.wav... from the first one.
+        const filename = `${sliceBaseName}_${String(i + 1).padStart(3, '0')}.wav`;
         slices.push({ filename, pcmData: pcm, sampleRate, channels });
         wavDefs[wavId] = filename;
       }
@@ -457,10 +464,11 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       }
     } catch (err) {
       console.error('[AudioSlicer] Slice failed:', err);
+      onError?.('save', err instanceof Error ? err.message : String(err));
     } finally {
       setSlicing(false);
     }
-  }, [audioBuffer, markers, bmsFilePath, usedWavIds, onSlicesCreated]);
+  }, [audioBuffer, markers, bmsFilePath, usedWavIds, onSlicesCreated, onError, sliceBaseName]);
 
   // Reset playing state when dialog closes
   useEffect(() => {

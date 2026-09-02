@@ -464,6 +464,8 @@
         "saveFailed": "저장 실패: {{message}}",
         "saved": "저장 완료",
         "savedAs": "다른 이름으로 저장 완료",
+        "sliceLoadFailed": "오디오 파일 로드 실패: {{message}}",
+        "sliceSaveFailed": "슬라이스 저장 실패: {{message}}",
         "slicesSaved": "{{count}}개 슬라이스 저장 완료",
         "slicesSaved_other": "{{count}}개 슬라이스 저장 완료",
         "undefinedWavWarning": "경고: {{count}}개 미정의 WAV 참조 ({{ids}})",

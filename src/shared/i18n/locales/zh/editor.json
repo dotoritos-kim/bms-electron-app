@@ -201,6 +201,8 @@
         "saveFailed": "保存失败：{{message}}",
         "saved": "已保存",
         "savedAs": "另存为",
+        "sliceLoadFailed": "音频文件加载失败：{{message}}",
+        "sliceSaveFailed": "切片保存失败：{{message}}",
         "slicesSaved_other": "已保存 {{count}} 个切片",
         "undefinedWavWarning_other": "警告：{{count}} 个未定义的 WAV 引用（{{ids}}）",
         "undoAction": "撤销：{{description}}"

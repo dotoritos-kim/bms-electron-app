@@ -1055,6 +1055,24 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     return () => window.removeEventListener('keydown', handler);
   }, [laneIds, activeModal, activeOverlay, handleSaveAs]);
 
+  /**
+   * Paste through `preparePaste` so out-of-key-mode columns are dropped and
+   * overlapping notes are reported, whichever entry point triggered it
+   * (Ctrl+V, toolbar, context menu, clipboard history).
+   */
+  const pasteWithChecks = useCallback(() => {
+    const result = store.preparePaste(laneIds);
+    if (!result) return;
+    if (result.droppedCount > 0) {
+      showToast(t('editor:routes.editor.toast.pasteDropped', { count: result.droppedCount }), 'warning');
+    }
+    if (result.conflicts.length > 0) {
+      // For now: auto-replace conflicts (full dialog UI deferred to P1)
+      store.executePaste(result, 'replace');
+      showToast(t('editor:routes.editor.toast.pasteConflicts', { count: result.conflicts.length }), 'info');
+    }
+  }, [laneIds, showToast, t]);
+
   // --- Audio playback ---
   const loadAudio = useCallback(async () => {
     if (!chart || audioPhase === 'loading') return;
@@ -1723,7 +1741,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             onUndo={store.undo}
             onRedo={store.redo}
             onCopy={store.copy}
-            onPaste={store.paste}
+            onPaste={pasteWithChecks}
             noteHeight={noteHeight}
             onNoteHeightChange={store.setNoteHeight}
             snapEnabled={snapEnabled}
@@ -1859,7 +1877,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             hasClipboard={clipboard.length > 0}
             onCopy={store.copy}
             onCut={store.cut}
-            onPaste={store.paste}
+            onPaste={pasteWithChecks}
             onDelete={() => store.deleteNotes(Array.from(selectedNotes))}
             onSelectAll={store.selectAll}
             onClearSelection={store.clearSelection}
@@ -2443,7 +2461,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 key={i}
                 onClick={() => {
                   store.selectClipboardHistory(i);
-                  store.paste();
+                  pasteWithChecks();
                   setActiveModal(null);
                 }}
                 className="w-full text-left px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors group"
@@ -2625,6 +2643,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           onClose={() => setActiveOverlay(null)}
           bmsFilePath={file.path}
           usedWavIds={new Set(Object.keys(keysoundRecord).map((k) => k.toUpperCase()))}
+          onError={(kind, message) => {
+            showToast(t(kind === 'load' ? 'editor:routes.editor.toast.sliceLoadFailed' : 'editor:routes.editor.toast.sliceSaveFailed', { message }), 'error');
+          }}
           onSlicesCreated={(wavDefs) => {
             store.updateHeadersWithWavDefs(wavDefs);
             showToast(t('editor:routes.editor.toast.slicesSaved', { count: Object.keys(wavDefs).length }), 'success');

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import i18next from 'i18next';
 import type { BMSNote, ISongInfoData } from '@rhythm-archive/bms-core';
 import type { KeyMode, BpmChange, StopEvent, ScrollSpeedChange } from '@rhythm-archive/bms-editor';
@@ -153,6 +153,7 @@ export function useHomeBmsFile() {
     };
 
     worker.onerror = (event: ErrorEvent) => {
+      worker.terminate();
       if (reqId !== requestIdRef.current) return;
       setState({
         chart: null,
@@ -165,6 +166,14 @@ export function useHomeBmsFile() {
 
     // Transfer buffer ownership to Worker (zero-copy)
     worker.postMessage({ type: 'PARSE_PHASE1', buffer, requestId: reqId }, [buffer]);
+  }, []);
+
+  // Kill an in-flight parse when the consumer unmounts (e.g. leaving Home
+  // mid-parse) so the worker thread and its transferred buffer are released.
+  useEffect(() => () => {
+    requestIdRef.current++;
+    workerRef.current?.terminate();
+    workerRef.current = null;
   }, []);
 
   const reset = useCallback(() => {

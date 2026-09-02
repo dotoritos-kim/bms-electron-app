@@ -231,6 +231,8 @@
         "saveFailed": "Ошибка сохранения: {{message}}",
         "saved": "Сохранено",
         "savedAs": "Сохранено как",
+        "sliceLoadFailed": "Не удалось загрузить аудиофайл: {{message}}",
+        "sliceSaveFailed": "Не удалось сохранить фрагменты: {{message}}",
         "slicesSaved_few": "{{count}} фрагмента сохранено",
         "slicesSaved_many": "{{count}} фрагментов сохранено",
         "slicesSaved_one": "{{count}} фрагмент сохранён",

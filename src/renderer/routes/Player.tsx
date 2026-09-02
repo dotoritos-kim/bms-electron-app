@@ -77,6 +77,10 @@ export function Player({ file, onBack, onRequestBack, onClearFile, onRegisterGua
     resizeObserverRef.current = observer;
   }, []);
   useLayoutEffect(() => () => resizeObserverRef.current?.disconnect(), []);
+  // The lane renderer maps its fixed lane widths onto the whole canvas, so a
+  // canvas as wide as the window stretches the playfield across the screen.
+  // Keep a tall playfield aspect and let the flex container centre it.
+  const playfieldWidth = Math.max(320, Math.min(containerSize.width, Math.round(containerSize.height * 0.8)));
 
   // Load chart
   useEffect(() => {
@@ -306,7 +310,7 @@ export function Player({ file, onBack, onRequestBack, onClearFile, onRegisterGua
         <GamePlayer
           notechart={notechart}
           keysoundPlayer={keysoundPlayer}
-          width={containerSize.width}
+          width={playfieldWidth}
           height={containerSize.height}
           onComplete={handleComplete}
           onExit={handleExit}

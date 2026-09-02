@@ -1,0 +1,19 @@
+name: Token Diagnostic
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check tokens
+        env:
+          T1: ${{ secrets.SIBLING_REPO_TOKEN }}
+          T2: ${{ secrets.WORKSPACE_REPO_TOKEN }}
+        run: |
+          for name in SIBLING_REPO_TOKEN WORKSPACE_REPO_TOKEN; do
+            if [ "$name" = "SIBLING_REPO_TOKEN" ]; then tok="$T1"; else tok="$T2"; fi
+            echo "== $name (len ${#tok}, prefix ${tok:0:11}...)"
+            curl -s -H "Authorization: Bearer $tok" https://api.github.com/user | jq -r '"login: \(.login // .message)"'
+            curl -s -H "Authorization: Bearer $tok" https://api.github.com/repos/dotoritos-kim/bms-electron-app | jq -r '"repo: \(.full_name // .message) permissions: \(.permissions // "n/a")"'
+            curl -s -o /dev/null -w "create-ref probe status: %{http_code}\n" -X POST -H "Authorization: Bearer $tok" -H "Content-Type: application/json" https://api.github.com/repos/dotoritos-kim/bms-electron-app/git/refs -d '{"ref":"refs/heads/__token_probe__","sha":"0000000000000000000000000000000000000000"}'
+          done

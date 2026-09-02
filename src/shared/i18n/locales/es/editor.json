@@ -197,6 +197,7 @@
       },
       "toast": {
         "audioLoadFailed": "No se pudo cargar el audio: {{message}}",
+        "autoChartSkipped": "Se omitieron {{count}} notas generadas que se superponen a las existentes",
         "highResWarning_many": "{{count}} notas fuera de la resolución estándar (192) — puede causar problemas de compatibilidad",
         "highResWarning_one": "{{count}} nota fuera de la resolución estándar (192) — puede causar problemas de compatibilidad",
         "highResWarning_other": "{{count}} notas fuera de la resolución estándar (192) — puede causar problemas de compatibilidad",

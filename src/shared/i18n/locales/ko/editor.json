@@ -475,6 +475,7 @@
       },
       "toast": {
         "audioLoadFailed": "오디오 로드 실패: {{message}}",
+        "autoChartSkipped": "기존 노트와 겹치는 {{count}}개는 건너뜀",
         "highResWarning": "{{count}}개 노트가 표준 해상도(192) 범위 밖 — 일부 플레이어에서 호환 문제 가능",
         "highResWarning_other": "{{count}}개 노트가 표준 해상도(192) 범위 밖 — 일부 플레이어에서 호환 문제 가능",
         "keysoundDeleted": "키음 {{id}} 삭제됨 (Ctrl+Z로 복원 가능)",

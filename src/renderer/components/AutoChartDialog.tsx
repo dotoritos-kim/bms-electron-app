@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Wand2, Lightbulb } from 'lucide-react';
+import { X, Wand2, Lightbulb, Dices } from 'lucide-react';
 import { AccessibleDialog } from './AccessibleDialog';
 import type { GeneratedNote, AutoChartOptions } from '../lib/autoChart';
 import {
@@ -8,6 +8,8 @@ import {
   detectOnsetsFromBuffer,
   buildMarkovModel,
   suggestPattern,
+  createRng,
+  isKeyLane,
 } from '../lib/autoChart';
 
 interface AutoChartDialogProps {
@@ -50,9 +52,15 @@ export function AutoChartDialog({
   const [generateAttempted, setGenerateAttempted] = useState(false);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [loadingAudio, setLoadingAudio] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [seed, setSeed] = useState(() => (Date.now() % 100000));
+  const [audioOffsetMs, setAudioOffsetMs] = useState(0);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const columnCount = laneIds.length;
+  // Key columns exclude the turntable / foot pedal lanes; scratch is opt-in.
+  const keyColumnIndices = useMemo(() => laneIds.map((id, i) => (isKeyLane(id) ? i : -1)).filter((i) => i >= 0), [laneIds]);
+  const scratchColumnIndex = useMemo(() => { const i = laneIds.indexOf('SC'); return i >= 0 ? i : null; }, [laneIds]);
 
   // Cleanup AudioContext on unmount
   useEffect(() => {
@@ -67,6 +75,7 @@ export function AutoChartDialog({
     const path = await window.api.file.openAudioFile();
     if (!path) return;
     setLoadingAudio(true);
+    setError(null);
     try {
       const arrayBuffer = await window.api.audio.readFile(path);
       if (!audioCtxRef.current) {
@@ -76,10 +85,11 @@ export function AutoChartDialog({
       setAudioBuffer(buffer);
     } catch (err) {
       console.error('[AutoChart] Audio load failed:', err);
+      setError(t('dialogs.autoChart.audioLoadFailed', { message: err instanceof Error ? err.message : String(err) }));
     } finally {
       setLoadingAudio(false);
     }
-  }, []);
+  }, [t]);
 
   // Generate chart from audio
   const handleGenerate = useCallback(() => {
@@ -94,12 +104,27 @@ export function AutoChartDialog({
       quantize,
       gridSnap,
       bpm,
+      seed,
+      keyColumnIndices,
+      scratchColumnIndex,
+      audioOffsetSec: audioOffsetMs / 1000,
     };
 
     const generated = generateChartFromOnsets(onsetTimes, bpm, options);
     setPreview(generated);
     setGenerateAttempted(true);
-  }, [audioBuffer, difficulty, columnCount, useScratch, lnRatio, quantize, gridSnap, bpm]);
+  }, [audioBuffer, difficulty, columnCount, useScratch, lnRatio, quantize, gridSnap, bpm, seed, keyColumnIndices, scratchColumnIndex, audioOffsetMs]);
+
+  // New seed → different but reproducible result
+  const handleReseed = useCallback(() => {
+    setSeed(Math.floor(Math.random() * 100000));
+  }, []);
+  const seedRef = useRef(seed);
+  useEffect(() => {
+    // Regenerate automatically when the seed changes after a generation.
+    if (seedRef.current !== seed && audioBuffer && generateAttempted) handleGenerate();
+    seedRef.current = seed;
+  }, [seed, audioBuffer, generateAttempted, handleGenerate]);
 
   // Suggest pattern from existing notes
   const handleSuggest = useCallback(() => {
@@ -117,9 +142,9 @@ export function AutoChartDialog({
     const before = notesWithIdx.filter((n) => n.beat <= currentBeat);
     const startCol = before.length > 0 ? before[before.length - 1].columnIndex : Math.floor(columnCount / 2);
 
-    const suggested = suggestPattern(model, currentBeat, startCol, columnCount, suggestCount, gridStep);
+    const suggested = suggestPattern(model, currentBeat, startCol, columnCount, suggestCount, gridStep, createRng(seed));
     setPreview(suggested);
-  }, [existingNotes, laneIds, columnCount, currentBeat, gridSnap, suggestCount]);
+  }, [existingNotes, laneIds, columnCount, currentBeat, gridSnap, suggestCount, seed]);
 
   const handleApply = useCallback(() => {
     if (preview.length === 0) return;
@@ -175,13 +200,28 @@ export function AutoChartDialog({
               {/* Audio source */}
               <div>
                 <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">{t('dialogs.autoChart.audioSection')}</h3>
-                <button
-                  onClick={handleLoadAudio}
-                  disabled={loadingAudio}
-                  className="px-3 py-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded transition-colors"
-                >
-                  {audioLabel}
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={handleLoadAudio}
+                    disabled={loadingAudio}
+                    className="px-3 py-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded transition-colors"
+                  >
+                    {audioLabel}
+                  </button>
+                  <label className="flex items-center gap-1.5 text-xs text-zinc-400">
+                    {t('dialogs.autoChart.offsetLabel')}
+                    <input
+                      type="number"
+                      step={10}
+                      value={audioOffsetMs}
+                      onChange={(e) => setAudioOffsetMs(Number.isFinite(e.target.valueAsNumber) ? e.target.valueAsNumber : 0)}
+                      className="w-20 px-2 py-1 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-200"
+                      title={t('dialogs.autoChart.offsetHint')}
+                    />
+                    ms
+                  </label>
+                </div>
+                {error && <div role="alert" className="mt-1.5 text-xs text-red-400">{error}</div>}
               </div>
 
               {/* Difficulty */}
@@ -214,9 +254,16 @@ export function AutoChartDialog({
                   <input type="checkbox" checked={quantize} onChange={(e) => setQuantize(e.target.checked)} className="accent-blue-500" />
                   {t('dialogs.autoChart.gridSnapToggle')}
                 </label>
-                <label className="flex items-center gap-1.5 text-xs text-zinc-400">
-                  <input type="checkbox" checked={useScratch} onChange={(e) => setUseScratch(e.target.checked)} className="accent-blue-500" />
+                <label className="flex items-center gap-1.5 text-xs text-zinc-400" title={scratchColumnIndex === null ? t('dialogs.autoChart.noScratchLane') : undefined}>
+                  <input type="checkbox" checked={useScratch && scratchColumnIndex !== null} disabled={scratchColumnIndex === null} onChange={(e) => setUseScratch(e.target.checked)} className="accent-blue-500" />
                   {t('dialogs.autoChart.scratchToggle')}
+                </label>
+                <label className="flex items-center gap-1.5 text-xs text-zinc-400 ml-auto">
+                  {t('dialogs.autoChart.seedLabel')}
+                  <span className="font-mono text-zinc-300">{seed}</span>
+                  <button type="button" onClick={handleReseed} className="p-1 rounded hover:bg-zinc-800 text-zinc-400" title={t('dialogs.autoChart.regenerateButton')} aria-label={t('dialogs.autoChart.regenerateButton')}>
+                    <Dices className="h-3.5 w-3.5" />
+                  </button>
                 </label>
               </div>
 
@@ -274,8 +321,8 @@ export function AutoChartDialog({
               </h3>
               <div className="bg-zinc-800/50 rounded p-2 max-h-40 overflow-y-auto">
                 <div className="grid grid-cols-8 gap-0.5 text-xs font-mono text-zinc-400">
-                  <div className="font-semibold text-zinc-500">Beat</div>
-                  <div className="font-semibold text-zinc-500">Col</div>
+                  <div className="font-semibold text-zinc-500">{t('dialogs.autoChart.previewBeat')}</div>
+                  <div className="font-semibold text-zinc-500">{t('dialogs.autoChart.previewCol')}</div>
                   <div className="col-span-6"></div>
                   {preview.slice(0, 50).map((n, i) => (
                     <div key={i} className="contents">
@@ -286,7 +333,7 @@ export function AutoChartDialog({
                       </div>
                     </div>
                   ))}
-                  {preview.length > 50 && <div className="col-span-8 text-zinc-600">... +{preview.length - 50} more</div>}
+                  {preview.length > 50 && <div className="col-span-8 text-zinc-600">{t('dialogs.autoChart.previewMore', { count: preview.length - 50 })}</div>}
                 </div>
               </div>
             </div>

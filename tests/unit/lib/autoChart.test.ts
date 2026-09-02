@@ -262,3 +262,45 @@ describe('suggestPattern', () => {
     }
   });
 });
+
+describe('generateChartFromOnsets — seed / lanes / long-note safety', () => {
+  const onsets = Array.from({ length: 40 }, (_, i) => i * 0.25); // 4 onsets per second
+
+  it('same seed reproduces the same chart, different seed differs', () => {
+    const a = generateChartFromOnsets(onsets, 120, makeOptions({ seed: 42, lnRatio: 0.5, difficulty: 10 }));
+    const b = generateChartFromOnsets(onsets, 120, makeOptions({ seed: 42, lnRatio: 0.5, difficulty: 10 }));
+    const c = generateChartFromOnsets(onsets, 120, makeOptions({ seed: 43, lnRatio: 0.5, difficulty: 10 }));
+    expect(a).toEqual(b);
+    expect(JSON.stringify(c)).not.toEqual(JSON.stringify(a));
+  });
+
+  it('only uses keyColumnIndices; scratch column only when useScratch is on', () => {
+    // laneIds: [SC, 1..7, FZ] → columnCount 9, keys are 1..7
+    const keys = [1, 2, 3, 4, 5, 6, 7];
+    const off = generateChartFromOnsets(onsets, 120, makeOptions({ seed: 7, columnCount: 9, keyColumnIndices: keys, scratchColumnIndex: 0, useScratch: false, difficulty: 12 }));
+    expect(off.length).toBeGreaterThan(0);
+    for (const n of off) expect(keys).toContain(n.columnIndex);
+
+    const on = generateChartFromOnsets(onsets, 120, makeOptions({ seed: 7, columnCount: 9, keyColumnIndices: keys, scratchColumnIndex: 0, useScratch: true, difficulty: 12 }));
+    for (const n of on) expect([0, ...keys]).toContain(n.columnIndex);
+    expect(on.some((n) => n.columnIndex === 0)).toBe(true);
+  });
+
+  it('never places a note inside a long note of the same column', () => {
+    const notes = generateChartFromOnsets(onsets, 120, makeOptions({ seed: 3, lnRatio: 0.8, difficulty: 12, gridSnap: 4 }));
+    const byCol = new Map<number, GeneratedNote[]>();
+    for (const n of notes) byCol.set(n.columnIndex, [...(byCol.get(n.columnIndex) ?? []), n]);
+    for (const list of byCol.values()) {
+      list.sort((a, b) => a.beat - b.beat);
+      for (let i = 0; i < list.length - 1; i++) {
+        if (list[i].endBeat !== undefined) expect(list[i].endBeat!).toBeLessThan(list[i + 1].beat);
+      }
+    }
+  });
+
+  it('applies the audio offset and drops onsets before it', () => {
+    const notes = generateChartFromOnsets([0.5, 1.0, 2.0], 120, makeOptions({ seed: 1, difficulty: 12, audioOffsetSec: 1.0 }));
+    expect(notes.every((n) => n.beat >= 0)).toBe(true);
+    expect(Math.max(...notes.map((n) => n.beat))).toBeCloseTo(2, 5); // (2.0 - 1.0) * 120 / 60
+  });
+});

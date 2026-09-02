@@ -480,6 +480,7 @@
       },
       "toast": {
         "audioLoadFailed": "Failed to load audio: {{message}}",
+        "autoChartSkipped": "Skipped {{count}} generated notes overlapping existing ones",
         "highResWarning": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
         "highResWarning_one": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
         "highResWarning_other": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",

@@ -193,6 +193,7 @@
       },
       "toast": {
         "audioLoadFailed": "Audio konnte nicht geladen werden: {{message}}",
+        "autoChartSkipped": "{{count}} erzeugte Noten übersprungen (überlappen vorhandene)",
         "highResWarning_one": "{{count}} Note außerhalb der Standardauflösung (192) — kann Kompatibilitätsprobleme verursachen",
         "highResWarning_other": "{{count}} Noten außerhalb der Standardauflösung (192) — kann Kompatibilitätsprobleme verursachen",
         "keysoundDeleted": "Schlüsselklang {{id}} gelöscht (Ctrl+Z zum Rückgängigmachen)",

@@ -475,6 +475,7 @@
       },
       "toast": {
         "audioLoadFailed": "オーディオの読み込みに失敗: {{message}}",
+        "autoChartSkipped": "既存ノートと重なる {{count}}件をスキップ",
         "highResWarning": "{{count}}ノーツが標準解像度(192)範囲外 — 一部プレイヤーで互換性問題の可能性",
         "highResWarning_other": "{{count}}ノーツが標準解像度(192)範囲外 — 一部プレイヤーで互換性問題の可能性",
         "keysoundDeleted": "キーサウンド {{id}} を削除しました (Ctrl+Zで復元可能)",

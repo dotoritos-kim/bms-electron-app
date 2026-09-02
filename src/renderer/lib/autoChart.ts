@@ -15,6 +15,32 @@ export interface AutoChartOptions {
   gridSnap: number;
   /** Base BPM for density calculation */
   bpm: number;
+  /** Seed for the pseudo-random generator — same seed + same input = same chart. */
+  seed?: number;
+  /** Indices (into the lane list) that may receive key notes. Defaults to every column. */
+  keyColumnIndices?: number[];
+  /** Index of the scratch lane, or null/undefined when the key mode has none. */
+  scratchColumnIndex?: number | null;
+  /** Audio start offset in seconds: onset time minus this is beat 0. */
+  audioOffsetSec?: number;
+}
+
+/** Small deterministic PRNG (mulberry32) so a seed reproduces a generation. */
+export function createRng(seed: number): () => number {
+  let a = (seed >>> 0) || 0x9e3779b9;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Lane ids that are not key columns (scratch / foot pedal) in the editor's lane naming. */
+const NON_KEY_LANE = /^(SC2?|FZ2?)$/;
+export function isKeyLane(laneId: string): boolean {
+  return !NON_KEY_LANE.test(laneId);
 }
 
 export interface GeneratedNote {
@@ -36,6 +62,16 @@ export function generateChartFromOnsets(
 
   const notes: GeneratedNote[] = [];
   const { columnCount, difficulty, lnRatio, quantize, gridSnap } = options;
+  // No seed → plain Math.random (keeps the historical behaviour and lets tests stub it).
+  const rng = options.seed !== undefined ? createRng(options.seed) : Math.random;
+  const keyColumns = (options.keyColumnIndices && options.keyColumnIndices.length > 0)
+    ? options.keyColumnIndices.filter((c) => c >= 0 && c < columnCount)
+    : Array.from({ length: columnCount }, (_, i) => i);
+  if (keyColumns.length === 0) return [];
+  const scratchCol = options.useScratch && options.scratchColumnIndex != null && options.scratchColumnIndex >= 0
+    ? options.scratchColumnIndex : null;
+  const scratchChance = scratchCol === null ? 0 : Math.min(0.25, 0.05 + difficulty * 0.012);
+  const audioOffset = options.audioOffsetSec ?? 0;
   const gridStep = 4 / gridSnap;
   // Tick-based snap helper (960 ticks/beat, no floating point drift)
   const TICKS_PER_BEAT = 960;
@@ -45,8 +81,8 @@ export function generateChartFromOnsets(
     return Math.round(tick / gridTicks) * gridTicks / TICKS_PER_BEAT;
   };
 
-  // Convert times to beats
-  let onsetBeats = onsetTimes.map((t) => (t * bpm) / 60);
+  // Convert times to beats (relative to the audio offset; onsets before it are dropped)
+  let onsetBeats = onsetTimes.map((t) => ((t - audioOffset) * bpm) / 60).filter((b) => b >= 0);
 
   // Quantize if requested
   if (quantize) {
@@ -61,20 +97,33 @@ export function generateChartFromOnsets(
   const chordChance = Math.max(0, (difficulty - 6) / 12);
 
   // Filter onsets by density
-  const filteredBeats = onsetBeats.filter(() => Math.random() < densityFactor);
+  const filteredBeats = onsetBeats.filter(() => rng() < densityFactor);
   if (filteredBeats.length === 0) return [];
 
   // Column distribution algorithm
-  let prevCol = Math.floor(columnCount / 2);
+  let prevCol = keyColumns[Math.floor(keyColumns.length / 2)];
   const colUsage = new Array(columnCount).fill(0);
+  // Beat until which each column is occupied by a long note (no note may land inside).
+  const busyUntil = new Array<number>(columnCount).fill(-Infinity);
+  const freeColumns = (beat: number) => keyColumns.filter((c) => busyUntil[c] <= beat);
 
   for (const beat of filteredBeats) {
+    // Scratch: occasionally route an onset to the turntable instead of a key.
+    if (scratchCol !== null && busyUntil[scratchCol] <= beat && rng() < scratchChance) {
+      notes.push({ beat, columnIndex: scratchCol, noteType: 'playable' });
+      colUsage[scratchCol]++;
+      continue;
+    }
+
+    const available = freeColumns(beat);
+    if (available.length === 0) continue; // every key column is inside a hold
+
     // Pick column: prefer movement, avoid same column (anti-jack)
-    let col = pickColumn(prevCol, columnCount, colUsage, difficulty);
+    const col = pickColumn(prevCol, available, colUsage, difficulty, rng);
 
     // Determine if long note
-    const isLN = Math.random() < lnRatio;
-    const endBeat = isLN ? beat + gridStep * (1 + Math.floor(Math.random() * 3)) : undefined;
+    const isLN = rng() < lnRatio;
+    const endBeat = isLN ? beat + gridStep * (1 + Math.floor(rng() * 3)) : undefined;
 
     notes.push({
       beat,
@@ -82,14 +131,16 @@ export function generateChartFromOnsets(
       noteType: 'playable',
       endBeat,
     });
+    if (endBeat !== undefined) busyUntil[col] = endBeat;
 
     colUsage[col]++;
     prevCol = col;
 
     // Maybe add chord (extra note at same beat)
-    if (Math.random() < chordChance) {
-      const chordCol = pickColumn(col, columnCount, colUsage, difficulty);
-      if (chordCol !== col) {
+    if (rng() < chordChance) {
+      const chordChoices = available.filter((c) => c !== col);
+      if (chordChoices.length > 0) {
+        const chordCol = pickColumn(col, chordChoices, colUsage, difficulty, rng);
         notes.push({
           beat,
           columnIndex: chordCol,
@@ -100,20 +151,38 @@ export function generateChartFromOnsets(
     }
   }
 
+  // A long note must end before the next note in its column; shorten it, and
+  // drop the hold entirely when there is no room for even one grid step.
+  notes.sort((a, b) => a.beat - b.beat || a.columnIndex - b.columnIndex);
+  const nextBeatInColumn = new Map<number, number>();
+  for (let i = notes.length - 1; i >= 0; i--) {
+    const n = notes[i];
+    if (n.endBeat !== undefined) {
+      const next = nextBeatInColumn.get(n.columnIndex);
+      if (next !== undefined && n.endBeat > next - gridStep) {
+        const capped = next - gridStep;
+        if (capped - n.beat >= gridStep) n.endBeat = capped;
+        else delete n.endBeat;
+      }
+    }
+    nextBeatInColumn.set(n.columnIndex, n.beat);
+  }
+
   return notes;
 }
 
 function pickColumn(
   prevCol: number,
-  columnCount: number,
+  allowedColumns: number[],
   colUsage: number[],
   difficulty: number,
+  rng: () => number = Math.random,
 ): number {
   // Higher difficulty = more spread, lower = more central
   const candidates: number[] = [];
   const weights: number[] = [];
 
-  for (let c = 0; c < columnCount; c++) {
+  for (const c of allowedColumns) {
     const dist = Math.abs(c - prevCol);
     // Avoid same column (anti-jack bias), unless high difficulty
     const jackPenalty = dist === 0 ? (difficulty > 8 ? 0.3 : 0.05) : 1;
@@ -128,7 +197,7 @@ function pickColumn(
 
   // Weighted random selection
   const totalWeight = weights.reduce((a, b) => a + b, 0);
-  let r = Math.random() * totalWeight;
+  let r = rng() * totalWeight;
   for (let i = 0; i < candidates.length; i++) {
     r -= weights[i];
     if (r <= 0) return candidates[i];
@@ -218,6 +287,7 @@ export function suggestPattern(
   columnCount: number,
   noteCount: number,
   gridStep: number,
+  rng: () => number = Math.random,
 ): GeneratedNote[] {
   const result: GeneratedNote[] = [];
   let currentCol = startCol;
@@ -234,7 +304,7 @@ export function suggestPattern(
       // Weighted random from transitions
       const entries = Array.from(nextStates.entries());
       const total = entries.reduce((s, [, w]) => s + w, 0);
-      let r = Math.random() * total;
+      let r = rng() * total;
       let chosen = entries[0][0];
       for (const [key, weight] of entries) {
         r -= weight;
@@ -245,7 +315,7 @@ export function suggestPattern(
       timeDelta = parseInt(deltaStr);
     } else {
       // Fallback: random column, step forward
-      nextCol = Math.floor(Math.random() * columnCount);
+      nextCol = Math.floor(rng() * columnCount);
       timeDelta = 1;
     }
 

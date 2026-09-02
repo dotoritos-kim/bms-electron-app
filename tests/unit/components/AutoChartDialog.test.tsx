@@ -11,6 +11,8 @@ import { AutoChartDialog } from '../../../src/renderer/components/AutoChartDialo
 
 // Mock autoChart module
 vi.mock('../../../src/renderer/lib/autoChart', () => ({
+  createRng: (seed: number) => { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; return (a % 1000) / 1000; }; },
+  isKeyLane: (id: string) => !/^(SC2?|FZ2?)$/.test(id),
   generateChartFromOnsets: vi.fn().mockReturnValue([]),
   detectOnsetsFromBuffer: vi.fn().mockReturnValue([]),
   buildMarkovModel: vi.fn().mockReturnValue({}),

@@ -2634,8 +2634,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           bpm={editedBaseBpm}
           currentBeat={useEditorStore.getState().currentBeat}
           gridSnap={gridSnap}
-          onApplyNotes={(generatedNotes: GeneratedNote[]) => {
+          onApplyNotes={(allGenerated: GeneratedNote[]) => {
             const s = useEditorStore.getState();
+            // Drop generated notes that would sit on top of an existing note in
+            // the same column (within half a 32nd); the user keeps what they wrote.
+            const occupied = new Set(s.notes.filter((n) => n.column).map((n) => `${n.column}@${Math.round(n.beat * 16)}`));
+            const generatedNotes = allGenerated.filter((gn) => !occupied.has(`${laneIds[gn.columnIndex] || ''}@${Math.round(gn.beat * 16)}`));
+            const skipped = allGenerated.length - generatedNotes.length;
+            if (skipped > 0) showToast(t('editor:routes.editor.toast.autoChartSkipped', { count: skipped }), 'info');
+            if (generatedNotes.length === 0) return;
             store.pushUndo('Auto-generate chart');
             let nextId = s.nextNoteId;
             const newNotes: EditableBMSNote[] = generatedNotes.map((gn) => {

@@ -189,6 +189,7 @@
       },
       "toast": {
         "audioLoadFailed": "音频加载失败：{{message}}",
+        "autoChartSkipped": "已跳过 {{count}} 个与现有音符重叠的生成音符",
         "highResWarning_other": "{{count}} 个音符超出标准分辨率（192），可能导致兼容性问题",
         "keysoundDeleted": "键音 {{id}} 已删除（Ctrl+Z 可撤销）",
         "keysoundImportFailed": "键音导入失败",

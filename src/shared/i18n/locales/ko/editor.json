@@ -188,6 +188,7 @@
       "filteredSummary": "({{count}}개 필터)",
       "noSearchResults": "검색 결과 없음",
       "noSilent": "무음 / No Sound",
+      "previewHint": "더블클릭으로 미리듣기",
       "searchPlaceholder": "검색...",
       "title": "키음",
       "uploadButton": "업로드",

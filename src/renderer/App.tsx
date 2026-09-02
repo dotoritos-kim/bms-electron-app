@@ -184,15 +184,15 @@ export function App() {
 
     cleanups.push(
       window.api.on('menu:save', () => {
-        // Dispatch a synthetic Ctrl+S keydown so the Editor's save handler fires
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }));
+        // The Editor listens for this app-level event (independent of the
+        // user's key bindings, unlike a synthetic Ctrl+S).
+        window.dispatchEvent(new CustomEvent('bms:menu-save'));
       }),
     );
 
     cleanups.push(
       window.api.on('menu:saveAs', () => {
-        // Dispatch a synthetic Ctrl+Shift+S keydown
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, shiftKey: true, bubbles: true }));
+        window.dispatchEvent(new CustomEvent('bms:menu-save-as'));
       }),
     );
 

@@ -188,6 +188,7 @@
       "filteredSummary": "({{count}}個フィルタ)",
       "noSearchResults": "検索結果なし",
       "noSilent": "無音 / No Sound",
+      "previewHint": "ダブルクリックで試聴",
       "searchPlaceholder": "検索...",
       "title": "キーサウンド",
       "uploadButton": "アップロード",

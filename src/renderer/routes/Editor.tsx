@@ -964,6 +964,20 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   // --- Keyboard shortcuts (refs to avoid TDZ with callbacks defined later) ---
   const handleSaveRef = useRef(handleSaveWithCleanup);
   handleSaveRef.current = handleSaveWithCleanup;
+  const handleSaveAsRef = useRef(handleSaveAs);
+  handleSaveAsRef.current = handleSaveAs;
+
+  // Application menu File ▸ Save / Save As (works regardless of key bindings).
+  useEffect(() => {
+    const onSave = () => { void handleSaveRef.current(); };
+    const onSaveAs = () => { void handleSaveAsRef.current(); };
+    window.addEventListener('bms:menu-save', onSave);
+    window.addEventListener('bms:menu-save-as', onSaveAs);
+    return () => {
+      window.removeEventListener('bms:menu-save', onSave);
+      window.removeEventListener('bms:menu-save-as', onSaveAs);
+    };
+  }, []);
   const handlePlayTestRef = useRef<(() => void) | null>(null);
   const handlePlaybackToggleRef = useRef<(() => void) | null>(null);
 

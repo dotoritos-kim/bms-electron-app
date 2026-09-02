@@ -190,6 +190,7 @@
       "filteredSummary": "({{count}} filtered)",
       "noSearchResults": "No matches",
       "noSilent": "Silent / No Sound",
+      "previewHint": "Double-click to preview",
       "searchPlaceholder": "Search...",
       "title": "Keysounds",
       "uploadButton": "Upload",

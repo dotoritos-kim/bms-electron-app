@@ -1,34 +1,63 @@
 {
-  "judgment": {
-    "pgreat": "PGREAT",
-    "great": "GREAT",
-    "good": "GOOD",
-    "bad": "BAD",
-    "poor": "POOR",
-    "miss": "MISS",
-    "early": "早い",
-    "late": "遅い"
+  "errors": {
+    "audioLoadFailed": "オーディオを読み込めませんでした",
+    "decodeFailed": "オーディオデコード失敗",
+    "keysoundMissing": "キーサウンド欠落: {{name}}"
   },
   "gauge": {
     "cleared": "クリア",
     "failed": "失敗"
   },
   "hud": {
+    "accuracy": "精度",
     "bpm": "BPM",
-    "score": "スコア",
     "combo": "コンボ",
-    "accuracy": "精度"
+    "score": "スコア"
   },
-  "errors": {
-    "audioLoadFailed": "オーディオを読み込めませんでした",
-    "decodeFailed": "オーディオデコード失敗",
-    "keysoundMissing": "キーサウンド欠落: {{name}}"
+  "judgment": {
+    "bad": "BAD",
+    "early": "早い",
+    "good": "GOOD",
+    "great": "GREAT",
+    "late": "遅い",
+    "miss": "MISS",
+    "pgreat": "PGREAT",
+    "poor": "POOR"
+  },
+  "screens": {
+    "pause": {
+      "exit": "終了",
+      "restart": "リスタート",
+      "resume": "再開",
+      "title": "一時停止"
+    },
+    "ready": {
+      "bpmFormula": "BPM {{bpm}} × {{hiSpeed}} = {{effective}}",
+      "floatingKey": "(` キー)",
+      "floatingOff": "○ フローティングハイスピード OFF",
+      "floatingOn": "● フローティングハイスピード ON",
+      "greenNumber": "グリーンナンバー: {{value}}",
+      "hiSpeedLabel": "ハイスピード (↑↓ で調整)",
+      "keyHint": "↑↓ ハイスピード ±0.25 | PgUp/PgDn ±1.0 | ` フローティング",
+      "pressToStart": "SPACE またはクリックで開始",
+      "start": "スタート",
+      "title": "READY"
+    },
+    "result": {
+      "clear": "クリア!",
+      "exScore": "EXスコア:",
+      "exit": "終了",
+      "failed": "失敗",
+      "fullCombo": "フルコンボ!",
+      "maxCombo": "最大コンボ:",
+      "retry": "リトライ"
+    }
   },
   "state": {
-    "ready": "準備完了",
-    "playing": "再生中",
-    "paused": "一時停止",
     "completed": "完了",
-    "failed": "失敗"
+    "failed": "失敗",
+    "paused": "一時停止",
+    "playing": "再生中",
+    "ready": "準備完了"
   }
 }

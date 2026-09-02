@@ -1,34 +1,63 @@
 {
-  "judgment": {
-    "pgreat": "PGREAT",
-    "great": "GREAT",
-    "good": "GOOD",
-    "bad": "BAD",
-    "poor": "POOR",
-    "miss": "MISS",
-    "early": "EARLY",
-    "late": "LATE"
+  "errors": {
+    "audioLoadFailed": "Failed to load audio",
+    "decodeFailed": "Audio decode failed",
+    "keysoundMissing": "Missing keysound: {{name}}"
   },
   "gauge": {
     "cleared": "CLEARED",
     "failed": "FAILED"
   },
   "hud": {
+    "accuracy": "Accuracy",
     "bpm": "BPM",
-    "score": "Score",
     "combo": "Combo",
-    "accuracy": "Accuracy"
+    "score": "Score"
   },
-  "errors": {
-    "audioLoadFailed": "Failed to load audio",
-    "decodeFailed": "Audio decode failed",
-    "keysoundMissing": "Missing keysound: {{name}}"
+  "judgment": {
+    "bad": "BAD",
+    "early": "EARLY",
+    "good": "GOOD",
+    "great": "GREAT",
+    "late": "LATE",
+    "miss": "MISS",
+    "pgreat": "PGREAT",
+    "poor": "POOR"
+  },
+  "screens": {
+    "pause": {
+      "exit": "EXIT",
+      "restart": "RESTART",
+      "resume": "RESUME",
+      "title": "PAUSED"
+    },
+    "ready": {
+      "bpmFormula": "BPM {{bpm}} × {{hiSpeed}} = {{effective}}",
+      "floatingKey": "(` key)",
+      "floatingOff": "○ FLOATING HI-SPEED OFF",
+      "floatingOn": "● FLOATING HI-SPEED ON",
+      "greenNumber": "GREEN NUMBER: {{value}}",
+      "hiSpeedLabel": "HI-SPEED (↑↓ adjust)",
+      "keyHint": "↑↓ Hi-Speed ±0.25 | PgUp/PgDn ±1.0 | ` Floating",
+      "pressToStart": "Press SPACE or click to start",
+      "start": "START",
+      "title": "READY"
+    },
+    "result": {
+      "clear": "CLEAR!",
+      "exScore": "EX SCORE:",
+      "exit": "EXIT",
+      "failed": "FAILED",
+      "fullCombo": "FULL COMBO!",
+      "maxCombo": "MAX COMBO:",
+      "retry": "RETRY"
+    }
   },
   "state": {
-    "ready": "Ready",
-    "playing": "Playing",
-    "paused": "Paused",
     "completed": "Completed",
-    "failed": "Failed"
+    "failed": "Failed",
+    "paused": "Paused",
+    "playing": "Playing",
+    "ready": "Ready"
   }
 }

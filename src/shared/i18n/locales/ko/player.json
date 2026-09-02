@@ -1,34 +1,63 @@
 {
-  "judgment": {
-    "pgreat": "PGREAT",
-    "great": "GREAT",
-    "good": "GOOD",
-    "bad": "BAD",
-    "poor": "POOR",
-    "miss": "MISS",
-    "early": "빠름",
-    "late": "느림"
+  "errors": {
+    "audioLoadFailed": "오디오를 불러오지 못했어요",
+    "decodeFailed": "오디오 디코드 실패",
+    "keysoundMissing": "키음 누락: {{name}}"
   },
   "gauge": {
     "cleared": "클리어",
     "failed": "실패"
   },
   "hud": {
+    "accuracy": "정확도",
     "bpm": "BPM",
-    "score": "점수",
     "combo": "콤보",
-    "accuracy": "정확도"
+    "score": "점수"
   },
-  "errors": {
-    "audioLoadFailed": "오디오를 불러오지 못했어요",
-    "decodeFailed": "오디오 디코드 실패",
-    "keysoundMissing": "키음 누락: {{name}}"
+  "judgment": {
+    "bad": "BAD",
+    "early": "빠름",
+    "good": "GOOD",
+    "great": "GREAT",
+    "late": "느림",
+    "miss": "MISS",
+    "pgreat": "PGREAT",
+    "poor": "POOR"
+  },
+  "screens": {
+    "pause": {
+      "exit": "나가기",
+      "restart": "다시 시작",
+      "resume": "계속하기",
+      "title": "일시정지"
+    },
+    "ready": {
+      "bpmFormula": "BPM {{bpm}} × {{hiSpeed}} = {{effective}}",
+      "floatingKey": "(` 키)",
+      "floatingOff": "○ 플로팅 하이스피드 꺼짐",
+      "floatingOn": "● 플로팅 하이스피드 켜짐",
+      "greenNumber": "그린 넘버: {{value}}",
+      "hiSpeedLabel": "하이스피드 (↑↓ 조절)",
+      "keyHint": "↑↓ 하이스피드 ±0.25 | PgUp/PgDn ±1.0 | ` 플로팅",
+      "pressToStart": "SPACE 또는 클릭으로 시작",
+      "start": "시작",
+      "title": "준비"
+    },
+    "result": {
+      "clear": "클리어!",
+      "exScore": "EX 스코어:",
+      "exit": "나가기",
+      "failed": "실패",
+      "fullCombo": "풀 콤보!",
+      "maxCombo": "최대 콤보:",
+      "retry": "다시 도전"
+    }
   },
   "state": {
-    "ready": "준비됨",
-    "playing": "재생 중",
-    "paused": "일시 정지",
     "completed": "완료",
-    "failed": "실패"
+    "failed": "실패",
+    "paused": "일시 정지",
+    "playing": "재생 중",
+    "ready": "준비됨"
   }
 }

@@ -8,6 +8,7 @@ import type {
   EditableBMSChart,
   NoteType,
 } from '@rhythm-archive/bms-core';
+import { styleForKeyMode } from '@rhythm-archive/bms-core';
 import type { EditorTool, SelectedNoteType, GridSnap, KeyMode } from '@rhythm-archive/bms-editor';
 import { getLaneIds } from '@rhythm-archive/bms-editor';
 import type { PatternTemplate, PatternNote } from '../lib/patternTemplates';
@@ -564,6 +565,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     if (!s.editableChart) return null;
     return {
+      // Channel layout follows the current key mode (DP / PMS / keyboard) so
+      // 2P and PMS lanes are written to their proper channels.
+      style: s.keyMode ? styleForKeyMode(s.keyMode) : s.editableChart.style,
       headers: s.headers || s.editableChart.headers,
       notes: s.notes,
       timeSignatures: s.timeSignatures,

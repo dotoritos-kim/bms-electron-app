@@ -450,7 +450,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       // Phase B: map notes with tick/beat calculations (O(N))
       const initConverter = createBeatConverter(ec.timeSignatures);
       const editableNotes: EditableBMSNote[] = chart.notes.map((n, i) => {
-        const { measure, fraction } = initConverter.beatToMF(n.beat);
+        // Prefer the position as written in the file; the writer uses it to
+        // put untouched notes back on the source line resolution exactly.
+        const derived = initConverter.beatToMF(n.beat);
+        const measure = typeof n.measure === 'number' ? n.measure : derived.measure;
+        const fraction = typeof n.fraction === 'number' ? n.fraction : derived.fraction;
         const tick = Math.round(n.beat * 960);
         const endTick = n.endBeat !== undefined ? Math.round(n.endBeat * 960) : undefined;
         return {
@@ -462,6 +466,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           keysound: n.keysound || '00',
           endBeat: n.endBeat,
           endTick,
+          endMeasure: n.endMeasure,
+          endFraction: n.endFraction,
           measure,
           fraction,
           channel: n.channel || '',

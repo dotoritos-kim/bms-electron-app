@@ -25,13 +25,10 @@ jobs:
       - name: Run release-please
         uses: googleapis/release-please-action@v4
         with:
-          # A PAT is preferable (GITHUB_TOKEN-pushed tags do not trigger
-          # release.yml), but the current SIBLING_REPO_TOKEN is rejected with
-          # "Resource not accessible by personal access token" (it needs
-          # Contents + Pull requests write on this repo). Until the token is
-          # re-issued with those scopes, use GITHUB_TOKEN so releases still get
-          # a PR; after tagging, run release.yml via workflow_dispatch.
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # PAT required: GITHUB_TOKEN-pushed tags do not trigger release.yml and
+          # GITHUB_TOKEN-created PRs get no CI run. Needs Contents + Pull requests
+          # (+ Workflows) write on this repo.
+          token: ${{ secrets.SIBLING_REPO_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
           target-branch: ${{ github.ref_name }}

@@ -918,17 +918,38 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     const chartToSave = store.savableChart();
     if (!chart || !chartToSave) return;
     try {
-      const writer = new BMSWriter();
+      // Same LN encoding decision as handleSave — Save As must not silently
+      // rewrite an LNOBJ chart as channel-style long notes (or vice versa).
+      const origLnObj = chartToSave.headers.lnobj;
+      const lnMode = origLnObj ? 'lnobj' as const : 'channel' as const;
+      const writer = new BMSWriter({ lnMode, lnObjValue: origLnObj || undefined });
       const bmsContent = writer.write(chartToSave);
       const newPath = await window.api.file.saveAs(bmsContent, file.name);
       if (newPath) {
+        // Carry the sidecar (bookmarks, colors, groups...) to the new file.
+        const s = useEditorStore.getState();
+        const meta = buildMetaFromState({
+          gridSnapOverrides: s.gridSnapOverrides,
+          minLnLength: s.minLnLength,
+          bookmarks: s.bookmarks,
+          noteGroups: s.noteGroups,
+          notes: s.notes,
+          customColors: s.customColors,
+        });
+        await window.api.file.saveMeta(newPath, serializeMeta(meta)).catch(() => {});
+        store.setHasUnsavedChanges(false);
         showToast(t('editor:routes.editor.toast.savedAs'), 'success');
+        // Continue editing the file we just wrote, not the old path.
+        if (newPath !== file.path && onOpenFile) {
+          const name = newPath.split(/[\\/]/).pop() || newPath;
+          onOpenFile({ path: newPath, name, folderPath: newPath.slice(0, newPath.length - name.length - 1) });
+        }
       }
     } catch (err) {
       console.error('[Editor] Save As failed:', err);
       showToast(t('editor:routes.editor.toast.saveFailed', { message: err instanceof Error ? err.message : String(err) }), 'error');
     }
-  }, [chart, file.name, showToast]);
+  }, [chart, file.name, file.path, onOpenFile, showToast, t]);
 
   // --- Keyboard shortcuts (refs to avoid TDZ with callbacks defined later) ---
   const handleSaveRef = useRef(handleSaveWithCleanup);

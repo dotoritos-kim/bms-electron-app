@@ -1,10 +1,18 @@
 {
   "contextMenu": {
+    "changeNoteType": "ノート種別を変更",
     "copy": "コピー",
     "cut": "切り取り",
     "delete": "削除",
+    "deleteCount": "削除 ({{count}})",
+    "deselect": "選択解除",
     "paste": "貼り付け",
-    "selectAll": "すべて選択"
+    "selectAll": "すべて選択",
+    "types": {
+      "invisible": "インビジブル",
+      "landmine": "地雷",
+      "playable": "プレイアブル"
+    }
   },
   "diff": {
     "ariaLabel": "変更比較",
@@ -239,9 +247,30 @@
       }
     },
     "noteSearch": {
+      "columnLabel": "カラム (レーン)",
+      "deselectAllColumns": "すべて解除",
+      "goToFirst": "最初のノートへ",
+      "keysoundLabel": "キー音 (WAV ID / ファイル名)",
+      "keysoundPlaceholder": "例: 01, kick, snare...",
+      "measureFrom": "開始",
+      "measureRange": "小節範囲",
+      "measureTo": "終了",
       "noResults": "結果なし",
+      "noteTypeLabel": "ノート種別",
       "placeholder": "検索...",
-      "title": "ノーツ検索"
+      "resetFilters": "フィルターをリセット",
+      "results": "一致 {{count}}件",
+      "selectAllColumns": "すべて選択",
+      "selectResults": "すべて選択 ({{count}})",
+      "title": "ノーツ検索",
+      "total": "合計 {{count}}ノート",
+      "types": {
+        "all": "すべて",
+        "bgm": "BGM",
+        "invisible": "インビジブル",
+        "landmine": "地雷",
+        "playable": "プレイアブル"
+      }
     },
     "statusBar": {
       "audioMissingTooltip": "オーディオ未ロード",

@@ -1,10 +1,18 @@
 {
   "contextMenu": {
+    "changeNoteType": "Change Note Type",
     "copy": "Copy",
     "cut": "Cut",
     "delete": "Delete",
+    "deleteCount": "Delete ({{count}})",
+    "deselect": "Deselect",
     "paste": "Paste",
-    "selectAll": "Select All"
+    "selectAll": "Select All",
+    "types": {
+      "invisible": "Invisible",
+      "landmine": "Landmine",
+      "playable": "Playable"
+    }
   },
   "diff": {
     "ariaLabel": "Diff comparison",
@@ -241,9 +249,30 @@
       }
     },
     "noteSearch": {
+      "columnLabel": "Column (Lane)",
+      "deselectAllColumns": "Deselect All",
+      "goToFirst": "Go to First",
+      "keysoundLabel": "Keysound (WAV ID / Filename)",
+      "keysoundPlaceholder": "e.g., 01, kick, snare...",
+      "measureFrom": "Start",
+      "measureRange": "Measure Range",
+      "measureTo": "End",
       "noResults": "No matches",
+      "noteTypeLabel": "Note Type",
       "placeholder": "Search...",
-      "title": "Find Note"
+      "resetFilters": "Reset Filters",
+      "results": "{{count}} matching notes",
+      "selectAllColumns": "Select All",
+      "selectResults": "Select All ({{count}})",
+      "title": "Find Note",
+      "total": "Total {{count}} notes",
+      "types": {
+        "all": "All",
+        "bgm": "BGM",
+        "invisible": "Invisible",
+        "landmine": "Landmine",
+        "playable": "Playable"
+      }
     },
     "statusBar": {
       "audioMissingTooltip": "Audio not loaded",

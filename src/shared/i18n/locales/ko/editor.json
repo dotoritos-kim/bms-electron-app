@@ -1,10 +1,18 @@
 {
   "contextMenu": {
+    "changeNoteType": "노트 종류 변경",
     "copy": "복사",
     "cut": "잘라내기",
     "delete": "삭제",
+    "deleteCount": "삭제 ({{count}})",
+    "deselect": "선택 해제",
     "paste": "붙여넣기",
-    "selectAll": "모두 선택"
+    "selectAll": "모두 선택",
+    "types": {
+      "invisible": "인비저블",
+      "landmine": "지뢰",
+      "playable": "플레이어블"
+    }
   },
   "diff": {
     "ariaLabel": "변경사항 비교",
@@ -239,9 +247,30 @@
       }
     },
     "noteSearch": {
+      "columnLabel": "컬럼 (레인)",
+      "deselectAllColumns": "전체 해제",
+      "goToFirst": "첫 노트로 이동",
+      "keysoundLabel": "키음 (WAV ID / 파일명)",
+      "keysoundPlaceholder": "예: 01, kick, snare...",
+      "measureFrom": "시작",
+      "measureRange": "마디 범위",
+      "measureTo": "끝",
       "noResults": "결과 없음",
+      "noteTypeLabel": "노트 종류",
       "placeholder": "검색...",
-      "title": "노트 찾기"
+      "resetFilters": "필터 초기화",
+      "results": "일치 {{count}}개",
+      "selectAllColumns": "전체 선택",
+      "selectResults": "전체 선택 ({{count}})",
+      "title": "노트 찾기",
+      "total": "전체 {{count}}개 노트",
+      "types": {
+        "all": "전체",
+        "bgm": "BGM",
+        "invisible": "인비저블",
+        "landmine": "지뢰",
+        "playable": "플레이어블"
+      }
     },
     "statusBar": {
       "audioMissingTooltip": "오디오 미로드",

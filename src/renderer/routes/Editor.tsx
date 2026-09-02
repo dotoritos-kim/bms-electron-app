@@ -45,6 +45,7 @@ import {
   connectMidiInput,
   disconnectMidiInput,
   requestMidiAccess,
+  isConnected as isMidiConnected,
 } from '../lib/midiInput';
 import { AudioSlicer } from '../components/AudioSlicer';
 import { AutoChartDialog } from '../components/AutoChartDialog';
@@ -784,12 +785,21 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     }
   }, []);
 
-  // Connect MIDI on recording mode change
+  // Connect MIDI on recording mode change. Access alone does not deliver
+  // notes — an input must be connected in the MIDI dialog — so if nothing is
+  // connected yet, open the dialog instead of silently recording nothing.
   useEffect(() => {
-    if (midiRecordingMode !== 'off') {
-      requestMidiAccess();
-    }
+    if (midiRecordingMode === 'off') return;
+    let cancelled = false;
+    requestMidiAccess().then(() => {
+      if (cancelled) return;
+      if (!isMidiConnected()) setActiveModal('midi');
+    });
+    return () => { cancelled = true; };
   }, [midiRecordingMode]);
+
+  // Release the MIDI input when the editor unmounts (the handler is module-global).
+  useEffect(() => () => disconnectMidiInput(), []);
 
   const handleDropKeysound = useCallback((keysoundId: string, beat: number, column: string) => {
     const { selectedNoteType: snt } = useEditorStore.getState();

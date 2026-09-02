@@ -8,6 +8,7 @@
     "autoDetectSuccess_one": "Обнаружен {{count}} сегмент.",
     "autoDetectSuccess_other": "Обнаружено {{count}} сегментов.",
     "clearMarkersButton": "Очистить маркеры",
+    "closeConfirm": "Закрыть слайсер? {{count}} маркер(ов) будут потеряны.",
     "emptyFormats": "Поддерживаются WAV, MP3, OGG, FLAC",
     "emptyTitle": "Откройте аудиофайл для начала работы",
     "infoChannels": "Каналы",

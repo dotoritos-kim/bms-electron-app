@@ -128,7 +128,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   const [autoSliceMsgType, setAutoSliceMsgType] = useState<'warning' | 'success' | null>(null);
   const [autoSliceCount, setAutoSliceCount] = useState(0);
   const draggingMarkerRef = useRef<number | null>(null);
-  const { t } = useTranslation('app');
+  const { t } = useTranslation(['app', 'common']);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -266,22 +266,44 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
       ctx.fillRect(x1, 0, x2 - x1, h);
     }
 
-    // Waveform
-    const startIdx = Math.floor((viewStart / duration) * min.length);
-    const endIdx = Math.ceil(((viewStart + viewDuration) / duration) * min.length);
-
+    // Waveform. The 4000-point overview is far too coarse once zoomed in
+    // (a 4-minute file leaves ~17 points/s), so when a pixel covers fewer
+    // samples than an overview point, read exact peaks from the mono signal.
+    const mono = monoRef.current;
+    const sampleRate = audioBuffer.sampleRate;
+    const samplesPerOverviewPoint = audioBuffer.length / min.length;
+    const samplesPerPixel = (viewDuration * sampleRate) / w;
     ctx.fillStyle = '#60a5fa';
-    for (let px = 0; px < w; px++) {
-      const i0 = startIdx + Math.floor((px / w) * (endIdx - startIdx));
-      const i1 = startIdx + Math.ceil(((px + 1) / w) * (endIdx - startIdx));
-      let lo = 0, hi = 0;
-      for (let i = Math.max(0, i0); i < Math.min(min.length, i1); i++) {
-        if (min[i] < lo) lo = min[i];
-        if (max[i] > hi) hi = max[i];
+    if (mono && samplesPerPixel < samplesPerOverviewPoint * 2) {
+      const base = viewStart * sampleRate;
+      for (let px = 0; px < w; px++) {
+        const s0 = Math.max(0, Math.floor(base + px * samplesPerPixel));
+        const s1 = Math.min(mono.length, Math.ceil(base + (px + 1) * samplesPerPixel));
+        let lo = 0, hi = 0;
+        for (let i = s0; i < s1; i++) {
+          const v = mono[i];
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+        const y1 = midY - hi * midY;
+        const y2 = midY - lo * midY;
+        ctx.fillRect(px, y1, 1, Math.max(1, y2 - y1));
       }
-      const y1 = midY - hi * midY;
-      const y2 = midY - lo * midY;
-      ctx.fillRect(px, y1, 1, Math.max(1, y2 - y1));
+    } else {
+      const startIdx = Math.floor((viewStart / duration) * min.length);
+      const endIdx = Math.ceil(((viewStart + viewDuration) / duration) * min.length);
+      for (let px = 0; px < w; px++) {
+        const i0 = startIdx + Math.floor((px / w) * (endIdx - startIdx));
+        const i1 = startIdx + Math.ceil(((px + 1) / w) * (endIdx - startIdx));
+        let lo = 0, hi = 0;
+        for (let i = Math.max(0, i0); i < Math.min(min.length, i1); i++) {
+          if (min[i] < lo) lo = min[i];
+          if (max[i] > hi) hi = max[i];
+        }
+        const y1 = midY - hi * midY;
+        const y2 = midY - lo * midY;
+        ctx.fillRect(px, y1, 1, Math.max(1, y2 - y1));
+      }
     }
 
     // Markers
@@ -450,12 +472,20 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     });
   }, [selStart, audioBuffer, pushMarkerHistory]);
 
+  // Closing discards decoded audio and every marker, so ask first when work exists.
+  const requestClose = useCallback(() => {
+    if (markers.length > 0 && !window.confirm(t('audioSlicer.closeConfirm', { count: markers.length }))) return;
+    onClose();
+  }, [markers.length, onClose, t]);
+
   // Keyboard shortcuts while the slicer is open (capture phase so the
-  // editor's global shortcuts don't also fire): Space play/stop, M add marker,
-  // Ctrl+Z undo markers, +/- zoom.
+  // editor's global shortcuts don't also fire): Escape close (with confirm),
+  // Space play/stop, M add marker, Ctrl+Z undo markers, +/- zoom.
   useEffect(() => {
-    if (!open || !audioBuffer) return;
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); requestClose(); return; }
+      if (!audioBuffer) return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const ctrl = e.ctrlKey || e.metaKey;
@@ -471,7 +501,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [open, audioBuffer, undoMarkers, handlePlay, handleAddMarker, handleZoomIn, handleZoomOut]);
+  }, [open, audioBuffer, undoMarkers, handlePlay, handleAddMarker, handleZoomIn, handleZoomOut, requestClose]);
 
   // Slice and save
   const handleSliceAndSave = useCallback(async () => {
@@ -570,7 +600,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[55] bg-zinc-950/95 flex flex-col">
+    <div className="fixed inset-0 z-[55] bg-zinc-950 flex flex-col" role="dialog" aria-modal="true" aria-label={t('audioSlicer.title')}>
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800 shrink-0">
         <h2 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
@@ -579,7 +609,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, onSlicesCr
         </h2>
         {fileName && <span className="text-xs text-zinc-500">{fileName}</span>}
         <div className="flex-1" />
-        <button onClick={onClose} className="p-1 rounded hover:bg-zinc-800 text-zinc-400">
+        <button onClick={requestClose} className="p-1 rounded hover:bg-zinc-800 text-zinc-400" aria-label={t('common:actions.close')}>
           <X className="h-4 w-4" />
         </button>
       </div>

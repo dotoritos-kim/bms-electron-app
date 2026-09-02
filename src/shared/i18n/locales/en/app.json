@@ -6,6 +6,7 @@
     "autoDetectSuccess_one": "{{count}} segment detected.",
     "autoDetectSuccess_other": "{{count}} segments detected.",
     "clearMarkersButton": "Clear markers",
+    "closeConfirm": "Close the slicer? {{count}} marker(s) will be discarded.",
     "emptyFormats": "Supports WAV, MP3, OGG, FLAC",
     "emptyTitle": "Open an audio file to start",
     "infoChannels": "Channels",

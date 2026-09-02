@@ -6,6 +6,7 @@
     "autoDetectSuccess_one": "{{count}}個の区間を検出しました。",
     "autoDetectSuccess_other": "{{count}}個の区間を検出しました。",
     "clearMarkersButton": "マーカーをクリア",
+    "closeConfirm": "スライサーを閉じますか？ マーカー {{count}}件が破棄されます。",
     "emptyFormats": "WAV、MP3、OGG、FLACに対応",
     "emptyTitle": "オーディオファイルを開いて開始してください",
     "infoChannels": "チャンネル",

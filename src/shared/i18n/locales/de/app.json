@@ -6,6 +6,7 @@
     "autoDetectSuccess_one": "{{count}} Segment erkannt.",
     "autoDetectSuccess_other": "{{count}} Segmente erkannt.",
     "clearMarkersButton": "Markierungen löschen",
+    "closeConfirm": "Slicer schließen? {{count}} Marker gehen verloren.",
     "emptyFormats": "Unterstützt WAV, MP3, OGG, FLAC",
     "emptyTitle": "Audiodatei öffnen, um zu beginnen",
     "infoChannels": "Kanäle",

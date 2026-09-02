@@ -5,6 +5,7 @@
     "autoDetectNoResults": "未检测到起音点，请尝试提高灵敏度。",
     "autoDetectSuccess_other": "检测到 {{count}} 个片段。",
     "clearMarkersButton": "清除标记",
+    "closeConfirm": "关闭切片器？将丢弃 {{count}} 个标记。",
     "emptyFormats": "支持 WAV、MP3、OGG、FLAC",
     "emptyTitle": "打开音频文件以开始",
     "infoChannels": "声道",

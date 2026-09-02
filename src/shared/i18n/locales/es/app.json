@@ -7,6 +7,7 @@
     "autoDetectSuccess_one": "{{count}} segmento detectado.",
     "autoDetectSuccess_other": "{{count}} segmentos detectados.",
     "clearMarkersButton": "Borrar marcadores",
+    "closeConfirm": "¿Cerrar el cortador? Se perderán {{count}} marcador(es).",
     "emptyFormats": "Compatible con WAV, MP3, OGG, FLAC",
     "emptyTitle": "Abre un archivo de audio para comenzar",
     "infoChannels": "Canales",

@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.4.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.3.2...v0.4.0) (2026-09-02)
+
+
+### Features
+
+* **app:** confirm before closing with unsaved changes; surface store toasts; guard stale chart loads ([d5e7599](https://github.com/dotoritos-kim/bms-electron-app/commit/d5e7599924f1349048d4ec28a42a7786004cd85d))
+* **auto-chart:** honour scratch toggle, keep notes off SC/FZ lanes, seeded regeneration, offset, LN safety ([7551d2a](https://github.com/dotoritos-kim/bms-electron-app/commit/7551d2a113c8ad130ef31b2e3892c7f54194e53f))
+* **i18n:** ko/ja/en strings for the player's ready / pause / result screens ([214eb53](https://github.com/dotoritos-kim/bms-electron-app/commit/214eb5326a2e94d25d086e0353a787ddc4225148))
+* **slicer:** exact-peak waveform when zoomed, close confirmation, opaque dialog surface ([7573049](https://github.com/dotoritos-kim/bms-electron-app/commit/75730495c67bd281c9f382e8813317a2e01a6d0d))
+* **slicer:** sensitivity control, mono detection, marker undo + shortcuts, click-free slices; auto-chart apply via store ([ee97a0d](https://github.com/dotoritos-kim/bms-electron-app/commit/ee97a0d4c7ef331f31e4354d3da8818f0a0c52f4))
+
+
+### Bug Fixes
+
+* **editor:** keep parsed source positions on notes so untouched notes save bit-exactly; bump bms-core ([9c3ad88](https://github.com/dotoritos-kim/bms-electron-app/commit/9c3ad88fcf2c5f3093928b6163e21524a70a3c47))
+* **editor:** paste checks on every entry point, slicer errors surfaced, home worker cleanup ([fd24178](https://github.com/dotoritos-kim/bms-electron-app/commit/fd24178cf3977f22c7eb9617ec8900289000638a))
+* **editor:** Save As keeps LN encoding, writes the sidecar and switches to the new file ([3ac0ff5](https://github.com/dotoritos-kim/bms-electron-app/commit/3ac0ff50514d132db3ae8b7462a88c921a73f82b))
+* **editor:** write charts with the channel layout of the current key mode; bump bms-core ([264605f](https://github.com/dotoritos-kim/bms-electron-app/commit/264605fa0aae099308a0d15cc8719bb50bc1e7f2))
+* **layout:** make Player and Editor follow window resizes ([50f6f2c](https://github.com/dotoritos-kim/bms-electron-app/commit/50f6f2c136b0a4b17a73bb4e67786fa20457575f))
+* **menu:** File &gt; Save / Save As no longer depend on the Ctrl+S key binding ([ece52f5](https://github.com/dotoritos-kim/bms-electron-app/commit/ece52f5ec065c1fb8f387511fefdf83b9866f47e))
+* **midi:** open the MIDI dialog when recording is enabled without a connected input; disconnect on unmount ([d676e8a](https://github.com/dotoritos-kim/bms-electron-app/commit/d676e8af817b626bfbd6d837d5d0849d067c2766))
+* mount lib i18n bridges, harden IPC, fix key-binding loss, surface errors ([7b1e064](https://github.com/dotoritos-kim/bms-electron-app/commit/7b1e0644d69efe6fd6ebc4af718e4e4bce5294f7))
+* **player:** keep a tall playfield aspect instead of stretching lanes across the window ([f22809c](https://github.com/dotoritos-kim/bms-electron-app/commit/f22809ce7ff1ceb51c856d5754c02c5ce70ef22b))
+
 ## [0.3.2](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.3.1...v0.3.2) (2026-07-29)
 
 

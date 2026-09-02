@@ -330,6 +330,7 @@
         "insertMeasureTitle": "小節挿入 (Ctrl+Shift+I)",
         "keyBindingsLabel": "キーバインド設定",
         "measureLabel": "小節",
+        "midiOnBadge": "ON",
         "midiSettingsLabel": "MIDI設定",
         "modifiedIndicator": "編集中",
         "noteColorLabel": "ノーツ色設定",
@@ -373,6 +374,7 @@
         "openPanelTitle": "キーサウンドパネルを開く",
         "patternTab": "パターン"
       },
+      "loadingChart": "譜面を読み込み中...",
       "measureDialog": {
         "cancel": "キャンセル",
         "currentMeasureLabel": "(現在の小節)",
@@ -391,10 +393,17 @@
         "closePopoutAria": "ミニマップポップアウトを閉じる",
         "dockToSidebar": "サイドバーに戻す",
         "dockToSidebarAria": "ミニマップをサイドバーに戻す",
-        "popoutTitle": "ミニマップ分離 (ドラッグ可能)"
+        "popoutLabel": "ミニマップ",
+        "popoutTitle": "ミニマップ分離 (ドラッグ可能)",
+        "sidebarLabel": "マップ"
       },
       "navGuardMessage": "保存されていない変更があります。移動しますか?",
+      "playTest": {
+        "label": "プレイテスト",
+        "returnToEditor": "編集に戻る (Esc)"
+      },
       "playback": {
+        "audioErrorTitle": "オーディオの読み込みに失敗しました — クリックして再試行",
         "bpmTapTitle": "BPMタップ",
         "clearLoopTitle": "ループ解除 (\\)",
         "diffTitle": "変更比較 (Ctrl+D)",
@@ -405,14 +414,11 @@
         "muteTitle": "ミュート",
         "playPauseTitle": "再生/一時停止 (Space)",
         "playTestTitle": "プレイテスト (F5)",
+        "retryAudio": "オーディオを再読み込み",
         "speedPresetTitle": "再生速度プリセット",
         "stopTitle": "停止",
         "unmuteTitle": "ミュート解除",
         "volumeTitle": "音量: {{percent}}%"
-      },
-      "playTest": {
-        "label": "プレイテスト",
-        "returnToEditor": "編集に戻る (Esc)"
       },
       "replaceKeysound": {
         "cancel": "キャンセル",
@@ -439,6 +445,7 @@
         "midiStep": "ステップ"
       },
       "toast": {
+        "audioLoadFailed": "オーディオの読み込みに失敗: {{message}}",
         "highResWarning": "{{count}}ノーツが標準解像度(192)範囲外 — 一部プレイヤーで互換性問題の可能性",
         "highResWarning_other": "{{count}}ノーツが標準解像度(192)範囲外 — 一部プレイヤーで互換性問題の可能性",
         "keysoundDeleted": "キーサウンド {{id}} を削除しました (Ctrl+Zで復元可能)",
@@ -454,9 +461,9 @@
         "pasteDropped": "{{count}}個のノーツが現在のキーモード範囲外のため除外",
         "pasteDropped_other": "{{count}}個のノーツが現在のキーモード範囲外のため除外",
         "redoAction": "やり直し: {{description}}",
+        "saveFailed": "保存失敗: {{message}}",
         "saved": "保存完了",
         "savedAs": "名前を付けて保存完了",
-        "saveFailed": "保存失敗: {{message}}",
         "slicesSaved": "{{count}}個のスライスを保存しました",
         "slicesSaved_other": "{{count}}個のスライスを保存しました",
         "undefinedWavWarning": "警告: {{count}}個の未定義WAV参照 ({{ids}})",

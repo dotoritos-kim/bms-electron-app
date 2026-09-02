@@ -334,6 +334,7 @@
         "insertMeasureTitle": "Insert measure (Ctrl+Shift+I)",
         "keyBindingsLabel": "Key Bindings",
         "measureLabel": "measure",
+        "midiOnBadge": "ON",
         "midiSettingsLabel": "MIDI Settings",
         "modifiedIndicator": "Modified",
         "noteColorLabel": "Note Color Settings",
@@ -377,6 +378,7 @@
         "openPanelTitle": "Open keysound panel",
         "patternTab": "Patterns"
       },
+      "loadingChart": "Loading chart...",
       "measureDialog": {
         "cancel": "Cancel",
         "currentMeasureLabel": "(current measure)",
@@ -395,10 +397,17 @@
         "closePopoutAria": "Close minimap popout",
         "dockToSidebar": "Dock to sidebar",
         "dockToSidebarAria": "Dock minimap to sidebar",
-        "popoutTitle": "Detach minimap (draggable)"
+        "popoutLabel": "Minimap",
+        "popoutTitle": "Detach minimap (draggable)",
+        "sidebarLabel": "Map"
       },
       "navGuardMessage": "You have unsaved changes. Leave anyway?",
+      "playTest": {
+        "label": "Play test",
+        "returnToEditor": "Return to editor (Esc)"
+      },
       "playback": {
+        "audioErrorTitle": "Audio failed to load — click to retry",
         "bpmTapTitle": "BPM tap",
         "clearLoopTitle": "Clear loop (\\)",
         "diffTitle": "Toggle diff view (Ctrl+D)",
@@ -409,14 +418,11 @@
         "muteTitle": "Mute",
         "playPauseTitle": "Play / Pause (Space)",
         "playTestTitle": "Play test (F5)",
+        "retryAudio": "Retry audio",
         "speedPresetTitle": "Speed preset",
         "stopTitle": "Stop",
         "unmuteTitle": "Unmute",
         "volumeTitle": "Volume: {{percent}}%"
-      },
-      "playTest": {
-        "label": "Play test",
-        "returnToEditor": "Return to editor (Esc)"
       },
       "replaceKeysound": {
         "cancel": "Cancel",
@@ -444,6 +450,7 @@
         "midiStep": "Step"
       },
       "toast": {
+        "audioLoadFailed": "Failed to load audio: {{message}}",
         "highResWarning": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
         "highResWarning_one": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
         "highResWarning_other": "{{count}} note(s) outside standard resolution (192) — may cause compatibility issues",
@@ -465,9 +472,9 @@
         "pasteDropped_one": "{{count}} note(s) outside key mode range excluded",
         "pasteDropped_other": "{{count}} note(s) outside key mode range excluded",
         "redoAction": "Redo: {{description}}",
+        "saveFailed": "Save failed: {{message}}",
         "saved": "Saved",
         "savedAs": "Saved as",
-        "saveFailed": "Save failed: {{message}}",
         "slicesSaved": "{{count}} slices saved",
         "slicesSaved_one": "{{count}} slices saved",
         "slicesSaved_other": "{{count}} slices saved",

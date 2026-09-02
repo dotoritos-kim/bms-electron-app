@@ -330,6 +330,7 @@
         "insertMeasureTitle": "마디 삽입 (Ctrl+Shift+I)",
         "keyBindingsLabel": "키 바인딩 설정",
         "measureLabel": "마디",
+        "midiOnBadge": "ON",
         "midiSettingsLabel": "MIDI 설정",
         "modifiedIndicator": "수정 중",
         "noteColorLabel": "노트 색상 설정",
@@ -373,6 +374,7 @@
         "openPanelTitle": "키음 패널 열기",
         "patternTab": "패턴"
       },
+      "loadingChart": "채보 로딩 중...",
       "measureDialog": {
         "cancel": "취소",
         "currentMeasureLabel": "(현재 마디)",
@@ -391,10 +393,17 @@
         "closePopoutAria": "미니맵 팝아웃 닫기",
         "dockToSidebar": "사이드바로 되돌리기",
         "dockToSidebarAria": "미니맵 사이드바로 되돌리기",
-        "popoutTitle": "미니맵 분리 (드래그 가능)"
+        "popoutLabel": "미니맵",
+        "popoutTitle": "미니맵 분리 (드래그 가능)",
+        "sidebarLabel": "맵"
       },
       "navGuardMessage": "저장하지 않은 변경사항이 있습니다. 이동하시겠습니까?",
+      "playTest": {
+        "label": "플레이 테스트",
+        "returnToEditor": "편집으로 돌아가기 (Esc)"
+      },
       "playback": {
+        "audioErrorTitle": "오디오 로드에 실패했습니다 — 클릭하여 재시도",
         "bpmTapTitle": "BPM 탭",
         "clearLoopTitle": "루프 해제 (\\)",
         "diffTitle": "변경사항 비교 (Ctrl+D)",
@@ -405,14 +414,11 @@
         "muteTitle": "음소거",
         "playPauseTitle": "재생/일시정지 (Space)",
         "playTestTitle": "플레이 테스트 (F5)",
+        "retryAudio": "오디오 다시 로드",
         "speedPresetTitle": "재생 속도 프리셋",
         "stopTitle": "정지",
         "unmuteTitle": "음소거 해제",
         "volumeTitle": "볼륨: {{percent}}%"
-      },
-      "playTest": {
-        "label": "플레이 테스트",
-        "returnToEditor": "편집으로 돌아가기 (Esc)"
       },
       "replaceKeysound": {
         "cancel": "취소",
@@ -439,6 +445,7 @@
         "midiStep": "스텝"
       },
       "toast": {
+        "audioLoadFailed": "오디오 로드 실패: {{message}}",
         "highResWarning": "{{count}}개 노트가 표준 해상도(192) 범위 밖 — 일부 플레이어에서 호환 문제 가능",
         "highResWarning_other": "{{count}}개 노트가 표준 해상도(192) 범위 밖 — 일부 플레이어에서 호환 문제 가능",
         "keysoundDeleted": "키음 {{id}} 삭제됨 (Ctrl+Z로 복원 가능)",
@@ -454,9 +461,9 @@
         "pasteDropped": "{{count}}개 노트가 현재 키 모드 범위 밖이라 제외됨",
         "pasteDropped_other": "{{count}}개 노트가 현재 키 모드 범위 밖이라 제외됨",
         "redoAction": "다시 실행: {{description}}",
+        "saveFailed": "저장 실패: {{message}}",
         "saved": "저장 완료",
         "savedAs": "다른 이름으로 저장 완료",
-        "saveFailed": "저장 실패: {{message}}",
         "slicesSaved": "{{count}}개 슬라이스 저장 완료",
         "slicesSaved_other": "{{count}}개 슬라이스 저장 완료",
         "undefinedWavWarning": "경고: {{count}}개 미정의 WAV 참조 ({{ids}})",

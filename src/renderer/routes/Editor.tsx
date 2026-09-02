@@ -77,6 +77,9 @@ function PlaybackTimeDisplay() {
 function PlaybackSeekbar({ onSeek }: { onSeek: (sec: number) => void }) {
   const playbackTime = useEditorStore((s) => s.playbackTime);
   const playbackDuration = useEditorStore((s) => s.playbackDuration);
+  // Detach in-flight drag listeners if the seekbar unmounts mid-drag
+  const dragCleanupRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => dragCleanupRef.current?.(), []);
   return (
     <div
       className="flex-1 min-w-[100px] h-5 group cursor-pointer flex items-center relative select-none"
@@ -93,9 +96,11 @@ function PlaybackSeekbar({ onSeek }: { onSeek: (sec: number) => void }) {
         const onUp = () => {
           document.removeEventListener('mousemove', onMove);
           document.removeEventListener('mouseup', onUp);
+          dragCleanupRef.current = null;
         };
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onUp);
+        dragCleanupRef.current = onUp;
       }}
     >
       <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-visible group-hover:h-2 transition-all relative">
@@ -124,6 +129,16 @@ function AudioLoadingProgress() {
       )}
     </div>
   );
+}
+
+/** Read a persisted panel width, falling back when the stored value is missing/corrupt. */
+function readStoredWidth(key: string, fallback: number, min: number, max: number): number {
+  try {
+    const v = parseInt(localStorage.getItem(key) ?? '', 10);
+    return Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function formatTime(sec: number): string {
@@ -249,7 +264,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     audioPhase, playbackSpeed, volume,
     noteHeight, inputDialog, showLeftPanel, showRightPanel, showMinimap, headerCollapsed, showBackConfirm,
     loopA, loopB, highlightKeysound,
-    bookmarks, customColors,
+    bookmarks, customColors, bgmSoloChannel, bgmMutedChannels,
   } = useEditorStore(useShallow((s) => ({
     notes: s.notes, bpmChanges: s.bpmChanges, stopEvents: s.stopEvents, headers: s.headers,
     timeSignatures: s.timeSignatures, editableChart: s.editableChart, keyMode: s.keyMode,
@@ -262,6 +277,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     showRightPanel: s.showRightPanel, showMinimap: s.showMinimap, headerCollapsed: s.headerCollapsed, showBackConfirm: s.showBackConfirm,
     loopA: s.loopA, loopB: s.loopB, highlightKeysound: s.highlightKeysound,
     bookmarks: s.bookmarks, customColors: s.customColors,
+    bgmSoloChannel: s.bgmSoloChannel, bgmMutedChannels: s.bgmMutedChannels,
   })));
   // Stable actions reference (Zustand actions are stable closures over set/get)
   const store = useMemo(() => useEditorStore.getState(), []);
@@ -288,16 +304,21 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const [midiMapping, setMidiMapping] = useState<MidiMapping>(() => loadMidiMapping() || createDefaultMapping([]));
   const [midiRecordingMode, setMidiRecordingMode] = useState<MidiRecordingMode>('off');
   const originalChartInfoRef = useRef<BmsChartDiffInfo | null>(null);
+  /** True once a .bms.meta sidecar is known to exist for this file (so clearing it still rewrites). */
+  const metaSidecarExistsRef = useRef(false);
   const measureInputRef = useRef<HTMLInputElement>(null);
   const [showToolMenu, setShowToolMenu] = useState(false);
   const [pendingBookmarkMeasure, setPendingBookmarkMeasure] = useState(0);
   const [bookmarkEditMode, setBookmarkEditMode] = useState<'add' | 'rename'>('add');
   const bookmarkNameRef = useRef<HTMLInputElement>(null);
   // showWaveform removed — WaveformOverlay needs NoteChartEditor coordinate integration
-  const [leftPanelWidth, setLeftPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-left-w') || '208'));
-  const [rightPanelWidth, setRightPanelWidth] = useState(() => parseInt(localStorage.getItem('editor-right-w') || '224'));
+  const [leftPanelWidth, setLeftPanelWidth] = useState(() => readStoredWidth('editor-left-w', 208, 150, 400));
+  const [rightPanelWidth, setRightPanelWidth] = useState(() => readStoredWidth('editor-right-w', 224, 180, 400));
   const panelWidthsRef = useRef({ left: leftPanelWidth, right: rightPanelWidth });
   panelWidthsRef.current = { left: leftPanelWidth, right: rightPanelWidth };
+  // Detach in-flight panel-resize listeners if the editor unmounts mid-drag
+  const panelDragCleanupRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => panelDragCleanupRef.current?.(), []);
   const [minimapPopout, setMinimapPopout] = useState(false);
   const [popoutPos, setPopoutPos] = useState({ x: typeof window !== 'undefined' ? window.innerWidth - 220 : 800, y: typeof window !== 'undefined' ? window.innerHeight - 300 : 400 });
   const popoutDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
@@ -447,6 +468,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       store.initFromChart(ec, editableNotes, editableNotes.length + 1, chart.keyMode);
       // Load .bms.meta sidecar (only apply if no user changes yet)
       window.api.file.readMeta(file.path).then((metaJson) => {
+        if (cancelled) return; // a newer file superseded this load
+        if (metaJson) metaSidecarExistsRef.current = true;
         if (metaJson && !useEditorStore.getState().hasUnsavedChanges) {
           const meta = deserializeMeta(metaJson);
           const stateUpdate = applyMetaToState(meta);
@@ -841,8 +864,13 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         customColors: s.customColors,
       });
       const metaJson = serializeMeta(meta);
-      if (metaJson !== '{\n  "version": 1\n}') {
+      const metaHasContent = Object.entries(meta).some(([k, v]) =>
+        k !== 'version' && v !== undefined && v !== null
+        && !(Array.isArray(v) && v.length === 0)
+        && !(typeof v === 'object' && !Array.isArray(v) && Object.keys(v as object).length === 0));
+      if (metaHasContent || metaSidecarExistsRef.current) {
         await window.api.file.saveMeta(file.path, metaJson).catch(() => {});
+        metaSidecarExistsRef.current = true;
       }
       store.setHasUnsavedChanges(false);
       showToast(t('editor:routes.editor.toast.saved'), 'success');
@@ -1015,9 +1043,15 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     store.setAudioLoadProgress({ loaded: 0, total: 0 });
     let preloader: AudioPreloader | null = null;
     try {
+      // Prefer the editable WAV table (reflects imported / sliced keysounds);
+      // fall back to the originally parsed chart keysounds.
       const fileMap: FileMap = {};
-      for (const [id, filename] of Object.entries(chart.keysounds)) {
-        fileMap[id] = filename;
+      const storeWav = useEditorStore.getState().headers?.wav;
+      const wavSource: Iterable<[string, string]> = storeWav && storeWav.size > 0
+        ? storeWav.entries()
+        : Object.entries(chart.keysounds);
+      for (const [id, filename] of wavSource) {
+        if (filename) fileMap[id.toLowerCase()] = filename;
       }
       const total = Object.keys(fileMap).length;
       if (total === 0) {
@@ -1070,9 +1104,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       console.error('[Editor] Audio load failed:', err);
       preloader?.releaseAllResources();
       inProgressPreloaderRef.current = null;
-      store.setAudioPhase('idle');
+      store.setAudioPhase('error');
+      showToast(t('editor:routes.editor.toast.audioLoadFailed', { message: err instanceof Error ? err.message : String(err) }), 'error');
     }
-  }, [chart, file.path, audioPhase, editedTiming]);
+  }, [chart, file.path, audioPhase, editedTiming, showToast, t]);
 
   // Auto-load audio effect (must be after loadAudio definition)
   loadAudioRef.current = loadAudio;
@@ -1093,8 +1128,16 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     const timing = editedTimingRef.current;
     if (!timing) return [];
     const es = useEditorStore.getState();
+    const solo = es.bgmSoloChannel;
+    const muted = es.bgmMutedChannels;
+    const bgmAudible = (n: EditableBMSNote) => {
+      if (n.noteType !== 'bgm') return true;
+      const ch = n.bgmChannel ?? 0;
+      if (solo !== null) return ch === solo;
+      return !muted.has(ch);
+    };
     return [...es.notes]
-      .filter((n) => n.noteType !== 'landmine' && n.keysound && n.keysound !== '00')
+      .filter((n) => n.noteType !== 'landmine' && n.keysound && n.keysound !== '00' && bgmAudible(n))
       .sort((a, b) => a.beat - b.beat)
       .map((n) => ({
         sec: timing.beatToSeconds(n.beat),
@@ -1400,7 +1443,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     return (
       <div className="h-full flex items-center justify-center bg-zinc-950">
         <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-3 text-zinc-400">Loading chart...</span>
+        <span className="ml-3 text-zinc-400">{t('editor:routes.editor.loadingChart')}</span>
       </div>
     );
   }
@@ -1541,7 +1584,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               >
                 <Piano className="h-3.5 w-3.5 text-green-400" />
                 {t('editor:routes.editor.header.midiSettingsLabel')}
-                {midiRecordingMode !== 'off' && <span className="ml-auto text-xs bg-green-900/50 px-1 rounded">ON</span>}
+                {midiRecordingMode !== 'off' && <span className="ml-auto text-xs bg-green-900/50 px-1 rounded">{t('editor:routes.editor.header.midiOnBadge')}</span>}
               </button>
               <div className="h-px bg-zinc-800 my-1" />
               <button
@@ -1632,10 +1675,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               const onUp = () => {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
-                localStorage.setItem('editor-left-w', String(lastW));
+                panelDragCleanupRef.current = null;
+                try { localStorage.setItem('editor-left-w', String(lastW)); } catch { /* quota */ }
               };
               document.addEventListener('mousemove', onMove);
               document.addEventListener('mouseup', onUp);
+              panelDragCleanupRef.current = onUp;
             }}
           >
             <GripVertical className="h-4 w-2.5 text-zinc-600" />
@@ -1696,6 +1741,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               </button>
             ) : audioPhase === 'loading' ? (
               <AudioLoadingProgress />
+            ) : audioPhase === 'error' ? (
+              <button onClick={loadAudio} className="flex items-center gap-1.5 px-3 py-1 bg-red-900/40 hover:bg-red-900/60 border border-red-800/60 rounded transition-colors text-red-300" title={t('editor:routes.editor.playback.audioErrorTitle')}>
+                <Volume2 className="h-3.5 w-3.5" />
+                {t('editor:routes.editor.playback.retryAudio')}
+              </button>
             ) : (
               <>
                 <button onClick={handlePlaybackToggle} className="p-2 rounded hover:bg-muted transition-colors" title={t('editor:routes.editor.playback.playPauseTitle')}>
@@ -1863,7 +1913,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         {chart && showMinimap && !minimapPopout && (
           <div className="w-20 border-l border-zinc-800 flex flex-col bg-zinc-950 shrink-0 min-h-0" data-testid="minimap-sidebar">
             <div className="px-1.5 py-1 flex items-center justify-between border-b border-zinc-800 shrink-0">
-              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Map</span>
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">{t('editor:routes.editor.minimap.sidebarLabel')}</span>
               <button
                 onClick={() => setMinimapPopout(true)}
                 className="p-1.5 flex items-center justify-center rounded hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-300"
@@ -1909,10 +1959,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               const onUp = () => {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
-                localStorage.setItem('editor-right-w', String(lastW));
+                panelDragCleanupRef.current = null;
+                try { localStorage.setItem('editor-right-w', String(lastW)); } catch { /* quota */ }
               };
               document.addEventListener('mousemove', onMove);
               document.addEventListener('mouseup', onUp);
+              panelDragCleanupRef.current = onUp;
             }}
           >
             <GripVertical className="h-4 w-2.5 text-zinc-600" />
@@ -1947,8 +1999,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               showBgmManager
               onSelectBgmNotes={(ids) => store.selectNotes(ids)}
               onDeleteNotes={store.deleteNotes}
-              bgmSoloChannel={useEditorStore.getState().bgmSoloChannel}
-              bgmMutedChannels={useEditorStore.getState().bgmMutedChannels}
+              bgmSoloChannel={bgmSoloChannel}
+              bgmMutedChannels={bgmMutedChannels}
               onToggleSolo={store.toggleBgmSolo}
               onToggleMute={store.toggleBgmMute}
             />
@@ -2063,7 +2115,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               }
             }}
           >
-            <span>Minimap</span>
+            <span>{t('editor:routes.editor.minimap.popoutLabel')}</span>
             <div className="flex items-center gap-0.5">
               {/* Dock back to sidebar */}
               <button

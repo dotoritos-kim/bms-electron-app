@@ -187,22 +187,43 @@
     "renderingTitle": "Rendering Error"
   },
   "home": {
+    "actions": {
+      "edit": "Edit",
+      "folder": "Folder",
+      "new": "New",
+      "open": "Open",
+      "play": "Play"
+    },
+    "emptyList": "Open a file or folder to get started",
+    "errors": {
+      "createFailed": "Failed to create file: {{message}}",
+      "scanFailed": "Failed to scan folder: {{message}}"
+    },
+    "loadError": "Error: {{message}}",
     "meta": {
       "file": "File",
       "genre": "Genre"
     },
     "newFile": {
       "artistField": "Artist",
+      "artistPlaceholder": "Unknown",
+      "bpmField": "BPM",
       "createButton": "Create",
       "creating": "Creating...",
+      "invalidBpm": "Enter a BPM greater than 0",
       "keyModeField": "Key Mode",
       "title": "New BMS File",
-      "titleField": "Title"
+      "titleField": "Title",
+      "titlePlaceholder": "Untitled"
     },
+    "noChartsInFolder": "No BMS charts found in this folder",
     "pinFile": "Pin",
     "recentFiles": "Recent files",
     "removeFromList": "Remove from list",
+    "selectPrompt": "Select a BMS file to view details",
+    "shortcutsHint": "Ctrl+N to create new, Ctrl+O to open",
     "stats": {
+      "bpm": "BPM",
       "invisible": "Invisible",
       "keyMode": "Key Mode",
       "keysounds": "Keysounds",
@@ -224,8 +245,13 @@
     "saveBeforeLeave": "You have unsaved changes. Save before leaving?"
   },
   "player": {
+    "autoplay": "Autoplay",
+    "backAria": "Back to home",
+    "errorTitle": "Error",
     "exitConfirm": "A game is in progress. Are you sure you want to leave?",
-    "keyBindingsHint": "Key bindings can be changed in Editor > Tools > Key Bindings"
+    "keyBindingsHint": "Key bindings can be changed in Editor > Tools > Key Bindings",
+    "loadingChart": "Loading chart...",
+    "loadingKeysounds": "Loading keysounds... {{loaded}}/{{total}}"
   },
   "stats": {
     "bgm": "BGM",

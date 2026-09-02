@@ -3,9 +3,9 @@
     "addMarkerButton": "Добавить маркер",
     "autoDetectButton": "Автоопределение",
     "autoDetectNoResults": "Атаки не обнаружены. Попробуйте увеличить чувствительность.",
-    "autoDetectSuccess_one": "Обнаружен {{count}} сегмент.",
     "autoDetectSuccess_few": "Обнаружено {{count}} сегмента.",
     "autoDetectSuccess_many": "Обнаружено {{count}} сегментов.",
+    "autoDetectSuccess_one": "Обнаружен {{count}} сегмент.",
     "autoDetectSuccess_other": "Обнаружено {{count}} сегментов.",
     "clearMarkersButton": "Очистить маркеры",
     "emptyFormats": "Поддерживаются WAV, MP3, OGG, FLAC",
@@ -36,24 +36,24 @@
       "audioSection": "Источник аудио",
       "difficultyLabel": "Сложность",
       "generateButton": "Сгенерировать чарт",
-      "generatedSummary_one": "Сгенерировано {{count}} нота",
       "generatedSummary_few": "Сгенерировано {{count}} ноты",
       "generatedSummary_many": "Сгенерировано {{count}} нот",
+      "generatedSummary_one": "Сгенерировано {{count}} нота",
       "generatedSummary_other": "Сгенерировано {{count}} нот",
       "gridSnapToggle": "Привязка к сетке",
       "lnRatioLabel": "Доля длинных нот",
       "minNotesWarning": "Требуется не менее 4 нот",
       "noOnsetsWarning": "Атаки не обнаружены. Возможно, аудио слишком тихое или беззвучное. Снижение сложности повышает чувствительность.",
-      "previewLabel_one": "Предпросмотр ({{count}} нота)",
       "previewLabel_few": "Предпросмотр ({{count}} ноты)",
       "previewLabel_many": "Предпросмотр ({{count}} нот)",
+      "previewLabel_one": "Предпросмотр ({{count}} нота)",
       "previewLabel_other": "Предпросмотр ({{count}} нот)",
       "scratchToggle": "Включить скретч",
       "suggestButton": "Предложить паттерн",
       "suggestCountLabel": "Количество нот для генерации",
-      "suggestExplanation_one": "Анализ существующих нот и предложение следующей фразы. Текущий чарт содержит {{count}} ноту.",
       "suggestExplanation_few": "Анализ существующих нот и предложение следующей фразы. Текущий чарт содержит {{count}} ноты.",
       "suggestExplanation_many": "Анализ существующих нот и предложение следующей фразы. Текущий чарт содержит {{count}} нот.",
+      "suggestExplanation_one": "Анализ существующих нот и предложение следующей фразы. Текущий чарт содержит {{count}} ноту.",
       "suggestExplanation_other": "Анализ существующих нот и предложение следующей фразы. Текущий чарт содержит {{count}} нот.",
       "tabs": {
         "generate": "Аудио → чарт",
@@ -66,17 +66,17 @@
       "resetButton": "Сбросить",
       "resetIndicator": "сброс",
       "tapButton": "Тап (Space)",
-      "tapsCount_one": "BPM ({{count}} тап)",
       "tapsCount_few": "BPM ({{count}} тапа)",
       "tapsCount_many": "BPM ({{count}} тапов)",
+      "tapsCount_one": "BPM ({{count}} тап)",
       "tapsCount_other": "BPM ({{count}} тапов)",
       "title": "Определение BPM"
     },
     "keyBindings": {
       "conflictBadge": "конфликт",
-      "conflictSummary_one": "{{count}} конфликт привязки",
       "conflictSummary_few": "{{count}} конфликта привязок",
       "conflictSummary_many": "{{count}} конфликтов привязок",
+      "conflictSummary_one": "{{count}} конфликт привязки",
       "conflictSummary_other": "{{count}} конфликтов привязок",
       "listening": "Нажмите клавишу...",
       "resetDefaults": "Сбросить до стандартных",
@@ -114,17 +114,17 @@
       "title": "Цвета нот"
     },
     "patternLibrary": {
-      "applyTooltip_one": "Нажмите для применения на текущей позиции\n{{count}} нота, {{beats}} долей",
       "applyTooltip_few": "Нажмите для применения на текущей позиции\n{{count}} ноты, {{beats}} долей",
       "applyTooltip_many": "Нажмите для применения на текущей позиции\n{{count}} нот, {{beats}} долей",
+      "applyTooltip_one": "Нажмите для применения на текущей позиции\n{{count}} нота, {{beats}} долей",
       "applyTooltip_other": "Нажмите для применения на текущей позиции\n{{count}} нот, {{beats}} долей",
       "deleteTooltip": "Удалить",
       "empty": "Нет паттернов",
       "noSearchResults": "Совпадений не найдено",
       "panelTitle": "Библиотека паттернов",
-      "patternStats_one": "{{count}} нота · {{beats}} долей",
       "patternStats_few": "{{count}} ноты · {{beats}} долей",
       "patternStats_many": "{{count}} нот · {{beats}} долей",
+      "patternStats_one": "{{count}} нота · {{beats}} долей",
       "patternStats_other": "{{count}} нот · {{beats}} долей",
       "saveDialog": {
         "namePlaceholder": "Название паттерна",
@@ -139,22 +139,43 @@
     "goHome": "На главную"
   },
   "home": {
+    "actions": {
+      "edit": "Редактировать",
+      "folder": "Папка",
+      "new": "Создать",
+      "open": "Открыть",
+      "play": "Играть"
+    },
+    "emptyList": "Откройте файл или папку, чтобы начать",
+    "errors": {
+      "createFailed": "Не удалось создать файл: {{message}}",
+      "scanFailed": "Не удалось просканировать папку: {{message}}"
+    },
+    "loadError": "Ошибка: {{message}}",
     "meta": {
       "file": "Файл",
       "genre": "Жанр"
     },
     "newFile": {
       "artistField": "Исполнитель",
+      "artistPlaceholder": "Неизвестно",
+      "bpmField": "BPM",
       "createButton": "Создать",
       "creating": "Создание...",
+      "invalidBpm": "Введите BPM больше 0",
       "keyModeField": "Режим клавиш",
       "title": "Новый BMS-файл",
-      "titleField": "Название"
+      "titleField": "Название",
+      "titlePlaceholder": "Без названия"
     },
+    "noChartsInFolder": "В этой папке нет BMS-чартов",
     "pinFile": "Закрепить",
     "recentFiles": "Недавние файлы",
     "removeFromList": "Убрать из списка",
+    "selectPrompt": "Выберите BMS-файл для просмотра сведений",
+    "shortcutsHint": "Ctrl+N — создать, Ctrl+O — открыть",
     "stats": {
+      "bpm": "BPM",
       "invisible": "Невидимые",
       "keyMode": "Режим клавиш",
       "keysounds": "Звуки клавиш",
@@ -172,8 +193,13 @@
     "saveAndLeaveLabel": "Сохранить и покинуть"
   },
   "player": {
+    "autoplay": "Автоигра",
+    "backAria": "На главную",
+    "errorTitle": "Ошибка",
     "exitConfirm": "Игра идёт. Вы уверены, что хотите выйти?",
-    "keyBindingsHint": "Привязки клавиш можно изменить в Редакторе → Инструменты → Привязки клавиш"
+    "keyBindingsHint": "Привязки клавиш можно изменить в Редакторе → Инструменты → Привязки клавиш",
+    "loadingChart": "Загрузка чарта...",
+    "loadingKeysounds": "Загрузка звуков... {{loaded}}/{{total}}"
   },
   "stats": {
     "duration": "Длительность",

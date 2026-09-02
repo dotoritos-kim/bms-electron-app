@@ -209,9 +209,25 @@ export function loadKeyBindings(): KeyBinding[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_BINDINGS;
     const saved = JSON.parse(raw) as KeyBinding[];
-    // Normalize old saved keys to lowercase for consistency
-    const savedMap = new Map(saved.map((b) => [b.action, { ...b, key: b.key.toLowerCase() }]));
-    return DEFAULT_BINDINGS.map((def) => savedMap.get(def.action) || def);
+    if (!Array.isArray(saved)) return DEFAULT_BINDINGS;
+    // Several actions intentionally have two bindings (letter + number row),
+    // so match saved entries by (action, ordinal) rather than by action alone —
+    // keying by action only would collapse both rows onto the last saved key.
+    const savedByAction = new Map<KeyAction, KeyBinding[]>();
+    for (const b of saved) {
+      if (!b || typeof b.action !== 'string' || typeof b.key !== 'string') continue;
+      const list = savedByAction.get(b.action) ?? [];
+      // Normalize old saved keys to lowercase for consistency
+      list.push({ ...b, key: b.key.toLowerCase() });
+      savedByAction.set(b.action, list);
+    }
+    const seen = new Map<KeyAction, number>();
+    return DEFAULT_BINDINGS.map((def) => {
+      const ordinal = seen.get(def.action) ?? 0;
+      seen.set(def.action, ordinal + 1);
+      const savedBinding = savedByAction.get(def.action)?.[ordinal];
+      return savedBinding ? { ...def, ...savedBinding } : def;
+    });
   } catch {
     return DEFAULT_BINDINGS;
   }

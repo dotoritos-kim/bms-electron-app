@@ -3,8 +3,8 @@
     "addMarkerButton": "Agregar marcador",
     "autoDetectButton": "Detectar automáticamente",
     "autoDetectNoResults": "No se detectaron inicios. Intente subir el control de sensibilidad.",
-    "autoDetectSuccess_one": "{{count}} segmento detectado.",
     "autoDetectSuccess_many": "{{count}} segmentos detectados.",
+    "autoDetectSuccess_one": "{{count}} segmento detectado.",
     "autoDetectSuccess_other": "{{count}} segmentos detectados.",
     "clearMarkersButton": "Borrar marcadores",
     "emptyFormats": "Compatible con WAV, MP3, OGG, FLAC",
@@ -35,21 +35,21 @@
       "audioSection": "Fuente de audio",
       "difficultyLabel": "Dificultad",
       "generateButton": "Generar chart",
-      "generatedSummary_one": "{{count}} nota generada",
       "generatedSummary_many": "{{count}} notas generadas",
+      "generatedSummary_one": "{{count}} nota generada",
       "generatedSummary_other": "{{count}} notas generadas",
       "gridSnapToggle": "Ajuste a cuadrícula",
       "lnRatioLabel": "Proporción de notas largas",
       "minNotesWarning": "Se requieren al menos 4 notas",
       "noOnsetsWarning": "No se detectaron inicios. El audio puede ser demasiado silencioso. Reducir la dificultad aumenta la sensibilidad.",
-      "previewLabel_one": "Vista previa ({{count}} nota)",
       "previewLabel_many": "Vista previa ({{count}} notas)",
+      "previewLabel_one": "Vista previa ({{count}} nota)",
       "previewLabel_other": "Vista previa ({{count}} notas)",
       "scratchToggle": "Incluir scratch",
       "suggestButton": "Sugerir patrón",
       "suggestCountLabel": "Notas a generar",
-      "suggestExplanation_one": "Analiza las notas existentes y propone la siguiente frase. El chart actual contiene {{count}} nota.",
       "suggestExplanation_many": "Analiza las notas existentes y propone la siguiente frase. El chart actual contiene {{count}} notas.",
+      "suggestExplanation_one": "Analiza las notas existentes y propone la siguiente frase. El chart actual contiene {{count}} nota.",
       "suggestExplanation_other": "Analiza las notas existentes y propone la siguiente frase. El chart actual contiene {{count}} notas.",
       "tabs": {
         "generate": "Audio → chart",
@@ -62,15 +62,15 @@
       "resetButton": "Restablecer",
       "resetIndicator": "restablecido",
       "tapButton": "Golpear (Space)",
-      "tapsCount_one": "BPM ({{count}} golpe)",
       "tapsCount_many": "BPM ({{count}} golpes)",
+      "tapsCount_one": "BPM ({{count}} golpe)",
       "tapsCount_other": "BPM ({{count}} golpes)",
       "title": "Golpear BPM"
     },
     "keyBindings": {
       "conflictBadge": "conflicto",
-      "conflictSummary_one": "{{count}} atajo en conflicto",
       "conflictSummary_many": "{{count}} atajos en conflicto",
+      "conflictSummary_one": "{{count}} atajo en conflicto",
       "conflictSummary_other": "{{count}} atajos en conflicto",
       "listening": "Presiona una tecla...",
       "resetDefaults": "Restablecer valores predeterminados",
@@ -108,15 +108,15 @@
       "title": "Colores de notas"
     },
     "patternLibrary": {
-      "applyTooltip_one": "Haz clic para aplicar en la posición actual\n{{count}} nota, {{beats}} tiempos",
       "applyTooltip_many": "Haz clic para aplicar en la posición actual\n{{count}} notas, {{beats}} tiempos",
+      "applyTooltip_one": "Haz clic para aplicar en la posición actual\n{{count}} nota, {{beats}} tiempos",
       "applyTooltip_other": "Haz clic para aplicar en la posición actual\n{{count}} notas, {{beats}} tiempos",
       "deleteTooltip": "Eliminar",
       "empty": "Sin patrones",
       "noSearchResults": "Sin resultados",
       "panelTitle": "Biblioteca de patrones",
-      "patternStats_one": "{{count}} nota · {{beats}} tiempos",
       "patternStats_many": "{{count}} notas · {{beats}} tiempos",
+      "patternStats_one": "{{count}} nota · {{beats}} tiempos",
       "patternStats_other": "{{count}} notas · {{beats}} tiempos",
       "saveDialog": {
         "namePlaceholder": "Nombre del patrón",
@@ -131,22 +131,43 @@
     "goHome": "Ir al inicio"
   },
   "home": {
+    "actions": {
+      "edit": "Editar",
+      "folder": "Carpeta",
+      "new": "Nuevo",
+      "open": "Abrir",
+      "play": "Jugar"
+    },
+    "emptyList": "Abre un archivo o carpeta para empezar",
+    "errors": {
+      "createFailed": "No se pudo crear el archivo: {{message}}",
+      "scanFailed": "No se pudo escanear la carpeta: {{message}}"
+    },
+    "loadError": "Error: {{message}}",
     "meta": {
       "file": "Archivo",
       "genre": "Género"
     },
     "newFile": {
       "artistField": "Artista",
+      "artistPlaceholder": "Desconocido",
+      "bpmField": "BPM",
       "createButton": "Crear",
       "creating": "Creando...",
+      "invalidBpm": "Introduce un BPM mayor que 0",
       "keyModeField": "Modo de teclas",
       "title": "Nuevo archivo BMS",
-      "titleField": "Título"
+      "titleField": "Título",
+      "titlePlaceholder": "Sin título"
     },
+    "noChartsInFolder": "No se encontraron charts BMS en esta carpeta",
     "pinFile": "Fijar",
     "recentFiles": "Archivos recientes",
     "removeFromList": "Quitar de la lista",
+    "selectPrompt": "Selecciona un archivo BMS para ver los detalles",
+    "shortcutsHint": "Ctrl+N para crear, Ctrl+O para abrir",
     "stats": {
+      "bpm": "BPM",
       "invisible": "Invisible",
       "keyMode": "Modo de teclas",
       "keysounds": "Sonidos de teclas",
@@ -164,8 +185,13 @@
     "saveAndLeaveLabel": "Guardar y salir"
   },
   "player": {
+    "autoplay": "Autoplay",
+    "backAria": "Volver al inicio",
+    "errorTitle": "Error",
     "exitConfirm": "Hay una partida en curso. ¿Seguro que quieres salir?",
-    "keyBindingsHint": "Los atajos de teclado se pueden cambiar en Editor > Herramientas > Atajos de teclado"
+    "keyBindingsHint": "Los atajos de teclado se pueden cambiar en Editor > Herramientas > Atajos de teclado",
+    "loadingChart": "Cargando chart...",
+    "loadingKeysounds": "Cargando keysounds... {{loaded}}/{{total}}"
   },
   "stats": {
     "duration": "Duración",

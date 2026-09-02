@@ -13,9 +13,9 @@
       "muteOn": "Отключить звук канала",
       "soloOff": "Отменить соло",
       "soloOn": "Соло для этого канала",
-      "title_one": "Менеджер BGM ({{count}})",
       "title_few": "Менеджер BGM ({{count}})",
       "title_many": "Менеджер BGM ({{count}})",
+      "title_one": "Менеджер BGM ({{count}})",
       "title_other": "Менеджер BGM ({{count}})"
     }
   },
@@ -56,17 +56,17 @@
         "currentLabel": "текущий",
         "hint": "Выберите запись, чтобы скопировать эти ноты в буфер обмена.",
         "noKeysounds": "Нет звуков клавиш",
-        "noteCount_one": "{{count}} нота",
         "noteCount_few": "{{count}} ноты",
         "noteCount_many": "{{count}} нот",
+        "noteCount_one": "{{count}} нота",
         "noteCount_other": "{{count}} нот",
         "title": "История буфера обмена"
       },
       "copyErrorTemplate": "Файл: {{path}}\nОшибка: {{error}}",
       "createGroupPrompt": "Название группы:",
-      "deleteUnusedConfirm_one": "Этот звук клавиши используется {{count}} нотой.\nУдаление заменит эти ноты на беззвучные (00).\n\nВсё равно удалить?",
       "deleteUnusedConfirm_few": "Этот звук клавиши используется {{count}} нотами.\nУдаление заменит эти ноты на беззвучные (00).\n\nВсё равно удалить?",
       "deleteUnusedConfirm_many": "Этот звук клавиши используется {{count}} нотами.\nУдаление заменит эти ноты на беззвучные (00).\n\nВсё равно удалить?",
+      "deleteUnusedConfirm_one": "Этот звук клавиши используется {{count}} нотой.\nУдаление заменит эти ноты на беззвучные (00).\n\nВсё равно удалить?",
       "deleteUnusedConfirm_other": "Этот звук клавиши используется {{count}} нотами.\nУдаление заменит эти ноты на беззвучные (00).\n\nВсё равно удалить?",
       "diff": {
         "close": "Закрыть (Esc)",
@@ -89,6 +89,7 @@
         "insertMeasureTitle": "Вставить такт (Ctrl+Shift+I)",
         "keyBindingsLabel": "Привязки клавиш",
         "measureLabel": "такт",
+        "midiOnBadge": "ВКЛ",
         "midiSettingsLabel": "Настройки MIDI",
         "modifiedIndicator": "Изменено",
         "noteColorLabel": "Настройки цветов нот",
@@ -126,6 +127,7 @@
         "openPanelTitle": "Открыть панель звуков клавиш",
         "patternTab": "Паттерны"
       },
+      "loadingChart": "Загрузка чарта...",
       "measureDialog": {
         "cancel": "Отмена",
         "currentMeasureLabel": "(текущий такт)",
@@ -144,10 +146,17 @@
         "closePopoutAria": "Закрыть всплывающую миникарту",
         "dockToSidebar": "Прикрепить к боковой панели",
         "dockToSidebarAria": "Прикрепить миникарту к боковой панели",
-        "popoutTitle": "Открепить миникарту (можно перетаскивать)"
+        "popoutLabel": "Мини-карта",
+        "popoutTitle": "Открепить миникарту (можно перетаскивать)",
+        "sidebarLabel": "Карта"
       },
       "navGuardMessage": "Есть несохранённые изменения. Всё равно выйти?",
+      "playTest": {
+        "label": "Тестовое воспроизведение",
+        "returnToEditor": "Вернуться в редактор (Esc)"
+      },
       "playback": {
+        "audioErrorTitle": "Не удалось загрузить аудио — нажмите, чтобы повторить",
         "bpmTapTitle": "Определение BPM",
         "clearLoopTitle": "Очистить петлю (\\)",
         "diffTitle": "Переключить просмотр различий (Ctrl+D)",
@@ -158,20 +167,17 @@
         "muteTitle": "Отключить звук",
         "playPauseTitle": "Воспроизвести / Пауза (Space)",
         "playTestTitle": "Тестовое воспроизведение (F5)",
+        "retryAudio": "Повторить загрузку аудио",
         "speedPresetTitle": "Предустановка скорости",
         "stopTitle": "Стоп",
         "unmuteTitle": "Включить звук",
         "volumeTitle": "Громкость: {{percent}}%"
       },
-      "playTest": {
-        "label": "Тестовое воспроизведение",
-        "returnToEditor": "Вернуться в редактор (Esc)"
-      },
       "replaceKeysound": {
         "cancel": "Отмена",
-        "noteCount_one": "— {{count}} нота",
         "noteCount_few": "— {{count}} ноты",
         "noteCount_many": "— {{count}} нот",
+        "noteCount_one": "— {{count}} нота",
         "noteCount_other": "— {{count}} нот",
         "sourceLabel": "Источник:",
         "targetPrompt": "Выберите целевой звук клавиши:"
@@ -194,52 +200,53 @@
         "midiStep": "Пошаговый"
       },
       "toast": {
-        "highResWarning_one": "{{count}} нота вне стандартного разрешения (192) — возможны проблемы совместимости",
+        "audioLoadFailed": "Не удалось загрузить аудио: {{message}}",
         "highResWarning_few": "{{count}} ноты вне стандартного разрешения (192) — возможны проблемы совместимости",
         "highResWarning_many": "{{count}} нот вне стандартного разрешения (192) — возможны проблемы совместимости",
+        "highResWarning_one": "{{count}} нота вне стандартного разрешения (192) — возможны проблемы совместимости",
         "highResWarning_other": "{{count}} нот вне стандартного разрешения (192) — возможны проблемы совместимости",
         "keysoundDeleted": "Звук клавиши {{id}} удалён (Ctrl+Z для отмены)",
         "keysoundImportFailed": "Ошибка импорта звука клавиши",
-        "keysoundReplaced_one": "Звук клавиши {{from}} → {{to}} заменён в {{count}} ноте (Ctrl+Z для отмены)",
         "keysoundReplaced_few": "Звук клавиши {{from}} → {{to}} заменён в {{count}} нотах (Ctrl+Z для отмены)",
         "keysoundReplaced_many": "Звук клавиши {{from}} → {{to}} заменён в {{count}} нотах (Ctrl+Z для отмены)",
+        "keysoundReplaced_one": "Звук клавиши {{from}} → {{to}} заменён в {{count}} ноте (Ctrl+Z для отмены)",
         "keysoundReplaced_other": "Звук клавиши {{from}} → {{to}} заменён в {{count}} нотах (Ctrl+Z для отмены)",
-        "keysoundsImported_one": "{{count}} звук клавиши импортирован",
         "keysoundsImported_few": "{{count}} звука клавиш импортировано",
         "keysoundsImported_many": "{{count}} звуков клавиш импортировано",
+        "keysoundsImported_one": "{{count}} звук клавиши импортирован",
         "keysoundsImported_other": "{{count}} звуков клавиш импортировано",
-        "notesGenerated_one": "Сгенерирована {{count}} нота",
         "notesGenerated_few": "Сгенерировано {{count}} ноты",
         "notesGenerated_many": "Сгенерировано {{count}} нот",
+        "notesGenerated_one": "Сгенерирована {{count}} нота",
         "notesGenerated_other": "Сгенерировано {{count}} нот",
-        "pasteConflicts_one": "{{count}} конфликтующая нота заменена",
         "pasteConflicts_few": "{{count}} конфликтующие ноты заменены",
         "pasteConflicts_many": "{{count}} конфликтующих нот заменено",
+        "pasteConflicts_one": "{{count}} конфликтующая нота заменена",
         "pasteConflicts_other": "{{count}} конфликтующих нот заменено",
-        "pasteDropped_one": "{{count}} нота вне диапазона режима клавиш исключена",
         "pasteDropped_few": "{{count}} ноты вне диапазона режима клавиш исключено",
         "pasteDropped_many": "{{count}} нот вне диапазона режима клавиш исключено",
+        "pasteDropped_one": "{{count}} нота вне диапазона режима клавиш исключена",
         "pasteDropped_other": "{{count}} нот вне диапазона режима клавиш исключено",
         "redoAction": "Повтор: {{description}}",
+        "saveFailed": "Ошибка сохранения: {{message}}",
         "saved": "Сохранено",
         "savedAs": "Сохранено как",
-        "saveFailed": "Ошибка сохранения: {{message}}",
-        "slicesSaved_one": "{{count}} фрагмент сохранён",
         "slicesSaved_few": "{{count}} фрагмента сохранено",
         "slicesSaved_many": "{{count}} фрагментов сохранено",
+        "slicesSaved_one": "{{count}} фрагмент сохранён",
         "slicesSaved_other": "{{count}} фрагментов сохранено",
-        "undefinedWavWarning_one": "Предупреждение: {{count}} неопределённая ссылка WAV ({{ids}})",
         "undefinedWavWarning_few": "Предупреждение: {{count}} неопределённые ссылки WAV ({{ids}})",
         "undefinedWavWarning_many": "Предупреждение: {{count}} неопределённых ссылок WAV ({{ids}})",
+        "undefinedWavWarning_one": "Предупреждение: {{count}} неопределённая ссылка WAV ({{ids}})",
         "undefinedWavWarning_other": "Предупреждение: {{count}} неопределённых ссылок WAV ({{ids}})",
         "undoAction": "Отмена: {{description}}"
       }
     }
   },
   "store": {
-    "orphanNotes_one": "{{count}} нота на дорожке вне режима {{keyMode}} скрыта. (Данные сохранены)",
     "orphanNotes_few": "{{count}} ноты на дорожках вне режима {{keyMode}} скрыты. (Данные сохранены)",
     "orphanNotes_many": "{{count}} нот на дорожках вне режима {{keyMode}} скрыто. (Данные сохранены)",
+    "orphanNotes_one": "{{count}} нота на дорожке вне режима {{keyMode}} скрыта. (Данные сохранены)",
     "orphanNotes_other": "{{count}} нот на дорожках вне режима {{keyMode}} скрыто. (Данные сохранены)",
     "removeUnusedKeysounds": "Удалить неиспользуемые звуки клавиш",
     "replaceKeysound": "Заменить звук клавиши"

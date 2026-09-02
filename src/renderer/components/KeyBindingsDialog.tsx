@@ -28,18 +28,24 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
     setLocalBindings(bindings);
   }, [bindings]);
 
-  const bindingMap = useMemo(() => new Map(localBindings.map((b) => [b.action, b])), [localBindings]);
+  // The dialog shows one row per action: the *primary* (first) binding.
+  // Secondary bindings (number-row tool shortcuts) are kept untouched.
+  const bindingMap = useMemo(() => {
+    const map = new Map<KeyAction, KeyBinding>();
+    for (const b of localBindings) if (!map.has(b.action)) map.set(b.action, b);
+    return map;
+  }, [localBindings]);
 
-  // Detect key conflicts: key → list of actions using that key
-  const conflictMap = new Map<string, KeyAction[]>();
+  // Detect key conflicts: key → set of distinct actions using that key
+  const conflictMap = new Map<string, Set<KeyAction>>();
   for (const b of localBindings) {
     const key = b.key.toLowerCase();
-    if (!conflictMap.has(key)) conflictMap.set(key, []);
-    conflictMap.get(key)!.push(b.action);
+    if (!conflictMap.has(key)) conflictMap.set(key, new Set());
+    conflictMap.get(key)!.add(b.action);
   }
   const conflictActions = new Set<KeyAction>();
   for (const [, actions] of conflictMap) {
-    if (actions.length > 1) actions.forEach((a) => conflictActions.add(a));
+    if (actions.size > 1) actions.forEach((a) => conflictActions.add(a));
   }
 
   const handleStartEdit = useCallback((action: KeyAction) => {
@@ -59,9 +65,11 @@ export function KeyBindingsDialog({ open, onClose, bindings, onBindingsChange }:
 
       const combo = normalizeKeyCombo(e);
       setLocalBindings((prev) => {
-        const next = prev.map((b) =>
-          b.action === editingAction ? { ...b, key: combo } : b,
-        );
+        // Rebind only the primary row for this action.
+        const idx = prev.findIndex((b) => b.action === editingAction);
+        if (idx === -1) return prev;
+        const next = prev.slice();
+        next[idx] = { ...next[idx], key: combo };
         return next;
       });
       setEditingAction(null);

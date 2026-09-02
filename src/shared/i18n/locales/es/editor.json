@@ -13,8 +13,8 @@
       "muteOn": "Silenciar este canal",
       "soloOff": "Quitar solo",
       "soloOn": "Solo este canal",
-      "title_one": "Gestor BGM ({{count}})",
       "title_many": "Gestor BGM ({{count}})",
+      "title_one": "Gestor BGM ({{count}})",
       "title_other": "Gestor BGM ({{count}})"
     }
   },
@@ -55,15 +55,15 @@
         "currentLabel": "actual",
         "hint": "Selecciona una entrada para copiar esas notas al portapapeles.",
         "noKeysounds": "Sin sonidos de teclas",
-        "noteCount_one": "{{count}} nota",
         "noteCount_many": "{{count}} notas",
+        "noteCount_one": "{{count}} nota",
         "noteCount_other": "{{count}} notas",
         "title": "Historial del portapapeles"
       },
       "copyErrorTemplate": "Archivo: {{path}}\nError: {{error}}",
       "createGroupPrompt": "Nombre del grupo:",
-      "deleteUnusedConfirm_one": "Este sonido de tecla es usado por {{count}} nota.\nEliminarlo reemplazará esas notas con silencio (00).\n\n¿Eliminar de todas formas?",
       "deleteUnusedConfirm_many": "Este sonido de tecla es usado por {{count}} notas.\nEliminarlo reemplazará esas notas con silencio (00).\n\n¿Eliminar de todas formas?",
+      "deleteUnusedConfirm_one": "Este sonido de tecla es usado por {{count}} nota.\nEliminarlo reemplazará esas notas con silencio (00).\n\n¿Eliminar de todas formas?",
       "deleteUnusedConfirm_other": "Este sonido de tecla es usado por {{count}} notas.\nEliminarlo reemplazará esas notas con silencio (00).\n\n¿Eliminar de todas formas?",
       "diff": {
         "close": "Cerrar (Esc)",
@@ -86,6 +86,7 @@
         "insertMeasureTitle": "Insertar compás (Ctrl+Shift+I)",
         "keyBindingsLabel": "Atajos de teclado",
         "measureLabel": "compás",
+        "midiOnBadge": "ON",
         "midiSettingsLabel": "Configuración MIDI",
         "modifiedIndicator": "Modificado",
         "noteColorLabel": "Configuración de colores de notas",
@@ -123,6 +124,7 @@
         "openPanelTitle": "Abrir panel de sonidos de teclas",
         "patternTab": "Patrones"
       },
+      "loadingChart": "Cargando chart...",
       "measureDialog": {
         "cancel": "Cancelar",
         "currentMeasureLabel": "(compás actual)",
@@ -141,10 +143,17 @@
         "closePopoutAria": "Cerrar minimapa flotante",
         "dockToSidebar": "Anclar a la barra lateral",
         "dockToSidebarAria": "Anclar minimapa a la barra lateral",
-        "popoutTitle": "Desprender minimapa (arrastrable)"
+        "popoutLabel": "Minimapa",
+        "popoutTitle": "Desprender minimapa (arrastrable)",
+        "sidebarLabel": "Mapa"
       },
       "navGuardMessage": "Tienes cambios sin guardar. ¿Salir de todas formas?",
+      "playTest": {
+        "label": "Probar reproducción",
+        "returnToEditor": "Volver al editor (Esc)"
+      },
       "playback": {
+        "audioErrorTitle": "No se pudo cargar el audio — clic para reintentar",
         "bpmTapTitle": "Golpear BPM",
         "clearLoopTitle": "Borrar bucle (\\)",
         "diffTitle": "Activar vista de diferencias (Ctrl+D)",
@@ -155,19 +164,16 @@
         "muteTitle": "Silenciar",
         "playPauseTitle": "Reproducir / Pausar (Space)",
         "playTestTitle": "Probar reproducción (F5)",
+        "retryAudio": "Reintentar audio",
         "speedPresetTitle": "Preajuste de velocidad",
         "stopTitle": "Detener",
         "unmuteTitle": "Activar sonido",
         "volumeTitle": "Volumen: {{percent}}%"
       },
-      "playTest": {
-        "label": "Probar reproducción",
-        "returnToEditor": "Volver al editor (Esc)"
-      },
       "replaceKeysound": {
         "cancel": "Cancelar",
-        "noteCount_one": "— {{count}} nota",
         "noteCount_many": "— {{count}} notas",
+        "noteCount_one": "— {{count}} nota",
         "noteCount_other": "— {{count}} notas",
         "sourceLabel": "Origen:",
         "targetPrompt": "Selecciona el sonido de tecla de destino:"
@@ -190,43 +196,44 @@
         "midiStep": "Paso a paso"
       },
       "toast": {
-        "highResWarning_one": "{{count}} nota fuera de la resolución estándar (192) — puede causar problemas de compatibilidad",
+        "audioLoadFailed": "No se pudo cargar el audio: {{message}}",
         "highResWarning_many": "{{count}} notas fuera de la resolución estándar (192) — puede causar problemas de compatibilidad",
+        "highResWarning_one": "{{count}} nota fuera de la resolución estándar (192) — puede causar problemas de compatibilidad",
         "highResWarning_other": "{{count}} notas fuera de la resolución estándar (192) — puede causar problemas de compatibilidad",
         "keysoundDeleted": "Sonido de tecla {{id}} eliminado (Ctrl+Z para deshacer)",
         "keysoundImportFailed": "Error al importar el sonido de tecla",
-        "keysoundReplaced_one": "Sonido de tecla {{from}} → {{to}} reemplazado en {{count}} nota (Ctrl+Z para deshacer)",
         "keysoundReplaced_many": "Sonido de tecla {{from}} → {{to}} reemplazado en {{count}} notas (Ctrl+Z para deshacer)",
+        "keysoundReplaced_one": "Sonido de tecla {{from}} → {{to}} reemplazado en {{count}} nota (Ctrl+Z para deshacer)",
         "keysoundReplaced_other": "Sonido de tecla {{from}} → {{to}} reemplazado en {{count}} notas (Ctrl+Z para deshacer)",
-        "keysoundsImported_one": "{{count}} sonido de tecla importado",
         "keysoundsImported_many": "{{count}} sonidos de teclas importados",
+        "keysoundsImported_one": "{{count}} sonido de tecla importado",
         "keysoundsImported_other": "{{count}} sonidos de teclas importados",
-        "notesGenerated_one": "{{count}} nota generada",
         "notesGenerated_many": "{{count}} notas generadas",
+        "notesGenerated_one": "{{count}} nota generada",
         "notesGenerated_other": "{{count}} notas generadas",
-        "pasteConflicts_one": "{{count}} nota en conflicto reemplazada",
         "pasteConflicts_many": "{{count}} notas en conflicto reemplazadas",
+        "pasteConflicts_one": "{{count}} nota en conflicto reemplazada",
         "pasteConflicts_other": "{{count}} notas en conflicto reemplazadas",
-        "pasteDropped_one": "{{count}} nota fuera del rango del modo de teclas excluida",
         "pasteDropped_many": "{{count}} notas fuera del rango del modo de teclas excluidas",
+        "pasteDropped_one": "{{count}} nota fuera del rango del modo de teclas excluida",
         "pasteDropped_other": "{{count}} notas fuera del rango del modo de teclas excluidas",
         "redoAction": "Rehacer: {{description}}",
+        "saveFailed": "Error al guardar: {{message}}",
         "saved": "Guardado",
         "savedAs": "Guardado como",
-        "saveFailed": "Error al guardar: {{message}}",
-        "slicesSaved_one": "{{count}} fragmento guardado",
         "slicesSaved_many": "{{count}} fragmentos guardados",
+        "slicesSaved_one": "{{count}} fragmento guardado",
         "slicesSaved_other": "{{count}} fragmentos guardados",
-        "undefinedWavWarning_one": "Advertencia: {{count}} referencia WAV no definida ({{ids}})",
         "undefinedWavWarning_many": "Advertencia: {{count}} referencias WAV no definidas ({{ids}})",
+        "undefinedWavWarning_one": "Advertencia: {{count}} referencia WAV no definida ({{ids}})",
         "undefinedWavWarning_other": "Advertencia: {{count}} referencias WAV no definidas ({{ids}})",
         "undoAction": "Deshacer: {{description}}"
       }
     }
   },
   "store": {
-    "orphanNotes_one": "{{count}} nota en un carril fuera del modo {{keyMode}} está ahora oculta. (Los datos se conservan)",
     "orphanNotes_many": "{{count}} notas en carriles fuera del modo {{keyMode}} están ahora ocultas. (Los datos se conservan)",
+    "orphanNotes_one": "{{count}} nota en un carril fuera del modo {{keyMode}} está ahora oculta. (Los datos se conservan)",
     "orphanNotes_other": "{{count}} notas en carriles fuera del modo {{keyMode}} están ahora ocultas. (Los datos se conservan)",
     "removeUnusedKeysounds": "Eliminar sonidos de teclas sin usar",
     "replaceKeysound": "Reemplazar sonido de tecla"

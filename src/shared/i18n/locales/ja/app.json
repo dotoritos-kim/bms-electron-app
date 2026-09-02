@@ -182,22 +182,43 @@
     "renderingTitle": "レンダリングエラー"
   },
   "home": {
+    "actions": {
+      "edit": "編集",
+      "folder": "フォルダ",
+      "new": "新規",
+      "open": "開く",
+      "play": "プレイ"
+    },
+    "emptyList": "ファイルまたはフォルダを開いて始めましょう",
+    "errors": {
+      "createFailed": "ファイルの作成に失敗: {{message}}",
+      "scanFailed": "フォルダのスキャンに失敗: {{message}}"
+    },
+    "loadError": "エラー: {{message}}",
     "meta": {
       "file": "ファイル",
       "genre": "ジャンル"
     },
     "newFile": {
       "artistField": "アーティスト",
+      "artistPlaceholder": "不明",
+      "bpmField": "BPM",
       "createButton": "作成",
       "creating": "作成中...",
+      "invalidBpm": "0より大きいBPMを入力してください",
       "keyModeField": "キーモード",
       "title": "新規BMSファイル",
-      "titleField": "タイトル"
+      "titleField": "タイトル",
+      "titlePlaceholder": "無題"
     },
+    "noChartsInFolder": "このフォルダにBMS譜面がありません",
     "pinFile": "ピン留め",
     "recentFiles": "最近のファイル",
     "removeFromList": "リストから削除",
+    "selectPrompt": "BMSファイルを選択すると詳細が表示されます",
+    "shortcutsHint": "Ctrl+N で新規作成、Ctrl+O で開く",
     "stats": {
+      "bpm": "BPM",
       "invisible": "見えないノーツ",
       "keyMode": "キーモード",
       "keysounds": "キーサウンド",
@@ -219,8 +240,13 @@
     "saveBeforeLeave": "保存されていない変更があります。保存して移動しますか?"
   },
   "player": {
+    "autoplay": "オートプレイ",
+    "backAria": "ホームに戻る",
+    "errorTitle": "エラー",
     "exitConfirm": "ゲームプレイ中です。終了しますか?",
-    "keyBindingsHint": "キー設定は編集画面 > ツール > キーバインド設定から変更できます"
+    "keyBindingsHint": "キー設定は編集画面 > ツール > キーバインド設定から変更できます",
+    "loadingChart": "譜面を読み込み中...",
+    "loadingKeysounds": "キー音を読み込み中... {{loaded}}/{{total}}"
   },
   "stats": {
     "bgm": "BGM",

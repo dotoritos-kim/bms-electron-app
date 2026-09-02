@@ -7,7 +7,10 @@ import { Editor } from './routes/Editor';
 import { Layout } from './components/Layout';
 import { basename, dirname } from './lib/pathUtils';
 import { loadSession, saveSession } from './lib/sessionStorage';
+import i18next from 'i18next';
 import { localeService } from './services/LocaleService';
+import { AccessibleDialog } from './components/AccessibleDialog';
+import { BmsEditorI18nBridge, BmsPlayerI18nBridge } from './i18n/BmsLibI18nBridge';
 import type { SupportedLocale } from '../shared/i18n/types';
 
 export type AppRoute = 'home' | 'player' | 'editor';
@@ -37,7 +40,7 @@ class ErrorBoundary extends Component<
     if (this.state.error) {
       return (
         <div style={{ padding: 32, color: '#f87171', background: '#1a1a2e', height: '100%', overflow: 'auto' }}>
-          <h2 style={{ fontSize: 20, marginBottom: 12 }}>Rendering Error</h2>
+          <h2 style={{ fontSize: 20, marginBottom: 12 }}>{i18next.t('app:errors.renderingTitle')}</h2>
           <pre style={{ fontSize: 13, whiteSpace: 'pre-wrap', color: '#fca5a5' }}>
             {this.state.error.message}
           </pre>
@@ -48,7 +51,7 @@ class ErrorBoundary extends Component<
             onClick={() => { this.setState({ error: null }); this.props.onReset?.(); }}
             style={{ marginTop: 16, padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
           >
-            Go Home
+            {i18next.t('app:errors.goHome')}
           </button>
         </div>
       );
@@ -68,7 +71,9 @@ export function App() {
   // Restore last session
   const [route, setRoute] = useState<AppRoute>(() => {
     const session = loadSession();
-    return session?.lastRoute || 'home';
+    // Player/Editor need a file; a stale session without one would render a blank pane.
+    if (!session?.lastFile) return 'home';
+    return session.lastRoute || 'home';
   });
   const [currentFile, setCurrentFile] = useState<CurrentFile | null>(() => {
     const session = loadSession();
@@ -196,23 +201,26 @@ export function App() {
           />
         )}
         {route === 'player' && currentFile && (
-          <Player file={currentFile} onBack={handleHome} onClearFile={handleClearFile} onRegisterGuard={registerNavigationGuard} />
+          <BmsPlayerI18nBridge>
+            <Player file={currentFile} onBack={handleHome} onRequestBack={() => handleNavigate('home')} onClearFile={handleClearFile} onRegisterGuard={registerNavigationGuard} />
+          </BmsPlayerI18nBridge>
         )}
         {route === 'editor' && currentFile && (
-          <Editor key={currentFile.path} file={currentFile} onBack={handleHome} onClearFile={handleClearFile} onOpenFile={handleOpenFile} onRegisterGuard={registerNavigationGuard} />
+          <BmsEditorI18nBridge>
+            <Editor key={currentFile.path} file={currentFile} onBack={handleHome} onClearFile={handleClearFile} onOpenFile={handleOpenFile} onRegisterGuard={registerNavigationGuard} />
+          </BmsEditorI18nBridge>
         )}
       </ErrorBoundary>
 
       {/* Navigation confirmation dialog */}
       {navConfirm && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
-          onClick={() => setNavConfirm(null)}
+        <AccessibleDialog
+          open
+          onClose={() => setNavConfirm(null)}
+          title={t('navigation.leaveTitle')}
+          className="border border-zinc-700 p-4 w-80"
         >
-          <div
-            className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 w-80 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div>
             <h3 className="text-sm font-semibold text-zinc-200 mb-2">{t('navigation.leaveTitle')}</h3>
             <p className="text-xs text-zinc-400 mb-4">{navConfirm.message}</p>
             <div className="flex justify-end gap-2">
@@ -256,7 +264,7 @@ export function App() {
               </button>
             </div>
           </div>
-        </div>
+        </AccessibleDialog>
       )}
     </Layout>
   );

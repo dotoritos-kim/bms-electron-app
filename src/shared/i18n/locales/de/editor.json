@@ -83,6 +83,7 @@
         "insertMeasureTitle": "Takt einfügen (Ctrl+Shift+I)",
         "keyBindingsLabel": "Tastenbelegungen",
         "measureLabel": "Takt",
+        "midiOnBadge": "AN",
         "midiSettingsLabel": "MIDI-Einstellungen",
         "modifiedIndicator": "Geändert",
         "noteColorLabel": "Notenfarben-Einstellungen",
@@ -120,6 +121,7 @@
         "openPanelTitle": "Schlüsselklang-Panel öffnen",
         "patternTab": "Muster"
       },
+      "loadingChart": "Chart wird geladen...",
       "measureDialog": {
         "cancel": "Abbrechen",
         "currentMeasureLabel": "(aktueller Takt)",
@@ -138,10 +140,17 @@
         "closePopoutAria": "Minimap-Popout schließen",
         "dockToSidebar": "In Seitenleiste andocken",
         "dockToSidebarAria": "Minimap in Seitenleiste andocken",
-        "popoutTitle": "Minimap ablösen (verschiebbar)"
+        "popoutLabel": "Minimap",
+        "popoutTitle": "Minimap ablösen (verschiebbar)",
+        "sidebarLabel": "Karte"
       },
       "navGuardMessage": "Es gibt ungespeicherte Änderungen. Trotzdem verlassen?",
+      "playTest": {
+        "label": "Spieltest",
+        "returnToEditor": "Zurück zum Editor (Esc)"
+      },
       "playback": {
+        "audioErrorTitle": "Audio konnte nicht geladen werden — klicken zum Wiederholen",
         "bpmTapTitle": "BPM-Tipp",
         "clearLoopTitle": "Loop löschen (\\)",
         "diffTitle": "Diff-Ansicht umschalten (Ctrl+D)",
@@ -152,14 +161,11 @@
         "muteTitle": "Stummschalten",
         "playPauseTitle": "Wiedergabe / Pause (Space)",
         "playTestTitle": "Spieltest (F5)",
+        "retryAudio": "Audio erneut laden",
         "speedPresetTitle": "Geschwindigkeits-Voreinstellung",
         "stopTitle": "Stopp",
         "unmuteTitle": "Stummschaltung aufheben",
         "volumeTitle": "Lautstärke: {{percent}}%"
-      },
-      "playTest": {
-        "label": "Spieltest",
-        "returnToEditor": "Zurück zum Editor (Esc)"
       },
       "replaceKeysound": {
         "cancel": "Abbrechen",
@@ -186,6 +192,7 @@
         "midiStep": "Schritt"
       },
       "toast": {
+        "audioLoadFailed": "Audio konnte nicht geladen werden: {{message}}",
         "highResWarning_one": "{{count}} Note außerhalb der Standardauflösung (192) — kann Kompatibilitätsprobleme verursachen",
         "highResWarning_other": "{{count}} Noten außerhalb der Standardauflösung (192) — kann Kompatibilitätsprobleme verursachen",
         "keysoundDeleted": "Schlüsselklang {{id}} gelöscht (Ctrl+Z zum Rückgängigmachen)",
@@ -201,9 +208,9 @@
         "pasteDropped_one": "{{count}} Note außerhalb des Tastenmodus-Bereichs ausgeschlossen",
         "pasteDropped_other": "{{count}} Noten außerhalb des Tastenmodus-Bereichs ausgeschlossen",
         "redoAction": "Wiederholen: {{description}}",
+        "saveFailed": "Speichern fehlgeschlagen: {{message}}",
         "saved": "Gespeichert",
         "savedAs": "Gespeichert als",
-        "saveFailed": "Speichern fehlgeschlagen: {{message}}",
         "slicesSaved_one": "{{count}} Segment gespeichert",
         "slicesSaved_other": "{{count}} Segmente gespeichert",
         "undefinedWavWarning_one": "Warnung: {{count}} undefinierter WAV-Verweis ({{ids}})",

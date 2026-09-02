@@ -80,6 +80,7 @@
         "insertMeasureTitle": "插入小节 (Ctrl+Shift+I)",
         "keyBindingsLabel": "快捷键设置",
         "measureLabel": "小节",
+        "midiOnBadge": "开",
         "midiSettingsLabel": "MIDI 设置",
         "modifiedIndicator": "已修改",
         "noteColorLabel": "音符颜色设置",
@@ -117,6 +118,7 @@
         "openPanelTitle": "打开键音面板",
         "patternTab": "排列"
       },
+      "loadingChart": "正在加载谱面...",
       "measureDialog": {
         "cancel": "取消",
         "currentMeasureLabel": "（当前小节）",
@@ -135,10 +137,17 @@
         "closePopoutAria": "关闭小地图弹出窗口",
         "dockToSidebar": "停靠到侧边栏",
         "dockToSidebarAria": "将小地图停靠到侧边栏",
-        "popoutTitle": "分离小地图（可拖动）"
+        "popoutLabel": "小地图",
+        "popoutTitle": "分离小地图（可拖动）",
+        "sidebarLabel": "地图"
       },
       "navGuardMessage": "有未保存的更改，确定要离开吗？",
+      "playTest": {
+        "label": "试玩",
+        "returnToEditor": "返回编辑器 (Esc)"
+      },
       "playback": {
+        "audioErrorTitle": "音频加载失败 — 点击重试",
         "bpmTapTitle": "BPM 点击检测",
         "clearLoopTitle": "清除循环 (\\)",
         "diffTitle": "切换差异视图 (Ctrl+D)",
@@ -149,14 +158,11 @@
         "muteTitle": "静音",
         "playPauseTitle": "播放 / 暂停 (Space)",
         "playTestTitle": "试玩 (F5)",
+        "retryAudio": "重新加载音频",
         "speedPresetTitle": "速度预设",
         "stopTitle": "停止",
         "unmuteTitle": "取消静音",
         "volumeTitle": "音量：{{percent}}%"
-      },
-      "playTest": {
-        "label": "试玩",
-        "returnToEditor": "返回编辑器 (Esc)"
       },
       "replaceKeysound": {
         "cancel": "取消",
@@ -182,6 +188,7 @@
         "midiStep": "步进"
       },
       "toast": {
+        "audioLoadFailed": "音频加载失败：{{message}}",
         "highResWarning_other": "{{count}} 个音符超出标准分辨率（192），可能导致兼容性问题",
         "keysoundDeleted": "键音 {{id}} 已删除（Ctrl+Z 可撤销）",
         "keysoundImportFailed": "键音导入失败",
@@ -191,9 +198,9 @@
         "pasteConflicts_other": "已替换 {{count}} 个冲突音符",
         "pasteDropped_other": "已排除 {{count}} 个超出键位模式范围的音符",
         "redoAction": "重做：{{description}}",
+        "saveFailed": "保存失败：{{message}}",
         "saved": "已保存",
         "savedAs": "另存为",
-        "saveFailed": "保存失败：{{message}}",
         "slicesSaved_other": "已保存 {{count}} 个切片",
         "undefinedWavWarning_other": "警告：{{count}} 个未定义的 WAV 引用（{{ids}}）",
         "undoAction": "撤销：{{description}}"

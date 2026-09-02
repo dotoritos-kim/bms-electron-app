@@ -5,6 +5,7 @@ import type { CurrentFile } from '../App';
 import { useHomeBmsFile } from '../hooks/useHomeBmsFile';
 import { dirname, basename } from '../lib/pathUtils';
 import { loadRecentFiles, addRecentFile, removeRecentFile, togglePinRecentFile } from '../lib/sessionStorage';
+import { AccessibleDialog } from '../components/AccessibleDialog';
 import type { RecentFileEntry } from '../lib/sessionStorage';
 
 interface HomeProps {
@@ -45,6 +46,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
   const [newKeyMode, setNewKeyMode] = useState<KeyModeOption>('7K');
   const [creating, setCreating] = useState(false);
   const [dialogBusy, setDialogBusy] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [recentFiles, setRecentFiles] = useState<RecentFileEntry[]>(() => loadRecentFiles());
 
@@ -80,12 +82,14 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
       if (path) {
         setFolderPath(path);
         setScanning(true);
+        setErrorMessage(null);
         try {
           const bmsFiles = await window.api.file.listBmsFolder(path);
           setFiles(bmsFiles);
         } catch (err) {
           console.error('[Home] Folder scan failed:', err);
           setFiles([]);
+          setErrorMessage(t('home.errors.scanFailed', { message: err instanceof Error ? err.message : String(err) }));
         } finally {
           setScanning(false);
         }
@@ -93,7 +97,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
     } finally {
       setDialogBusy(false);
     }
-  }, [dialogBusy]);
+  }, [dialogBusy, t]);
 
   const handleSelectFile = useCallback(
     (file: BmsFileEntry) => {
@@ -108,12 +112,16 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
 
   const handleNewFile = useCallback(async () => {
     const bpm = parseFloat(newBpm);
-    if (isNaN(bpm) || bpm <= 0) return;
+    if (isNaN(bpm) || bpm <= 0) {
+      setErrorMessage(t('home.newFile.invalidBpm'));
+      return;
+    }
 
     setCreating(true);
+    setErrorMessage(null);
     try {
       const result = await window.api.file.createNewBms({
-        title: newTitle || 'Untitled',
+        title: newTitle || t('home.newFile.titlePlaceholder'),
         artist: newArtist,
         bpm,
         keyMode: newKeyMode,
@@ -133,10 +141,11 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
       }
     } catch (err) {
       console.error('[Home] Create new file failed:', err);
+      setErrorMessage(t('home.errors.createFailed', { message: err instanceof Error ? err.message : String(err) }));
     } finally {
       setCreating(false);
     }
-  }, [newTitle, newArtist, newBpm, newKeyMode, onOpenFile, onEdit]);
+  }, [newTitle, newArtist, newBpm, newKeyMode, onOpenFile, onEdit, t]);
 
   // Ctrl+N / Ctrl+O shortcuts
   useEffect(() => {
@@ -164,7 +173,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
   return (
     <div className="flex h-full">
       {/* Left: File Browser */}
-      <div className="w-80 border-r border-zinc-800 flex flex-col">
+      <div className="w-80 max-w-[45%] min-w-[200px] shrink-0 border-r border-zinc-800 flex flex-col">
         {/* Actions */}
         <div className="p-3 border-b border-zinc-800 flex gap-2 flex-wrap">
           <button
@@ -173,7 +182,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
           >
             <FilePlus className="h-4 w-4" />
-            New
+            {t('home.actions.new')}
           </button>
           <button
             onClick={handleOpenFile}
@@ -181,7 +190,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
           >
             <File className="h-4 w-4" />
-            Open
+            {t('home.actions.open')}
           </button>
           <button
             onClick={handleOpenFolder}
@@ -189,9 +198,17 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
           >
             <FolderOpen className="h-4 w-4" />
-            Folder
+            {t('home.actions.folder')}
           </button>
         </div>
+        {errorMessage && (
+          <div role="alert" className="mx-3 mt-2 px-3 py-2 text-xs bg-red-900/30 border border-red-800 rounded text-red-300 flex items-start gap-2">
+            <span className="flex-1 break-words">{errorMessage}</span>
+            <button onClick={() => setErrorMessage(null)} className="shrink-0 text-red-400 hover:text-red-200" aria-label={t('common:actions.dismiss')}>
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
 
         {/* File list */}
         <div className="flex-1 overflow-y-auto">
@@ -202,9 +219,14 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
               {scanning && <RefreshCw className="h-3 w-3 animate-spin ml-auto" />}
             </div>
           )}
-          {files.length === 0 && !scanning && recentFiles.length === 0 && (
+          {files.length === 0 && !scanning && !folderPath && recentFiles.length === 0 && (
             <div className="p-6 text-center text-sm text-zinc-500">
-              Open a file or folder to get started
+              {t('home.emptyList')}
+            </div>
+          )}
+          {files.length === 0 && !scanning && folderPath && (
+            <div className="p-6 text-center text-sm text-zinc-500">
+              {t('home.noChartsInFolder')}
             </div>
           )}
           {files.length === 0 && !scanning && !folderPath && recentFiles.length > 0 && (
@@ -272,8 +294,8 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
           <div className="h-full flex items-center justify-center text-zinc-400">
             <div className="text-center">
               <Music className="h-16 w-16 mx-auto mb-4 opacity-20" />
-              <p className="text-lg">Select a BMS file to view details</p>
-              <p className="text-sm mt-1">Ctrl+N to create new, Ctrl+O to open</p>
+              <p className="text-lg">{t('home.selectPrompt')}</p>
+              <p className="text-sm mt-1">{t('home.shortcutsHint')}</p>
             </div>
           </div>
         )}
@@ -285,8 +307,8 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
         )}
 
         {currentFile && error && (
-          <div className="bg-red-900/20 border border-red-800 rounded-lg p-4 text-red-400">
-            Error: {error}
+          <div role="alert" className="bg-red-900/20 border border-red-800 rounded-lg p-4 text-red-400">
+            {t('home.loadError', { message: error })}
           </div>
         )}
 
@@ -301,7 +323,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
             <div className="grid grid-cols-3 gap-3 mb-4">
               <StatCard label={t('home.stats.keyMode')} value={chart.keyMode} />
               <StatCard
-                label="BPM"
+                label={t('home.stats.bpm')}
                 value={
                   chart.bpm.min === chart.bpm.max
                     ? `${chart.bpm.initial}`
@@ -325,14 +347,14 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                 className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg text-lg font-semibold transition-colors"
               >
                 <Play className="h-5 w-5" />
-                Play
+                {t('home.actions.play')}
               </button>
               <button
                 onClick={onEdit}
                 className="flex items-center gap-2 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-lg font-semibold transition-colors"
               >
                 <Edit className="h-5 w-5" />
-                Edit
+                {t('home.actions.edit')}
               </button>
             </div>
             {(chart.songInfo?.genre || currentFile) && (
@@ -348,8 +370,8 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
 
       {/* ===== NEW FILE DIALOG ===== */}
       {showNewDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowNewDialog(false)}>
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-5 w-96 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <AccessibleDialog open onClose={() => setShowNewDialog(false)} title={t('home.newFile.title')} className="border border-zinc-700 p-5 w-96">
+          <div>
             <h3 className="text-lg font-semibold text-zinc-200 mb-4">{t('home.newFile.title')}</h3>
             <form onSubmit={(e) => { e.preventDefault(); handleNewFile(); }}>
               <div className="space-y-3">
@@ -360,7 +382,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                     type="text"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="Untitled"
+                    placeholder={t('home.newFile.titlePlaceholder')}
                     className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -370,13 +392,13 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
                     type="text"
                     value={newArtist}
                     onChange={(e) => setNewArtist(e.target.value)}
-                    placeholder="Unknown"
+                    placeholder={t('home.newFile.artistPlaceholder')}
                     className="w-full px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-600 rounded text-zinc-100 focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div className="flex gap-3">
                   <div className="flex-1">
-                    <label className="text-xs text-zinc-400 mb-1 block">BPM</label>
+                    <label className="text-xs text-zinc-400 mb-1 block">{t('home.newFile.bpmField')}</label>
                     <input
                       type="number"
                       value={newBpm}
@@ -419,7 +441,7 @@ export function Home({ currentFile, onOpenFile, onPlay, onEdit }: HomeProps) {
               </div>
             </form>
           </div>
-        </div>
+        </AccessibleDialog>
       )}
     </div>
   );

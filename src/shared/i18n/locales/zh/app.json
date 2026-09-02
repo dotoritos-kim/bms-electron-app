@@ -115,22 +115,43 @@
     "goHome": "返回主页"
   },
   "home": {
+    "actions": {
+      "edit": "编辑",
+      "folder": "文件夹",
+      "new": "新建",
+      "open": "打开",
+      "play": "开始"
+    },
+    "emptyList": "打开文件或文件夹以开始",
+    "errors": {
+      "createFailed": "创建文件失败：{{message}}",
+      "scanFailed": "扫描文件夹失败：{{message}}"
+    },
+    "loadError": "错误：{{message}}",
     "meta": {
       "file": "文件",
       "genre": "曲风"
     },
     "newFile": {
       "artistField": "艺术家",
+      "artistPlaceholder": "未知",
+      "bpmField": "BPM",
       "createButton": "创建",
       "creating": "创建中…",
+      "invalidBpm": "请输入大于 0 的 BPM",
       "keyModeField": "键位模式",
       "title": "新建 BMS 文件",
-      "titleField": "标题"
+      "titleField": "标题",
+      "titlePlaceholder": "未命名"
     },
+    "noChartsInFolder": "此文件夹中没有 BMS 谱面",
     "pinFile": "固定",
     "recentFiles": "最近文件",
     "removeFromList": "从列表移除",
+    "selectPrompt": "选择 BMS 文件以查看详情",
+    "shortcutsHint": "Ctrl+N 新建，Ctrl+O 打开",
     "stats": {
+      "bpm": "BPM",
       "invisible": "隐形音符",
       "keyMode": "键位模式",
       "keysounds": "键音",
@@ -148,8 +169,13 @@
     "saveAndLeaveLabel": "保存并离开"
   },
   "player": {
+    "autoplay": "自动播放",
+    "backAria": "返回主页",
+    "errorTitle": "错误",
     "exitConfirm": "游戏进行中，确定要离开吗？",
-    "keyBindingsHint": "可在编辑器 > 工具 > 快捷键设置中修改键位绑定"
+    "keyBindingsHint": "可在编辑器 > 工具 > 快捷键设置中修改键位绑定",
+    "loadingChart": "正在加载谱面...",
+    "loadingKeysounds": "正在加载键音... {{loaded}}/{{total}}"
   },
   "stats": {
     "duration": "时长",

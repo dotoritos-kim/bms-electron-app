@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+/*
+ * The vendored bms-editor / bms-player components carry their own Tailwind
+ * utility classes. Tailwind v4's automatic source detection does not reach
+ * into vendor/, so utilities used only there (e.g. `pl-7` on the keysound
+ * search input) were silently missing from the bundle.
+ */
+@source '../../vendor/bms-editor/src';
+@source '../../vendor/bms-player/src';
+
 /* shadcn-compatible design tokens for bms-editor components */
 @theme {
   --color-background: oklch(0.145 0 0);

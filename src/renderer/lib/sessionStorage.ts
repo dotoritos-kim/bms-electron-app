@@ -41,7 +41,8 @@ export function addRecentFile(file: CurrentFile): RecentFileEntry[] {
   const result = entry.pinned
     ? [entry, ...pinned, ...unpinned]
     : [...pinned, entry, ...unpinned];
-  const trimmed = result.slice(0, MAX_RECENT + pinned.filter((r) => r.path !== file.path).length);
+  // Pinned entries never count against the LRU cap.
+  const trimmed = result.slice(0, MAX_RECENT + pinned.length);
   saveRecentFiles(trimmed);
   return trimmed;
 }
@@ -61,7 +62,12 @@ export function togglePinRecentFile(path: string): RecentFileEntry[] {
 }
 
 function saveRecentFiles(files: RecentFileEntry[]): void {
-  localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(files));
+  try {
+    localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(files));
+  } catch (err) {
+    // Quota / privacy-mode failures must not crash the UI; persistence is best-effort.
+    console.warn('[sessionStorage] Failed to save recent files:', err);
+  }
 }
 
 // --- Session Restore ---
@@ -84,5 +90,9 @@ export function loadSession(): SessionData | null {
 }
 
 export function saveSession(data: SessionData): void {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  } catch (err) {
+    console.warn('[sessionStorage] Failed to save session:', err);
+  }
 }

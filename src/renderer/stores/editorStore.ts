@@ -77,7 +77,10 @@ export interface UndoEntry {
   description: string;
 }
 
-export type AudioPhase = 'idle' | 'loading' | 'ready' | 'playing' | 'paused';
+/** Cap on undo/redo history depth (entries beyond this are dropped oldest-first). */
+const MAX_UNDO_HISTORY = 50;
+
+export type AudioPhase = 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'error';
 
 export interface InputDialog {
   type: 'bpm-add' | 'bpm-edit' | 'stop-add' | 'stop-edit' | 'timesig-edit';
@@ -607,7 +610,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         description,
       });
       set((prev) => ({
-        undoStack: [...prev.undoStack.slice(-50), entry],
+        undoStack: [...prev.undoStack.slice(-(MAX_UNDO_HISTORY - 1)), entry],
         redoStack: [],
       }));
     } catch (err) {
@@ -627,7 +630,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       });
       const newConverter = createBeatConverter(entry.timeSignatures);
       set({
-        redoStack: [...s.redoStack, redoEntry],
+        redoStack: [...s.redoStack.slice(-(MAX_UNDO_HISTORY - 1)), redoEntry],
         notes: entry.notes,
         bpmChanges: entry.bpmChanges,
         stopEvents: entry.stopEvents,
@@ -1572,7 +1575,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const overrides = new Map(s.gridSnapOverrides);
     if (gridSnap === null) overrides.delete(measure);
     else overrides.set(measure, gridSnap);
-    return { gridSnapOverrides: overrides };
+    return { gridSnapOverrides: overrides, hasUnsavedChanges: true };
   }),
   getGridSnapForMeasure: (measure) => {
     const s = get();
@@ -1621,16 +1624,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     layerConfig: { ...s.layerConfig, [layer]: { ...s.layerConfig[layer], opacity: Math.max(0, Math.min(1, opacity)) } },
   })),
   resetLayerConfig: () => set({ layerConfig: { ...DEFAULT_LAYER_CONFIG } }),
-  setMinLnLength: (length) => set({ minLnLength: Math.max(0.0625, Math.min(4, length)) }),
+  setMinLnLength: (length) => set({ minLnLength: Math.max(0.0625, Math.min(4, length)), hasUnsavedChanges: true }),
 
   // Custom Colors
   setCustomColor: (key, color) => set((s) => {
     const next = { ...s.customColors };
     if (color === null) delete (next as Record<string, string | undefined>)[key];
     else (next as Record<string, string | undefined>)[key] = color;
-    return { customColors: next };
+    return { customColors: next, hasUnsavedChanges: true };
   }),
-  resetCustomColors: () => set({ customColors: {} }),
+  resetCustomColors: () => set({ customColors: {}, hasUnsavedChanges: true }),
 
   // A/B Comparison
   saveComparisonSnapshot: () => {
@@ -1664,20 +1667,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   addBookmark: (measure, name, color) => set((s) => ({
     bookmarks: [...s.bookmarks.filter((b) => b.measure !== measure), { measure, name, color }]
       .sort((a, b) => a.measure - b.measure),
+    hasUnsavedChanges: true,
   })),
   removeBookmark: (measure) => set((s) => ({
     bookmarks: s.bookmarks.filter((b) => b.measure !== measure),
+    hasUnsavedChanges: true,
   })),
   renameBookmark: (measure, name) => set((s) => ({
     bookmarks: s.bookmarks.map((b) => b.measure === measure ? { ...b, name } : b),
+    hasUnsavedChanges: true,
   })),
 
   // Note Groups
   createGroup: (name, noteIds, color) => set((s) => ({
     noteGroups: [...s.noteGroups, { id: `group-${Date.now()}`, name, noteIds, color }],
+    hasUnsavedChanges: true,
   })),
   deleteGroup: (groupId) => set((s) => ({
     noteGroups: s.noteGroups.filter((g) => g.id !== groupId),
+    hasUnsavedChanges: true,
   })),
   selectGroup: (groupId) => set((s) => {
     const group = s.noteGroups.find((g) => g.id === groupId);

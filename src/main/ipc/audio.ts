@@ -1,12 +1,12 @@
 import { readFile, readdir } from 'fs/promises';
 import { join, dirname, parse } from 'path';
 import { handle } from './handle';
-
-const AUDIO_EXTENSIONS = new Set(['.wav', '.ogg', '.mp3', '.flac']);
+import { assertAudioPath, assertBmsPath, AUDIO_EXTENSIONS } from './validate';
 
 export function registerAudioIpc(): void {
   // Read a single audio file as ArrayBuffer
-  handle('audio:readFile', async (_event, filePath: string) => {
+  handle('audio:readFile', async (_event, rawPath: string) => {
+    const filePath = assertAudioPath(rawPath, 'filePath');
     const buffer = await readFile(filePath);
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   });
@@ -15,7 +15,11 @@ export function registerAudioIpc(): void {
   // Given the BMS file path and a keysound map { id: filename }, reads all audio files
   handle(
     'audio:readBatch',
-    async (_event, bmsFilePath: string, keysoundMap: Record<string, string>) => {
+    async (_event, rawBmsPath: string, keysoundMap: Record<string, string>) => {
+      const bmsFilePath = assertBmsPath(rawBmsPath, 'bmsFilePath');
+      if (!keysoundMap || typeof keysoundMap !== 'object') {
+        throw new Error('keysoundMap must be an object');
+      }
       const dir = dirname(bmsFilePath);
       const results: Record<string, ArrayBuffer> = {};
       const errors: Record<string, string> = {};
@@ -43,6 +47,12 @@ export function registerAudioIpc(): void {
         const batch = entries.slice(i, i + batchSize);
         await Promise.all(
           batch.map(async ([id, filename]) => {
+            if (typeof filename !== 'string') {
+              errors[id] = 'Invalid filename';
+              return;
+            }
+            // Lookup is by base name inside the chart directory only; a
+            // filename carrying directory segments can never escape `dir`.
             const baseName = parse(filename).name.toLowerCase();
             const resolvedPath = baseNameToPath.get(baseName);
 

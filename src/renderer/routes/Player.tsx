@@ -13,13 +13,15 @@ import GameLoopWorkerConstructor from '../workers/gameLoop.worker?worker';
 interface PlayerProps {
   file: CurrentFile;
   onBack: () => void;
+  /** Back request from the header arrow — routed through the app navigation guard. */
+  onRequestBack?: () => void;
   onClearFile?: () => void;
   onRegisterGuard: (guard: NavigationGuard | null) => void;
 }
 
 type PlayerPhase = 'loading-chart' | 'loading-audio' | 'ready' | 'error';
 
-export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerProps) {
+export function Player({ file, onBack, onRequestBack, onClearFile, onRegisterGuard }: PlayerProps) {
   const { t } = useTranslation(['app', 'common']);
   const { chart, isLoading, error, load } = useLocalBmsFile();
   const [phase, setPhase] = useState<PlayerPhase>('loading-chart');
@@ -196,12 +198,18 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
     onBack();
   }, [keysoundPlayer, onBack]);
 
+  // Header back arrow: go through the navigation guard so an active game asks first.
+  const handleHeaderBack = useCallback(() => {
+    if (onRequestBack) onRequestBack();
+    else handleExit();
+  }, [onRequestBack, handleExit]);
+
   // Error states
   if (error || phase === 'error') {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-4 bg-zinc-950">
         <div className="text-red-400 text-center">
-          <p className="text-lg mb-1">Error</p>
+          <p className="text-lg mb-1">{t('player.errorTitle')}</p>
           <p className="text-sm">{error || audioError}</p>
         </div>
         <div className="flex gap-3">
@@ -227,7 +235,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
     return (
       <div className="h-full flex items-center justify-center bg-zinc-950">
         <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-3 text-zinc-400">Loading chart...</span>
+        <span className="ml-3 text-zinc-400">{t('player.loadingChart')}</span>
       </div>
     );
   }
@@ -241,7 +249,7 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
           {chart?.songInfo?.title || file.name}
         </div>
         <div className="text-zinc-500 text-sm mb-4">
-          Loading keysounds... {audioProgress.loaded}/{audioProgress.total}
+          {t('player.loadingKeysounds', { loaded: audioProgress.loaded, total: audioProgress.total })}
         </div>
         {audioProgress.total > 0 && (
           <div className="w-80 h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -260,11 +268,11 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
     <div className="h-full flex flex-col bg-black">
       {/* Minimal header */}
       <div className="flex items-center gap-3 px-4 py-1.5 bg-zinc-900/80 border-b border-zinc-800 z-10">
-        <button onClick={handleExit} className="p-1 rounded hover:bg-zinc-800 transition-colors">
+        <button onClick={handleHeaderBack} className="p-1 rounded hover:bg-zinc-800 transition-colors" aria-label={t('player.backAria')} title={t('player.backAria')}>
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="flex-1 min-w-0 text-xs text-zinc-400 truncate" title={t('player.keyBindingsHint')}>
-          {chart?.songInfo?.title || file.name} — {chart?.keyMode} | BPM {chart?.bpm.initial}
+          {chart?.songInfo?.title || file.name} — {chart?.keyMode} | BPM {chart?.bpm?.initial ?? '—'}
         </div>
         <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
           <input
@@ -272,8 +280,9 @@ export function Player({ file, onBack, onClearFile, onRegisterGuard }: PlayerPro
             checked={autoplay}
             onChange={(e) => setAutoplay(e.target.checked)}
             className="w-3.5 h-3.5 accent-orange-500"
+            aria-label={t('player.autoplay')}
           />
-          <span className="text-xs text-zinc-400">AUTOPLAY</span>
+          <span className="text-xs text-zinc-400 uppercase">{t('player.autoplay')}</span>
         </label>
       </div>
 

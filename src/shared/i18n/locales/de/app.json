@@ -123,22 +123,43 @@
     "goHome": "Zur Startseite"
   },
   "home": {
+    "actions": {
+      "edit": "Bearbeiten",
+      "folder": "Ordner",
+      "new": "Neu",
+      "open": "Öffnen",
+      "play": "Spielen"
+    },
+    "emptyList": "Öffne eine Datei oder einen Ordner, um zu beginnen",
+    "errors": {
+      "createFailed": "Datei konnte nicht erstellt werden: {{message}}",
+      "scanFailed": "Ordner konnte nicht durchsucht werden: {{message}}"
+    },
+    "loadError": "Fehler: {{message}}",
     "meta": {
       "file": "Datei",
       "genre": "Genre"
     },
     "newFile": {
       "artistField": "Künstler",
+      "artistPlaceholder": "Unbekannt",
+      "bpmField": "BPM",
       "createButton": "Erstellen",
       "creating": "Wird erstellt...",
+      "invalidBpm": "Gib eine BPM größer als 0 ein",
       "keyModeField": "Tastenmodus",
       "title": "Neue BMS-Datei",
-      "titleField": "Titel"
+      "titleField": "Titel",
+      "titlePlaceholder": "Ohne Titel"
     },
+    "noChartsInFolder": "Keine BMS-Charts in diesem Ordner gefunden",
     "pinFile": "Anheften",
     "recentFiles": "Zuletzt geöffnete Dateien",
     "removeFromList": "Aus Liste entfernen",
+    "selectPrompt": "Wähle eine BMS-Datei, um Details anzuzeigen",
+    "shortcutsHint": "Strg+N für neu, Strg+O zum Öffnen",
     "stats": {
+      "bpm": "BPM",
       "invisible": "Unsichtbar",
       "keyMode": "Tastenmodus",
       "keysounds": "Schlüsselklänge",
@@ -156,8 +177,13 @@
     "saveAndLeaveLabel": "Speichern und verlassen"
   },
   "player": {
+    "autoplay": "Autoplay",
+    "backAria": "Zurück zur Startseite",
+    "errorTitle": "Fehler",
     "exitConfirm": "Ein Spiel läuft gerade. Wirklich verlassen?",
-    "keyBindingsHint": "Tastenbelegungen können unter Editor > Werkzeuge > Tastenbelegungen geändert werden"
+    "keyBindingsHint": "Tastenbelegungen können unter Editor > Werkzeuge > Tastenbelegungen geändert werden",
+    "loadingChart": "Chart wird geladen...",
+    "loadingKeysounds": "Keysounds werden geladen... {{loaded}}/{{total}}"
   },
   "stats": {
     "duration": "Dauer",

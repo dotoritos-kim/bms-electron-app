@@ -4,9 +4,9 @@ import { join, extname, basename, dirname } from 'path';
 import { handle } from './handle';
 import type { BmsFileInfo } from '../../shared/ipc-contract';
 import { t as tMenu } from '../i18n/menu';
+import { assertBmsPath, assertDirPath, assertFileName, assertPathString, assertString, AUDIO_EXTENSIONS, BMS_EXTENSIONS } from './validate';
 import { resolveInitialLocale } from '../store/localeStore';
 
-const BMS_EXTENSIONS = new Set(['.bms', '.bme', '.bml', '.pms', '.bmson']);
 
 export type { BmsFileInfo };
 
@@ -72,13 +72,16 @@ export function registerFileIpc(): void {
   });
 
   // Read BMS file as buffer (Electron serialises Buffer→Uint8Array on the renderer side)
-  handle('file:readBms', async (_event, filePath: string) => {
+  handle('file:readBms', async (_event, rawPath: string) => {
+    const filePath = assertBmsPath(rawPath, 'filePath');
     const buffer = await readFile(filePath);
     return buffer as unknown as Uint8Array;
   });
 
   // Save BMS file (atomic: write to temp, then rename)
-  handle('file:saveBms', async (_event, filePath: string, content: string) => {
+  handle('file:saveBms', async (_event, rawPath: string, rawContent: string) => {
+    const filePath = assertBmsPath(rawPath, 'filePath');
+    const content = assertString(rawContent, 'content');
     const tmpPath = filePath + '.tmp';
     await writeFile(tmpPath, content, 'utf-8');
     try {
@@ -92,7 +95,8 @@ export function registerFileIpc(): void {
   });
 
   // Read .bms.meta sidecar file
-  handle('file:readMeta', async (_event, bmsFilePath: string) => {
+  handle('file:readMeta', async (_event, rawPath: string) => {
+    const bmsFilePath = assertBmsPath(rawPath, 'bmsFilePath');
     try {
       const metaPath = bmsFilePath + '.meta';
       const content = await readFile(metaPath, 'utf-8');
@@ -103,14 +107,17 @@ export function registerFileIpc(): void {
   });
 
   // Write .bms.meta sidecar file
-  handle('file:saveMeta', async (_event, bmsFilePath: string, content: string) => {
+  handle('file:saveMeta', async (_event, rawPath: string, rawContent: string) => {
+    const bmsFilePath = assertBmsPath(rawPath, 'bmsFilePath');
+    const content = assertString(rawContent, 'content');
     const metaPath = bmsFilePath + '.meta';
     await writeFile(metaPath, content, 'utf-8');
     return true;
   });
 
   // Save As dialog + write
-  handle('file:saveAs', async (event, content: string, defaultName?: string) => {
+  handle('file:saveAs', async (event, rawContent: string, defaultName?: string) => {
+    const content = assertString(rawContent, 'content');
     if (dialogOpen) return null;
     dialogOpen = true;
     const win = getWindowFromEvent(event);
@@ -143,7 +150,8 @@ export function registerFileIpc(): void {
   });
 
   // Import keysound files: open dialog to pick audio files, copy them to BMS directory
-  handle('file:importKeysounds', async (event, bmsFilePath: string) => {
+  handle('file:importKeysounds', async (event, rawPath: string) => {
+    const bmsFilePath = assertBmsPath(rawPath, 'bmsFilePath');
     if (dialogOpen) return [];
     dialogOpen = true;
     const win = getWindowFromEvent(event);
@@ -182,14 +190,17 @@ export function registerFileIpc(): void {
   });
 
   // Write autosave file
-  handle('file:writeAutoSave', async (_event, filePath: string, content: string) => {
+  handle('file:writeAutoSave', async (_event, rawPath: string, rawContent: string) => {
+    const filePath = assertBmsPath(rawPath, 'filePath');
+    const content = assertString(rawContent, 'content');
     const autoPath = filePath + '.autosave';
     await writeFile(autoPath, content, 'utf-8');
     return true;
   });
 
   // Check for autosave file (returns content if newer than main file, null otherwise)
-  handle('file:checkAutoSave', async (_event, filePath: string) => {
+  handle('file:checkAutoSave', async (_event, rawPath: string) => {
+    const filePath = assertBmsPath(rawPath, 'filePath');
     const autoPath = filePath + '.autosave';
     try {
       const [mainStat, autoStat] = await Promise.all([
@@ -208,7 +219,8 @@ export function registerFileIpc(): void {
   });
 
   // Delete autosave file
-  handle('file:deleteAutoSave', async (_event, filePath: string) => {
+  handle('file:deleteAutoSave', async (_event, rawPath: string) => {
+    const filePath = assertBmsPath(rawPath, 'filePath');
     const autoPath = filePath + '.autosave';
     await unlink(autoPath).catch(() => {});
     return true;
@@ -309,11 +321,15 @@ export function registerFileIpc(): void {
     'file:saveWavSlice',
     async (
       _event,
-      destPath: string,
+      rawDestPath: string,
       pcmData: Float32Array,
       sampleRate: number,
       channels: number,
     ) => {
+      const destPath = assertPathString(rawDestPath, 'destPath');
+      if (!AUDIO_EXTENSIONS.has(extname(destPath).toLowerCase())) {
+        throw new Error('destPath must have an audio extension');
+      }
       const numSamples = pcmData.length / channels;
       const byteRate = sampleRate * channels * 2; // 16-bit
       const blockAlign = channels * 2;
@@ -354,12 +370,13 @@ export function registerFileIpc(): void {
     'file:saveWavSlices',
     async (
       _event,
-      bmsDir: string,
+      rawBmsDir: string,
       slices: Array<{ filename: string; pcmData: Float32Array; sampleRate: number; channels: number }>,
     ) => {
+      const bmsDir = assertDirPath(rawBmsDir, 'bmsDir');
       const saved: string[] = [];
       for (const slice of slices) {
-        const destPath = join(bmsDir, slice.filename);
+        const destPath = join(bmsDir, assertFileName(slice.filename, 'slice.filename'));
         const numSamples = slice.pcmData.length / slice.channels;
         const byteRate = slice.sampleRate * slice.channels * 2;
         const blockAlign = slice.channels * 2;
@@ -394,7 +411,8 @@ export function registerFileIpc(): void {
   );
 
   // List BMS files in folder (recursive)
-  handle('file:listBmsFolder', async (_event, folderPath: string) => {
+  handle('file:listBmsFolder', async (_event, rawFolderPath: string) => {
+    const folderPath = assertDirPath(rawFolderPath, 'folderPath');
     // Phase 1: collect all BMS paths (readdir only, no stat)
     const paths: Array<{ name: string; path: string; ext: string }> = [];
     await collectBmsPaths(folderPath, paths);

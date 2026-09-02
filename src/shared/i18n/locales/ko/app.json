@@ -182,22 +182,43 @@
     "renderingTitle": "렌더링 오류"
   },
   "home": {
+    "actions": {
+      "edit": "편집",
+      "folder": "폴더",
+      "new": "새로 만들기",
+      "open": "열기",
+      "play": "플레이"
+    },
+    "emptyList": "파일 또는 폴더를 열어 시작하세요",
+    "errors": {
+      "createFailed": "파일 생성 실패: {{message}}",
+      "scanFailed": "폴더 스캔 실패: {{message}}"
+    },
+    "loadError": "오류: {{message}}",
     "meta": {
       "file": "파일",
       "genre": "장르"
     },
     "newFile": {
       "artistField": "아티스트",
+      "artistPlaceholder": "미상",
+      "bpmField": "BPM",
       "createButton": "생성",
       "creating": "생성 중...",
+      "invalidBpm": "0보다 큰 BPM을 입력하세요",
       "keyModeField": "키모드",
       "title": "새 BMS 파일",
-      "titleField": "제목"
+      "titleField": "제목",
+      "titlePlaceholder": "제목 없음"
     },
+    "noChartsInFolder": "이 폴더에 BMS 채보가 없습니다",
     "pinFile": "고정",
     "recentFiles": "최근 파일",
     "removeFromList": "목록에서 제거",
+    "selectPrompt": "BMS 파일을 선택하면 상세 정보가 표시됩니다",
+    "shortcutsHint": "Ctrl+N 새 파일, Ctrl+O 열기",
     "stats": {
+      "bpm": "BPM",
       "invisible": "안 보이는 노트",
       "keyMode": "키모드",
       "keysounds": "키사운드",
@@ -219,8 +240,13 @@
     "saveBeforeLeave": "저장하지 않은 변경 사항이 있습니다. 저장 후 이동할까요?"
   },
   "player": {
+    "autoplay": "자동 플레이",
+    "backAria": "홈으로 돌아가기",
+    "errorTitle": "오류",
     "exitConfirm": "게임 플레이 중입니다. 나가시겠습니까?",
-    "keyBindingsHint": "키 설정은 편집 화면 > 도구 > 키 바인딩 설정에서 변경할 수 있습니다"
+    "keyBindingsHint": "키 설정은 편집 화면 > 도구 > 키 바인딩 설정에서 변경할 수 있습니다",
+    "loadingChart": "채보 로딩 중...",
+    "loadingKeysounds": "키음 로딩 중... {{loaded}}/{{total}}"
   },
   "stats": {
     "bgm": "BGM",

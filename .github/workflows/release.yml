@@ -38,7 +38,7 @@ jobs:
         with:
           ref: ${{ steps.ref.outputs.ref }}
           submodules: recursive
-          token: ${{ secrets.SIBLING_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
 
       - name: Setup Node.js 20.x
         uses: actions/setup-node@v4

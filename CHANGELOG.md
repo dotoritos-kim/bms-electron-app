@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.5.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.4.0...v0.5.0) (2026-10-21)
+
+
+### Features
+
+* **editor:** save charts in their source encoding; #EXBPMxx and #LNTYPE 2 ([bc680df](https://github.com/dotoritos-kim/bms-electron-app/commit/bc680df21aecf9fc387f6f5cdfbc914440361204))
+
+
+### Bug Fixes
+
+* **editor:** keep unmodelled channels and 10K 2P lanes on save; bump vendors ([3f4ccca](https://github.com/dotoritos-kim/bms-electron-app/commit/3f4ccca914a6dafe35af2f7db97cbb2a3734d6f6))
+* **editor:** keysound-heavy charts play and place correctly ([1389d1b](https://github.com/dotoritos-kim/bms-electron-app/commit/1389d1b2eb44351745226d0475bbf7c3d3cb3ea3))
+* **player:** pass chart judge/gauge headers and follow the BMS spec; bump vendors ([261ef43](https://github.com/dotoritos-kim/bms-electron-app/commit/261ef43084874c9733738972f17813a32a0db9ef))
+
 ## [0.4.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.3.2...v0.4.0) (2026-09-02)
 
 

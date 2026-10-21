@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.5.4](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.3...v0.5.4) (2026-10-21)
+
+
+### Bug Fixes
+
+* **i18n:** replace em dashes in locale strings ([bbcc055](https://github.com/dotoritos-kim/bms-electron-app/commit/bbcc055f9c94f78172949848cb91614b3f501340))
+
 ## [0.5.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.4.0...v0.5.0) (2026-10-21)
 
 

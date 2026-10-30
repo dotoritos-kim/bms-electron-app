@@ -4,10 +4,9 @@ import { App } from './App';
 import { localeService } from './services/LocaleService';
 import './global.css';
 
-// Kick off i18next boot in parallel with React render. With useSuspense:false
-// (see i18n/init.ts). App mounts immediately, so t() returns raw keys for the
-// brief window before namespaces land, then re-renders with translations.
-// This keeps E2E dev helpers (__DEV_OPEN_FILE__) reachable from first paint.
+// Kick off i18next boot in parallel with React render. App mounts immediately
+// and holds its tree until init settles (see App.tsx), but its effects run, so
+// E2E dev helpers (__DEV_OPEN_FILE__) are reachable from first paint.
 void localeService.init().catch((err: unknown) => {
   console.error('[boot] LocaleService.init failed:', err);
 });

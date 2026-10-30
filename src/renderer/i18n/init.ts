@@ -14,7 +14,7 @@
  */
 
 import i18next, { type i18n as I18nInstance } from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { initReactI18next, setDefaults, setI18n } from 'react-i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import {
   DEFAULT_LOCALE,
@@ -25,6 +25,14 @@ import {
 } from '../../shared/i18n/types';
 
 let initPromise: Promise<I18nInstance> | null = null;
+
+// Register the instance with react-i18next now, not when init() runs.
+// init() waits for the locale IPC first, and until initReactI18next is
+// applied useTranslation returns early with fewer hooks. A component that
+// renders in that window and again after it changes its hook count, and
+// React throws (the Editor crashed this way when opened right after boot).
+setDefaults({ useSuspense: false });
+setI18n(i18next);
 
 const backend = resourcesToBackend(async (language: string, namespace: string) => {
   // Vite handles the dynamic import. It splits each JSON into a chunk.

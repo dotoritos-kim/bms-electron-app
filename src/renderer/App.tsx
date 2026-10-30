@@ -80,6 +80,17 @@ export function App() {
     return session?.lastFile || null;
   });
   const navigationGuardRef = useRef<NavigationGuard | null>(null);
+  // Before locale init settles, i18next has no translator and t() returns
+  // undefined, so the tree waits for it. Hooks and dev helpers still run.
+  const [i18nReady, setI18nReady] = useState(() => i18next.isInitialized);
+  useEffect(() => {
+    if (i18nReady) return;
+    let alive = true;
+    void localeService.waitReady().catch(() => {}).then(() => {
+      if (alive) setI18nReady(true);
+    });
+    return () => { alive = false; };
+  }, [i18nReady]);
 
   // Save session on route/file changes
   useEffect(() => {
@@ -212,6 +223,8 @@ export function App() {
 
     return () => cleanups.forEach((fn) => fn());
   }, []);
+
+  if (!i18nReady) return null;
 
   return (
     <Layout route={route} onNavigate={handleNavigate} currentFile={currentFile}>

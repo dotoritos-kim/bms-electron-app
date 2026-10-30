@@ -2,7 +2,7 @@
  * Shared Playwright fixture for launching the Electron app.
  */
 import { test as base, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { readdirSync, rmSync } from 'fs';
+import { readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 
 const FIXTURES_DIR = resolve(__dirname, 'fixtures');
@@ -18,10 +18,30 @@ function clearAutoSaves(): void {
   }
 }
 
+/**
+ * Snapshot the fixture folder. Tests that press Ctrl+S save the chart for
+ * real (the writer normalises it), and every later test would then open a
+ * different file than the one in git. The returned function puts it back:
+ * changed files are rewritten, files the test created are removed.
+ */
+function snapshotFixtures(): () => void {
+  const files = () => readdirSync(FIXTURES_DIR, { withFileTypes: true }).filter((e) => e.isFile()).map((e) => e.name);
+  const before = new Map(files().map((name) => [name, readFileSync(join(FIXTURES_DIR, name))]));
+  return () => {
+    for (const name of files()) {
+      const path = join(FIXTURES_DIR, name);
+      const original = before.get(name);
+      if (!original) rmSync(path, { force: true });
+      else if (!readFileSync(path).equals(original)) writeFileSync(path, original);
+    }
+  };
+}
+
 export const test = base.extend<{ electronApp: ElectronApplication; window: Page }>({
   // eslint-disable-next-line no-empty-pattern
   electronApp: async ({}, use) => {
     clearAutoSaves();
+    const restoreFixtures = snapshotFixtures();
     const appPath = resolve(__dirname, '../../out/main/index.js');
     const { ELECTRON_RUN_AS_NODE, ...cleanEnv } = process.env;
     const electronApp = await electron.launch({
@@ -44,7 +64,7 @@ export const test = base.extend<{ electronApp: ElectronApplication; window: Page
         .catch(() => {});
     }
     await electronApp.close();
-    clearAutoSaves();
+    restoreFixtures();
   },
   window: async ({ electronApp }, use) => {
     const window = await electronApp.firstWindow();

@@ -100,12 +100,15 @@ export function registerAudioIpc(): void {
       const errors: Record<string, string> = {};
       const entries = Object.entries(keysoundMap);
 
+      let rootFiles: string[];
       try {
-        await readdir(dir);
+        rootFiles = await readdir(dir);
       } catch {
         return { results, errors: Object.fromEntries(entries.map(([id]) => [id, `Directory not found: ${dir}`])) };
       }
-      const resolveKeysound = createKeysoundResolver(dir, (d) => readdir(d));
+      // The resolver indexes the chart folder first: hand it the listing just read.
+      const root = resolve(dir);
+      const resolveKeysound = createKeysoundResolver(dir, (d) => (d === root ? Promise.resolve(rootFiles) : readdir(d)));
 
       // Several ids may point at the same file: read it once.
       const reads = new Map<string, Promise<ArrayBuffer>>();

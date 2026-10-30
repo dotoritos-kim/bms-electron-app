@@ -4,7 +4,7 @@ import { BMSParser, Timing, Positioning, Spacing, SongInfo, KeySounds, Notes, DE
 import type { BMSChart, BMSNote, EditableChartStyle, ISongInfoData } from '@rhythm-archive/bms-core';
 import { detectKeyMode } from '@rhythm-archive/bms-editor';
 import type { KeyMode, BpmChange, StopEvent, ScrollSpeedChange } from '@rhythm-archive/bms-editor';
-import { readMetaKeyMode, readWithLayout, readWithSavedKeyMode } from '../lib/keyModePersistence';
+import { metaKeyMode, readWithLayout, readWithSavedKeyMode } from '../lib/keyModePersistence';
 import { isScratchColumn, playedLanes } from '../lib/keyModeLanes';
 
 export interface LocalBmsChartInfo {
@@ -42,6 +42,8 @@ export interface LocalBmsChartInfo {
   sourceEncoding: string;
   /** Whether the file started with a byte order mark. */
   sourceBom: boolean;
+  /** The .bms.meta sidecar as read with the chart (null when absent), so the editor need not read it again. */
+  metaJson: string | null;
 }
 
 /**
@@ -97,7 +99,8 @@ export function useLocalBmsFile() {
     setState({ chart: null, isLoading: true, error: null });
 
     try {
-      // Read file from disk via IPC
+      // Read file and sidecar from disk via IPC (the sidecar once, in parallel)
+      const metaPromise = Promise.resolve().then(() => window.api.file.readMeta(filePath)).catch(() => null);
       const buffer = await window.api.file.readBms(filePath);
       const parser = new BMSParser();
       // readBuffer is async: reads buffer → detects encoding → returns string
@@ -118,7 +121,8 @@ export function useLocalBmsFile() {
       // Detect key mode (static import, no dynamic import)
       let keyMode = detectKeyMode(notes, chart.headers);
       // A key mode recorded at save time wins, read with the layout it was written in
-      let saved = readWithSavedKeyMode(chart, notes, await readMetaKeyMode(filePath), bmsString);
+      const metaJson = await metaPromise;
+      let saved = readWithSavedKeyMode(chart, notes, metaKeyMode(metaJson), bmsString);
       if (!isCurrent()) return;
       if (!saved && playedLanes(keyMode)) {
         // #4K / #6K / #8K lanes sit on fixed IIDX channels whatever the channel usage suggests
@@ -268,6 +272,7 @@ export function useLocalBmsFile() {
           bmsChart: chart,
           sourceEncoding: parser.encoding ?? 'utf-8',
           sourceBom: parser.bom,
+          metaJson,
         },
         isLoading: false,
         error: null,

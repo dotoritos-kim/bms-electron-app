@@ -66,10 +66,9 @@ export function keyModeMetaFields(
     : {};
 }
 
-/** Key mode recorded in the file's .bms.meta sidecar, if any (never throws). */
-export async function readMetaKeyMode(bmsPath: string): Promise<SavedKeyMode | undefined> {
+/** Key mode recorded in a .bms.meta sidecar's JSON, if any (never throws). */
+export function metaKeyMode(json: string | null | undefined): SavedKeyMode | undefined {
   try {
-    const json = await window.api.file.readMeta(bmsPath);
     if (!json) return undefined;
     const meta = deserializeMeta(json);
     const keyMode = applyMetaToState(meta).keyMode;

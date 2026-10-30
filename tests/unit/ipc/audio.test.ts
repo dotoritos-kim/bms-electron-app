@@ -237,6 +237,18 @@ describe('audio:readBatch — keysound path resolution', () => {
     for (const [d] of mockReaddir.mock.calls) expect(norm(d)).toMatch(/\/songs\/pack$/);
   });
 
+  it('lists each folder once per batch (the existence check is the chart folder index)', async () => {
+    mockReaddir.mockImplementation(async (d) => (norm(d).endsWith('/sounds') ? ['hat.wav'] : ['kick.wav', 'snare.wav']) as any);
+    mockReadFile.mockResolvedValue(Buffer.from([0x01]) as any);
+
+    const result = await getHandler('audio:readBatch')(fakeEvent, bmsPath, {
+      '01': 'kick.wav', '02': 'snare.wav', '03': 'sounds/hat.wav', '04': 'missing.wav',
+    });
+
+    expect(Object.keys(result.results).sort()).toEqual(['01', '02', '03']);
+    expect(mockReaddir.mock.calls.map(([d]) => norm(d)).sort()).toEqual(['/songs/pack', '/songs/pack/sounds']);
+  });
+
   it('gives ids sharing one file separate buffers (each is decoded/detached on its own)', async () => {
     mockReaddir.mockResolvedValue(['kick.wav'] as any);
     mockReadFile.mockResolvedValue(Buffer.from([0x01, 0x02]) as any);

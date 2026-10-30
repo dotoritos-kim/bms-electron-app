@@ -480,8 +480,6 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     let cancelled = false;
 
     const run = async () => {
-      // Sidecar read starts now and is applied before the notes are committed.
-      const metaPromise = window.api.file.readMeta(file.path).catch(() => null);
       // Phase A: convert BMSChart → EditableBMSChart (heaviest sync op)
       const ec = BMSWriter.fromBMSChart(chart.bmsChart!, chart.layoutStyle);
 
@@ -537,7 +535,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
       // Load .bms.meta sidecar before committing the notes. The key mode in it
       // was already applied by the loader (chart.keyMode / chart.layoutStyle).
-      const metaJson = await metaPromise;
+      // Sidecar read with the chart; applied before the notes are committed.
+      const metaJson = chart.metaJson;
       if (cancelled) return; // a newer file superseded this load
       if (metaJson) metaSidecarExistsRef.current = true;
       let metaUpdate: Partial<ReturnType<typeof useEditorStore.getState>> | null = null;
@@ -1034,11 +1033,16 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     }
   }, [chart, file.path, showToast, reportWriterWarnings]);
 
+  // Text of the .autosave file this session last wrote (null: none on disk),
+  // so a tick with nothing new since the last one does not rewrite it.
+  const lastAutoSaveRef = useRef<string | null>(null);
+
   // Clean up autosave on explicit save
   const originalHandleSave = handleSave;
   const handleSaveWithCleanup = useCallback(async (): Promise<boolean> => {
     const success = await originalHandleSave();
     if (success) {
+      lastAutoSaveRef.current = null;
       window.api.file.deleteAutoSave(file.path).catch(() => {});
     }
     return success;
@@ -1594,7 +1598,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     };
   }, []);
 
-  // Auto-save (every 60s when dirty)
+  // Auto-save (every 60s when dirty and changed since the last autosave)
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   useEffect(() => {
     autoSaveRef.current = setInterval(async () => {
@@ -1604,12 +1608,17 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         const origLnObj = chartToSave.headers.lnobj;
         const writer = new BMSWriter({ lnMode: origLnObj ? 'lnobj' : 'channel', lnObjValue: origLnObj || undefined });
         const content = tagAutoSave(writer.write(chartToSave), useEditorStore.getState().keyMode, chartToSave.style);
+        if (content === lastAutoSaveRef.current) return;
         await window.api.file.writeAutoSave(file.path, content);
+        lastAutoSaveRef.current = content;
       } catch (err) {
         console.warn('[Editor] Auto-save failed:', err);
       }
     }, 60000);
-    return () => clearInterval(autoSaveRef.current);
+    return () => {
+      clearInterval(autoSaveRef.current);
+      lastAutoSaveRef.current = null;
+    };
   }, [file.path]);
 
   // Check for autosave on mount
@@ -2586,6 +2595,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             onClick={() => {
               setActiveModal(null);
               autoSaveContentRef.current = null;
+              lastAutoSaveRef.current = null;
               window.api.file.deleteAutoSave(file.path).catch(() => {});
             }}
             className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
@@ -2597,6 +2607,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 await window.api.file.saveBms(file.path, encodeForSave(recovered.content, chart).content);
                 await syncMetaKeyMode(file.path, recovered.content, recovered.keyMode, recovered.style);
                 await window.api.file.deleteAutoSave(file.path).catch(() => {});
+                lastAutoSaveRef.current = null;
                 autoSaveContentRef.current = null;
                 load(file.path);
               }

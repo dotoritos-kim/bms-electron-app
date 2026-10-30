@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.5.9](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.8...v0.5.9) (2026-10-30)
+
+
+### Bug Fixes
+
+* **renderer:** editor no longer crashes when opened before the locale loads ([000b6c7](https://github.com/dotoritos-kim/bms-electron-app/commit/000b6c73b7968e0fbe6718a2c2297862435c27ff))
+
+
+### Performance Improvements
+
+* **io:** read the sidecar and chart folder once; skip unchanged autosaves ([a877497](https://github.com/dotoritos-kim/bms-electron-app/commit/a8774973dcb269eb7e46ff4718668f829043bc6b))
+
 ## [0.5.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.4.0...v0.5.0) (2026-10-21)
 
 

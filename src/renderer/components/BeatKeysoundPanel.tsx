@@ -214,11 +214,11 @@ function BgmManagerSection({
         <span className="text-zinc-600 ml-auto">{expanded ? '▼' : '▶'}</span>
       </button>
       {expanded && onRelayoutBgmLanes && (
-        <div className="flex items-center gap-1 mb-1.5 text-xs">
-          <span className="text-zinc-500 shrink-0">{t('panels.bgmManager.arrangeLabel')}</span>
+        <div className="flex flex-wrap items-center gap-1 mb-1.5 text-xs">
+          <span className="text-zinc-500 whitespace-nowrap">{t('panels.bgmManager.arrangeLabel')}</span>
           <button
             onClick={() => onRelayoutBgmLanes('packed')}
-            className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+            className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors whitespace-nowrap"
             title={t('panels.bgmManager.arrangePackedTooltip')}
             data-testid="bgm-arrange-packed"
           >
@@ -226,7 +226,7 @@ function BgmManagerSection({
           </button>
           <button
             onClick={() => onRelayoutBgmLanes('source')}
-            className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+            className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors whitespace-nowrap"
             title={t('panels.bgmManager.arrangeSourceTooltip')}
             data-testid="bgm-arrange-source"
           >

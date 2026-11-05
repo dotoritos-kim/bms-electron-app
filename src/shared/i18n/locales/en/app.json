@@ -79,26 +79,26 @@
     },
     "editorOptions": {
       "bgmLanesInView": {
-        "description": "With more BGM lanes than this the note area scrolls sideways (bottom scrollbar or Shift+wheel). Fewer lanes on screen make every lane wider.",
+        "description": "With more BGM lanes, scroll sideways with the bottom scrollbar or Shift+wheel. Fewer lanes on screen make them wider.",
         "label": "BGM lanes on screen"
       },
       "bgmLayout": {
-        "description": "Charts saved by this editor keep the layout stored in their .bms.meta. For the open chart, use \"Lanes\" in the BGM manager on the right.",
-        "label": "BGM lanes when a chart is opened",
+        "description": "Charts saved by this editor open with their saved layout. For the open chart, use \"Lanes\" in the BGM manager.",
+        "label": "BGM lanes when opening a chart",
         "options": {
-          "packed": "Pack left (notes on the same beat fill lanes from the left)",
+          "packed": "Pack left",
           "source": "As in file (the B1, B2… columns of BMSE / iBMSC)"
         }
       },
-      "description": "Applied right away and kept on this computer for every chart.",
+      "description": "Applied right away, for every chart.",
       "dragAxis": {
-        "description": "Which way dragged notes may move. Selected notes can also be moved with the arrow keys (← → ↑ ↓).",
+        "description": "Which way dragged notes can move. Selected notes also move with the arrow keys (← → ↑ ↓).",
         "label": "Note drag direction",
         "options": {
-          "auto": "Lock to the direction first moved (sideways or up/down)",
+          "auto": "Lock to the first direction moved",
           "free": "Freely",
-          "horizontal": "Sideways only (timing kept)",
-          "vertical": "Up/down only (lane kept)"
+          "horizontal": "Sideways only (keeps timing)",
+          "vertical": "Up/down only (keeps lane)"
         }
       },
       "resetButton": "Restore defaults",

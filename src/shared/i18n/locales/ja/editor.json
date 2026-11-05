@@ -136,7 +136,7 @@
     },
     "bgmManager": {
       "channelStats": "{{notes}}ノーツ、{{keysounds}}種キーサウンド",
-      "clickToSelect": "クリック: 選択 · Ctrl+クリック: 選択に追加",
+      "clickToSelect": "クリック: 選択 · Ctrl+クリック: 追加選択",
       "muteOff": "ミュート解除",
       "muteOn": "このチャンネルをミュート",
       "soloOff": "ソロ解除",
@@ -145,9 +145,9 @@
       "title_other": "BGMマネージャ ({{count}})",
       "arrangeLabel": "レーン配置",
       "arrangePacked": "左詰め",
-      "arrangePackedTooltip": "同じ拍のBGMノーツを左のレーンから詰めます (Ctrl+Zで元に戻す)",
-      "arrangeSource": "元の行順",
-      "arrangeSourceTooltip": "ファイルの#xxx01行の順番(BMSE・iBMSCのB1, B2…列)でレーンに置きます。楽器ごとに列を分けた譜面では楽器を1レーンにまとめられます (Ctrl+Zで元に戻す)"
+      "arrangePackedTooltip": "同じ拍のBGMノーツを左のレーンから詰めます (Ctrl+Zで復元可能)",
+      "arrangeSource": "元の順番",
+      "arrangeSourceTooltip": "ファイルの#xxx01行の順番でレーンに置きます。BMSE・iBMSCのB1, B2…列と同じなので、楽器ごとに列を分けた譜面は楽器ごとに1レーンにまとまります (Ctrl+Zで復元可能)"
     },
     "header": {
       "artistField": "アーティスト",
@@ -216,13 +216,14 @@
         "uploadFailed": "アップロード失敗"
       },
       "uploadTooltip": "キーサウンドファイルをアップロード",
-      "multiSelectHint": "Ctrl+クリック: 複数選択 · Shift+クリック: 範囲選択 · フォルダをCtrl+クリック: フォルダ全体",
+      "multiSelectHint": "Ctrl・Shift+クリックで複数選択",
       "checkedSummary": "キーサウンド{{count}}個を選択中",
       "clearChecked": "キーサウンドの選択を解除",
       "selectBgmNotes": "BGMノーツを選択",
-      "selectBgmNotesTooltip": "選択したキーサウンドを使うBGMノーツを曲全体から選択します",
+      "selectBgmNotesTooltip": "これらのキーサウンドを使うBGMノーツを曲全体から選択します",
       "selectAllNotes": "すべてのノーツを選択",
-      "selectAllNotesTooltip": "選択したキーサウンドを使うノーツをレーン・BGMを問わずすべて選択します"
+      "selectAllNotesTooltip": "これらのキーサウンドを使うノーツをレーン・BGMを問わず選択します",
+      "multiSelectHintDetail": "Ctrl+クリック: 1つずつ追加・解除\nShift+クリック: 範囲選択\nフォルダ名をCtrl+クリック: フォルダ全体"
     },
     "minimap": {
       "navigationTooltip": "クリック/ドラッグで移動",
@@ -544,15 +545,15 @@
         "writerSlotRerouted_other": "同じレーンの同じ位置に重なったオブジェクト{{count}}個は、キー音をBGMチャンネルに保存しました"
       },
       "keysoundSelection": {
-        "selected": "ノーツを{{count}}個選択しました",
-        "selected_other": "ノーツを{{count}}個選択しました",
+        "selected": "ノーツ{{count}}個を選択しました",
+        "selected_other": "ノーツ{{count}}個を選択しました",
         "none": "選択したキーサウンドを使うノーツはありません"
       },
       "bgmLanes": {
-        "arranged": "BGMノーツ{{count}}個のレーンを移動しました (Ctrl+Zで元に戻す)",
-        "arranged_other": "BGMノーツ{{count}}個のレーンを移動しました (Ctrl+Zで元に戻す)",
-        "unchanged": "BGMレーンはすでにその配置です",
-        "noSourceLines": "元の行の情報を持つBGMノーツがありません (エディタで置いたノーツ・bmsonには行の情報がありません)"
+        "arranged": "BGMノーツ{{count}}個のレーンを移動しました (Ctrl+Zで復元可能)",
+        "arranged_other": "BGMノーツ{{count}}個のレーンを移動しました (Ctrl+Zで復元可能)",
+        "unchanged": "すでに同じ配置です",
+        "noSourceLines": "元の行の情報を持つBGMノーツがありません。エディタで置いたノーツとbmson譜面には行の情報がありません。"
       }
     }
   },

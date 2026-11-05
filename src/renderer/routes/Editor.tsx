@@ -1940,6 +1940,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             </div>
             {leftPanelTab === 'keysound' ? (
               <KeysoundPanel
+                className="flex-1 min-h-0"
                 keysounds={keysoundRecord}
                 currentKeysound={currentKeysound}
                 onSelect={store.setCurrentKeysound}

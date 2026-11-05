@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, X } from 'lucide-react';
 import type { DragAxisLock } from '@rhythm-archive/bms-editor';
 import { AccessibleDialog } from './AccessibleDialog';
 import { useEditorOptions, BGM_LANES_IN_VIEW_RANGE } from '../stores/editorOptionsStore';
@@ -31,9 +31,15 @@ export function EditorOptionsDialog({ open, onClose }: EditorOptionsDialogProps)
       open={open}
       onClose={onClose}
       title={t('dialogs.editorOptions.title')}
-      className="border border-zinc-700 w-[460px] flex flex-col"
+      className="border border-zinc-700 w-[460px] max-h-[85vh] flex flex-col"
     >
-      <div className="px-4 pb-1 pt-1">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
+        <h2 className="text-sm font-semibold text-zinc-200">{t('dialogs.editorOptions.title')}</h2>
+        <button onClick={onClose} className="p-1 rounded hover:bg-zinc-800 text-zinc-400" aria-label={t('common:actions.close')}>
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="px-4 pb-1 pt-2">
         <p className="text-xs text-zinc-400">{t('dialogs.editorOptions.description')}</p>
       </div>
 

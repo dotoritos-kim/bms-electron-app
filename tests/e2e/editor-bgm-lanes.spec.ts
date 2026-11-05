@@ -113,7 +113,7 @@ test.describe('Keysound multi-select', () => {
 
     await window.getByTestId('keysound-checked-select-bgm').click();
     // inst01 is used twice (measures 1 and 2)
-    await expect(window.locator('text=/노트 4개를 선택|Selected 4 notes|ノーツを4個選択/')).toBeVisible();
+    await expect(window.locator('text=/노트 4개 선택됨|Selected 4 notes|ノーツ4個を選択/')).toBeVisible();
   });
 });
 
@@ -121,7 +121,7 @@ test.describe('Drag direction lock', () => {
   /** Select the key note (key.wav) through the keysound panel. */
   async function selectKeyNote(window: Page) {
     await window.locator('button', { hasText: 'key.wav' }).first().click({ modifiers: ['Control'] });
-    await window.getByText(/^모든 노트 선택$|^Select all notes$/).click();
+    await window.getByTestId('keysound-checked-select-all').click();
     await window.waitForTimeout(500);
   }
 

@@ -136,7 +136,7 @@
     },
     "bgmManager": {
       "channelStats": "{{notes}}개 노트, {{keysounds}}종 키음",
-      "clickToSelect": "클릭: 선택 · Ctrl+클릭: 선택에 추가",
+      "clickToSelect": "클릭: 선택 · Ctrl+클릭: 추가 선택",
       "muteOff": "뮤트 해제",
       "muteOn": "이 채널 뮤트",
       "soloOff": "솔로 해제",
@@ -145,9 +145,9 @@
       "title_other": "BGM 매니저 ({{count}}개)",
       "arrangeLabel": "레인 배치",
       "arrangePacked": "왼쪽 정렬",
-      "arrangePackedTooltip": "같은 박자의 BGM 노트를 왼쪽 레인부터 채웁니다 (Ctrl+Z로 되돌리기)",
-      "arrangeSource": "원본 줄 순서",
-      "arrangeSourceTooltip": "파일의 #xxx01 줄 순서(BMSE·iBMSC의 B1, B2… 열)대로 레인에 놓습니다. 악기별로 열을 나눠 쓴 차트에서 악기를 한 레인에 모을 수 있습니다 (Ctrl+Z로 되돌리기)"
+      "arrangePackedTooltip": "같은 박자의 BGM 노트를 왼쪽 레인부터 채웁니다 (Ctrl+Z로 복원 가능)",
+      "arrangeSource": "원본 순서",
+      "arrangeSourceTooltip": "파일의 #xxx01 줄 순서대로 레인에 놓습니다. BMSE·iBMSC의 B1, B2… 열과 같아서, 악기별로 열을 나눈 차트는 악기마다 한 레인에 모입니다 (Ctrl+Z로 복원 가능)"
     },
     "header": {
       "artistField": "아티스트",
@@ -216,13 +216,14 @@
         "uploadFailed": "업로드 실패"
       },
       "uploadTooltip": "키음 파일 업로드",
-      "multiSelectHint": "Ctrl+클릭: 여러 개 선택 · Shift+클릭: 범위 선택 · 폴더 Ctrl+클릭: 폴더 전체",
+      "multiSelectHint": "Ctrl·Shift+클릭으로 여러 키음 선택",
       "checkedSummary": "키음 {{count}}개 선택됨",
       "clearChecked": "키음 선택 해제",
       "selectBgmNotes": "BGM 노트 선택",
-      "selectBgmNotesTooltip": "선택한 키음을 쓰는 BGM 노트를 곡 전체에서 선택합니다",
+      "selectBgmNotesTooltip": "이 키음들을 쓰는 BGM 노트를 곡 전체에서 선택합니다",
       "selectAllNotes": "모든 노트 선택",
-      "selectAllNotesTooltip": "선택한 키음을 쓰는 노트를 레인·BGM 구분 없이 모두 선택합니다"
+      "selectAllNotesTooltip": "이 키음들을 쓰는 노트를 레인·BGM 구분 없이 선택합니다",
+      "multiSelectHintDetail": "Ctrl+클릭: 하나씩 추가·해제\nShift+클릭: 범위 선택\n폴더 이름 Ctrl+클릭: 폴더 전체"
     },
     "minimap": {
       "navigationTooltip": "클릭/드래그하여 이동",
@@ -544,15 +545,15 @@
         "writerSlotRerouted_other": "같은 레인의 같은 위치에 겹친 오브젝트 {{count}}개는 키음을 BGM 채널에 저장했습니다"
       },
       "keysoundSelection": {
-        "selected": "노트 {{count}}개를 선택했습니다",
-        "selected_other": "노트 {{count}}개를 선택했습니다",
+        "selected": "노트 {{count}}개 선택됨",
+        "selected_other": "노트 {{count}}개 선택됨",
         "none": "선택한 키음을 쓰는 노트가 없습니다"
       },
       "bgmLanes": {
-        "arranged": "BGM 노트 {{count}}개의 레인을 옮겼습니다 (Ctrl+Z로 되돌리기)",
-        "arranged_other": "BGM 노트 {{count}}개의 레인을 옮겼습니다 (Ctrl+Z로 되돌리기)",
-        "unchanged": "BGM 레인이 이미 그 배치입니다",
-        "noSourceLines": "원본 줄 정보가 있는 BGM 노트가 없습니다 (편집기에서 놓은 노트·bmson은 줄 정보가 없습니다)"
+        "arranged": "BGM 노트 {{count}}개의 레인을 옮김 (Ctrl+Z로 복원 가능)",
+        "arranged_other": "BGM 노트 {{count}}개의 레인을 옮김 (Ctrl+Z로 복원 가능)",
+        "unchanged": "이미 같은 배치입니다",
+        "noSourceLines": "원본 줄 정보가 있는 BGM 노트가 없습니다. 편집기에서 놓은 노트와 bmson 차트에는 줄 정보가 없습니다."
       }
     }
   },

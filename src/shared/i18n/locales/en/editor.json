@@ -147,9 +147,9 @@
       "title_other": "BGM Manager ({{count}})",
       "arrangeLabel": "Lanes",
       "arrangePacked": "Pack left",
-      "arrangePackedTooltip": "Fill BGM lanes from the left on every beat (Ctrl+Z to undo)",
+      "arrangePackedTooltip": "Fill the BGM lanes from the left on each beat (Ctrl+Z to undo)",
       "arrangeSource": "As in file",
-      "arrangeSourceTooltip": "Put each note on the lane of the #xxx01 line it was written on (the B1, B2… columns of BMSE / iBMSC). Charts with one instrument per column get one instrument per lane (Ctrl+Z to undo)"
+      "arrangeSourceTooltip": "Put each note on the lane of its #xxx01 line, like the B1, B2… columns of BMSE / iBMSC. Charts with one instrument per column get one instrument per lane (Ctrl+Z to undo)"
     },
     "header": {
       "artistField": "Artist",
@@ -192,7 +192,7 @@
         "highlightOn": "Highlight in chart",
         "replace": "Replace keysound...",
         "selectBgm": "Select BGM notes for this keysound",
-        "selectBgmChecked": "Select BGM notes of the {{count}} picked keysounds"
+        "selectBgmChecked": "Select BGM notes of the picked keysounds ({{count}})"
       },
       "countSummary": "{{count}} keysound(s)",
       "empty": "No keysounds loaded",
@@ -218,13 +218,14 @@
         "uploadFailed": "Upload failed"
       },
       "uploadTooltip": "Upload keysound files",
-      "multiSelectHint": "Ctrl+click: pick several · Shift+click: range · Ctrl+click a folder: whole folder",
-      "checkedSummary": "{{count}} keysound(s) picked",
+      "multiSelectHint": "Ctrl/Shift+click to pick several",
+      "checkedSummary": "Picked keysounds: {{count}}",
       "clearChecked": "Clear picked keysounds",
       "selectBgmNotes": "Select BGM notes",
-      "selectBgmNotesTooltip": "Select every BGM note that uses the picked keysounds",
+      "selectBgmNotesTooltip": "Select every BGM note in the chart that uses these keysounds",
       "selectAllNotes": "Select all notes",
-      "selectAllNotesTooltip": "Select every note (key lanes and BGM) that uses the picked keysounds"
+      "selectAllNotesTooltip": "Select every note that uses these keysounds, on key lanes and BGM",
+      "multiSelectHintDetail": "Ctrl+click: add / remove one\nShift+click: pick a range\nCtrl+click a folder name: the whole folder"
     },
     "minimap": {
       "navigationTooltip": "Click or drag to navigate",
@@ -576,8 +577,8 @@
         "arranged": "Moved {{count}} BGM notes to other lanes (Ctrl+Z to undo)",
         "arranged_other": "Moved {{count}} BGM notes to other lanes (Ctrl+Z to undo)",
         "arranged_one": "Moved {{count}} BGM note to another lane (Ctrl+Z to undo)",
-        "unchanged": "The BGM lanes are already laid out that way",
-        "noSourceLines": "No BGM note has a source line (notes placed in the editor and bmson charts have none)"
+        "unchanged": "The lanes are already laid out that way",
+        "noSourceLines": "No BGM note has a source line. Notes placed in the editor and bmson charts have none."
       }
     }
   },

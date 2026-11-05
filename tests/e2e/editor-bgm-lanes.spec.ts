@@ -165,6 +165,9 @@ test.describe('Drag direction lock', () => {
   }
 
   async function drag(window: Page, from: { x: number; y: number }, dx: number, dy: number) {
+    // Toasts (e.g. after Ctrl+Z) sit over the bottom of the canvas; a release
+    // on one counts as outside the canvas and cancels the drag.
+    await expect(window.locator('[role="status"] > *')).toHaveCount(0, { timeout: 8000 });
     await window.mouse.move(from.x, from.y);
     await window.mouse.down();
     await window.mouse.move(from.x + dx, from.y + dy, { steps: 12 });

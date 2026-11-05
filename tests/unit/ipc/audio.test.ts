@@ -203,7 +203,8 @@ describe('audio:readBatch', () => {
 
 describe('audio:readBatch — keysound path resolution', () => {
   const bmsPath = '/songs/pack/chart.bms';
-  const norm = (p: unknown) => String(p).replace(/\\/g, '/');
+  // POSIX form: on Windows path.resolve adds a drive ("C:\songs\pack")
+  const norm = (p: unknown) => String(p).replace(/\\/g, '/').replace(/^[A-Za-z]:/, '');
 
   it('finds keysounds in subfolders (#WAV01 sounds\\kick.wav)', async () => {
     mockReaddir.mockImplementation(async (d) => (norm(d).endsWith('/sounds')

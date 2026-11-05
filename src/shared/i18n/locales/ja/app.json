@@ -74,6 +74,33 @@
       "tapsCount_other": "BPM ({{count}}回タップ)",
       "title": "BPMタップ"
     },
+    "editorOptions": {
+      "bgmLanesInView": {
+        "description": "BGMレーンがこれより多いとノーツ領域を左右にスクロールします (下のスクロールバーまたはShift+ホイール)。減らすとレーンが広くなります。",
+        "label": "1画面に表示するBGMレーン数"
+      },
+      "bgmLayout": {
+        "description": "このエディタで保存した譜面は.bms.metaに保存された配置をそのまま使います。開いている譜面は右側のBGMマネージャの「レーン配置」ですぐに変えられます。",
+        "label": "譜面を開くときのBGMレーン配置",
+        "options": {
+          "packed": "左詰め (同じ拍のノーツを左のレーンから)",
+          "source": "元の行順 (BMSE・iBMSCのB1, B2…列のまま)"
+        }
+      },
+      "description": "すぐに適用され、すべての譜面に共通でこのPCに保存されます。",
+      "dragAxis": {
+        "description": "ノーツをドラッグで動かすときに動ける方向です。選択したノーツは矢印キー(← → ↑ ↓)でも動かせます。",
+        "label": "ノーツのドラッグ方向",
+        "options": {
+          "auto": "最初に動かした方向に固定 (左右または上下)",
+          "free": "自由に",
+          "horizontal": "左右のみ (タイミング維持)",
+          "vertical": "上下のみ (レーン維持)"
+        }
+      },
+      "resetButton": "デフォルトに戻す",
+      "title": "編集オプション"
+    },
     "keyBindings": {
       "conflictBadge": "競合",
       "conflictSummary": "{{count}}項目でキー競合",

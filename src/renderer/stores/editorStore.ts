@@ -18,6 +18,7 @@ import type { PatternTemplate, PatternNote } from '../lib/patternTemplates';
 import { createBeatConverter, beatToMF44 } from '../lib/beatConverter';
 import type { BeatConverter, MeasureFraction } from '../lib/beatConverter';
 import { beatToTick, tickToBeat, TICKS_PER_BEAT } from '../lib/tickUtils';
+import { computeBgmLanes, type BgmLaneLayout } from '../lib/bgmLanes';
 
 // --- Raw header parser (for applyRawHeaders action) ---
 
@@ -542,6 +543,12 @@ interface EditorState {
     target: { kind: 'bgm'; channel: number } | { kind: 'playable'; column: string },
     laneIds: string[],
   ) => void;
+  /**
+   * Re-lays out the BGM lanes ('packed' = fill from the left per tick, 'source'
+   * = the `#xxx01:` line each note was read from). One undo step; notes on a
+   * locked BGM layer stay put. Returns how many notes changed lane.
+   */
+  relayoutBgmLanes: (layout: BgmLaneLayout) => number;
   removeKeysoundLayer: (noteId: string, layerIndex: number) => void;
 
   // Clipboard
@@ -1077,6 +1084,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return u ? { ...n, ...u } : n;
     });
     set({ notes, _noteIndex: buildNoteIndex(notes), hasUnsavedChanges: true });
+  },
+
+  relayoutBgmLanes: (layout) => {
+    const s = get();
+    const locked = new Set(s.notes.filter((n) => n.noteType === 'bgm' && isNoteLocked(s.layerConfig, n)).map((n) => n.id));
+    const lanes = computeBgmLanes(s.notes, layout, locked);
+    let changed = 0;
+    for (const n of s.notes) {
+      const ch = lanes.get(n.id);
+      if (ch !== undefined && ch !== n.bgmChannel) changed++;
+    }
+    if (changed === 0) return 0;
+    s.pushUndo('Arrange BGM lanes');
+    const notes = s.notes.map((n) => {
+      const ch = lanes.get(n.id);
+      return ch !== undefined && ch !== n.bgmChannel ? { ...n, bgmChannel: ch } : n;
+    });
+    set({ notes, hasUnsavedChanges: true });
+    return changed;
   },
 
   // Select everything that can be edited: hidden and locked layers are skipped.

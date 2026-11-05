@@ -137,14 +137,19 @@
     },
     "bgmManager": {
       "channelStats": "{{notes}} notes, {{keysounds}} keysounds",
-      "clickToSelect": "Click: select",
+      "clickToSelect": "Click: select · Ctrl+click: add to selection",
       "muteOff": "Unmute",
       "muteOn": "Mute this channel",
       "soloOff": "Unsolo",
       "soloOn": "Solo this channel",
       "title": "BGM Manager ({{count}})",
       "title_one": "BGM Manager ({{count}})",
-      "title_other": "BGM Manager ({{count}})"
+      "title_other": "BGM Manager ({{count}})",
+      "arrangeLabel": "Lanes",
+      "arrangePacked": "Pack left",
+      "arrangePackedTooltip": "Fill BGM lanes from the left on every beat (Ctrl+Z to undo)",
+      "arrangeSource": "As in file",
+      "arrangeSourceTooltip": "Put each note on the lane of the #xxx01 line it was written on (the B1, B2… columns of BMSE / iBMSC). Charts with one instrument per column get one instrument per lane (Ctrl+Z to undo)"
     },
     "header": {
       "artistField": "Artist",
@@ -186,7 +191,8 @@
         "highlightOff": "Clear highlight",
         "highlightOn": "Highlight in chart",
         "replace": "Replace keysound...",
-        "selectBgm": "Select BGM notes for this keysound"
+        "selectBgm": "Select BGM notes for this keysound",
+        "selectBgmChecked": "Select BGM notes of the {{count}} picked keysounds"
       },
       "countSummary": "{{count}} keysound(s)",
       "empty": "No keysounds loaded",
@@ -211,7 +217,14 @@
         "unsupportedFormat": "Unsupported format: {{name}} (WAV/OGG/MP3 only)",
         "uploadFailed": "Upload failed"
       },
-      "uploadTooltip": "Upload keysound files"
+      "uploadTooltip": "Upload keysound files",
+      "multiSelectHint": "Ctrl+click: pick several · Shift+click: range · Ctrl+click a folder: whole folder",
+      "checkedSummary": "{{count}} keysound(s) picked",
+      "clearChecked": "Clear picked keysounds",
+      "selectBgmNotes": "Select BGM notes",
+      "selectBgmNotesTooltip": "Select every BGM note that uses the picked keysounds",
+      "selectAllNotes": "Select all notes",
+      "selectAllNotesTooltip": "Select every note (key lanes and BGM) that uses the picked keysounds"
     },
     "minimap": {
       "navigationTooltip": "Click or drag to navigate",
@@ -375,7 +388,8 @@
         "saveBtnUnsaved": "Save (Ctrl+S)",
         "saveTitle": "Save (Ctrl+S)",
         "settingsLabel": "Settings",
-        "settingsTitle": "Settings menu"
+        "settingsTitle": "Settings menu",
+        "editorOptionsLabel": "Editor options"
       },
       "inputDialog": {
         "bpmAdd": "Add BPM",
@@ -551,6 +565,19 @@
         "writerSlotRerouted": "{{count}} object(s) shared a position with another note in the same lane; their keysounds were saved on the BGM channel",
         "writerSlotRerouted_one": "{{count}} object(s) shared a position with another note in the same lane; their keysounds were saved on the BGM channel",
         "writerSlotRerouted_other": "{{count}} object(s) shared a position with another note in the same lane; their keysounds were saved on the BGM channel"
+      },
+      "keysoundSelection": {
+        "selected": "Selected {{count}} notes",
+        "selected_other": "Selected {{count}} notes",
+        "selected_one": "Selected {{count}} note",
+        "none": "No notes use the picked keysounds"
+      },
+      "bgmLanes": {
+        "arranged": "Moved {{count}} BGM notes to other lanes (Ctrl+Z to undo)",
+        "arranged_other": "Moved {{count}} BGM notes to other lanes (Ctrl+Z to undo)",
+        "arranged_one": "Moved {{count}} BGM note to another lane (Ctrl+Z to undo)",
+        "unchanged": "The BGM lanes are already laid out that way",
+        "noSourceLines": "No BGM note has a source line (notes placed in the editor and bmson charts have none)"
       }
     }
   },

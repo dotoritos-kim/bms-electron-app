@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Music, Headphones, Layers, ArrowRight, Trash2 } from 'lucide-react';
 import type { EditableBMSNote } from '@rhythm-archive/bms-core';
+import type { BgmLaneLayout } from '../lib/bgmLanes';
 
 interface BeatKeysoundPanelProps {
   notes: EditableBMSNote[];
@@ -11,8 +12,10 @@ interface BeatKeysoundPanelProps {
   isAudioReady?: boolean;
   /** BGM 매니저 모드: 채널별 그룹핑 + 일괄 작업 */
   showBgmManager?: boolean;
-  /** BGM 노트 선택 콜백 */
-  onSelectBgmNotes?: (noteIds: string[]) => void;
+  /** BGM 노트 선택 콜백 (additive: Ctrl+클릭 — 기존 선택에 추가) */
+  onSelectBgmNotes?: (noteIds: string[], additive?: boolean) => void;
+  /** BGM 레인 재배치 (왼쪽 정렬 / 원본 줄 순서) */
+  onRelayoutBgmLanes?: (layout: BgmLaneLayout) => void;
   /** BGM 노트 삭제 콜백 */
   onDeleteNotes?: (noteIds: string[]) => void;
   /** BGM 채널 변경 콜백 */
@@ -35,6 +38,7 @@ export function BeatKeysoundPanel({
   isAudioReady,
   showBgmManager,
   onSelectBgmNotes,
+  onRelayoutBgmLanes,
   onDeleteNotes,
   onChangeBgmChannel,
   bgmSoloChannel,
@@ -147,7 +151,7 @@ export function BeatKeysoundPanel({
       </div>
 
       {/* BGM 매니저 */}
-      {showBgmManager && <BgmManagerSection notes={notes} wavDefinitions={wavDefinitions} onSelectBgmNotes={onSelectBgmNotes} onDeleteNotes={onDeleteNotes} onChangeBgmChannel={onChangeBgmChannel} bgmSoloChannel={bgmSoloChannel} bgmMutedChannels={bgmMutedChannels} onToggleSolo={onToggleSolo} onToggleMute={onToggleMute} />}
+      {showBgmManager && <BgmManagerSection notes={notes} wavDefinitions={wavDefinitions} onSelectBgmNotes={onSelectBgmNotes} onRelayoutBgmLanes={onRelayoutBgmLanes} onDeleteNotes={onDeleteNotes} onChangeBgmChannel={onChangeBgmChannel} bgmSoloChannel={bgmSoloChannel} bgmMutedChannels={bgmMutedChannels} onToggleSolo={onToggleSolo} onToggleMute={onToggleMute} />}
     </div>
   );
 }
@@ -157,6 +161,7 @@ function BgmManagerSection({
   notes,
   wavDefinitions,
   onSelectBgmNotes,
+  onRelayoutBgmLanes,
   onDeleteNotes,
   onChangeBgmChannel,
   bgmSoloChannel,
@@ -166,7 +171,8 @@ function BgmManagerSection({
 }: {
   notes: EditableBMSNote[];
   wavDefinitions: Map<string, string>;
-  onSelectBgmNotes?: (noteIds: string[]) => void;
+  onSelectBgmNotes?: (noteIds: string[], additive?: boolean) => void;
+  onRelayoutBgmLanes?: (layout: BgmLaneLayout) => void;
   onDeleteNotes?: (noteIds: string[]) => void;
   onChangeBgmChannel?: (noteIds: string[], newChannel: number) => void;
   bgmSoloChannel?: number | null;
@@ -207,6 +213,27 @@ function BgmManagerSection({
         {t('panels.bgmManager.title', { count: channelGroups.reduce((s, [, g]) => s + g.count, 0) })}
         <span className="text-zinc-600 ml-auto">{expanded ? '▼' : '▶'}</span>
       </button>
+      {expanded && onRelayoutBgmLanes && (
+        <div className="flex items-center gap-1 mb-1.5 text-xs">
+          <span className="text-zinc-500 shrink-0">{t('panels.bgmManager.arrangeLabel')}</span>
+          <button
+            onClick={() => onRelayoutBgmLanes('packed')}
+            className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+            title={t('panels.bgmManager.arrangePackedTooltip')}
+            data-testid="bgm-arrange-packed"
+          >
+            {t('panels.bgmManager.arrangePacked')}
+          </button>
+          <button
+            onClick={() => onRelayoutBgmLanes('source')}
+            className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+            title={t('panels.bgmManager.arrangeSourceTooltip')}
+            data-testid="bgm-arrange-source"
+          >
+            {t('panels.bgmManager.arrangeSource')}
+          </button>
+        </div>
+      )}
       {expanded && (
         <div className="space-y-1.5">
           {channelGroups.map(([ch, group]) => (
@@ -235,7 +262,7 @@ function BgmManagerSection({
                 {Array.from(group.keysounds.entries()).map(([ks, ids]) => (
                   <button
                     key={ks}
-                    onClick={() => onSelectBgmNotes?.(ids)}
+                    onClick={(e) => onSelectBgmNotes?.(ids, e.ctrlKey || e.metaKey)}
                     className="flex items-center gap-0.5 px-1 py-0.5 rounded bg-purple-900/30 text-purple-300 hover:bg-purple-800/40 transition-colors"
                     title={`${ks}: ${wavDefinitions.get(ks) || '?'} (${ids.length})\n${t('panels.bgmManager.clickToSelect')}`}
                   >

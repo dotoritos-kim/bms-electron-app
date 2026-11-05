@@ -430,6 +430,41 @@ insertMeasure 성능 개선 + .bms.meta 로드 race condition 방어:
 
 ---
 
-*최종 업데이트: 2026-04-06*
+## BGM 레인 원본 배치 + 키음 다중 선택 + 드래그 방향 고정 (2026-11-05)
+
+사용자 피드백으로 시작한 작업입니다. 프롬프트는 받은 그대로 옮겼습니다.
+
+```
+BGM 키음 노트들을 왼쪽으로 정렬하는게 아니라 채널 위치 그대로 유지해서 보는 방법이 있나요? 악기별로 노트를 일괄 선택해서 노트 영역에 배치하기 위해서에요
+이를 추가해야 한다면 좌우 스크롤바나 좌우 사이즈 조절이 필요해질 수 있어요
+노트의 상하 위치를 고정한채로 좌우로만 움직이고 싶은 경우가 많은데, 이때에는 드래그를 하지 말고 좌우 방향키를 쓰면 되긴 하네요
+나머지 대부분의 문제들은 UI에 잘 설명이 잘 되어있어서 스스로 해결할 수 있었습니다
+```
+
+이 질문에 아래 세 가지 안을 제안했습니다.
+
+- A. 여러 키음을 묶어서 선택: 키음 패널에서 Ctrl/Shift+클릭으로 악기의 키음 여러 개를 고르고, 그 BGM 노트를 한 번에 선택
+- B. 원본 줄 순서대로 BGM 레인 배치: 파일의 `#xxx01` 줄 순서(BMSE·iBMSC의 B1, B2… 열)를 레인 번호로 쓰고, 레인이 많아지면 가로 스크롤
+- C. 드래그 방향 고정: 노트를 좌우 또는 상하로만 움직이기
+
+```
+A,B 기능 만들고 C 는 옵션에 설정할 수 있도록 구현
+```
+
+```
+작업 계속 진행하고, 프롬프트들도 리모트에 문서로 공개
+```
+
+결과:
+
+- bms-core: 컴파일러가 BGM 객체에 `bgmLine`(마디 안에서 몇 번째 `#xxx01:` 줄인지, 빈 `00` 줄 포함)을 기록하고, BGM 노트로 넘깁니다.
+- 앱: `lib/bgmLanes.ts`의 `computeBgmLanes`('packed' / 'source'), 스토어 `relayoutBgmLanes`(되돌리기 가능), BGM 매니저의 "레인 배치" 버튼
+- bms-editor: `KeysoundPanel` 다중 선택(`onSelectNotesByKeysounds`), `NoteChartEditor`의 `bgmLanesInView`(가로 스크롤바, Shift+휠)와 `dragAxisLock`
+- 설정 → 편집 옵션: 노트 드래그 방향(자유 / 처음 방향 고정 / 좌우만 / 상하만), 차트를 열 때 BGM 레인 배치, 한 화면에 보일 BGM 레인 수
+- 테스트: `tests/bgm-lines.test.ts`(bms-core), `tests/unit/lib/bgmLanes.test.ts`, `tests/unit/stores/editorOptionsStore.test.ts`, `tests/unit/components/KeysoundPanelMultiSelect.test.tsx`, `tests/e2e/editor-bgm-lanes.spec.ts`
+
+---
+
+*최종 업데이트: 2026-11-05*
 *총 완료 Phase: 1~7 + QA + UX개편 + Tick 전환 + Draw Call 최적화*
 *최종 테스트: 1044/1044 통과*

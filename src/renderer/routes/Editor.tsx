@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
-import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Settings2, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap, Maximize2, X as XIcon } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Play, Pause, Square, Volume2, VolumeX, Loader2, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, GitCompare, Timer, PlayCircle, Wand2, Scissors, Piano, Keyboard, ChevronDown, Settings2, GripVertical, Undo2, Redo2, Eye, EyeOff, Lock, Unlock, Bookmark, Map as LucideMap, Maximize2, X as XIcon, SlidersHorizontal } from 'lucide-react';
 // Removed react-resizable-panels. Using custom resize handles instead
 import {
   NoteChartEditor,
@@ -35,6 +35,10 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { PatternLibraryPanel } from '../components/PatternLibraryPanel';
 import { KeyBindingsDialog } from '../components/KeyBindingsDialog';
 import { NoteColorDialog } from '../components/NoteColorDialog';
+import { EditorOptionsDialog } from '../components/EditorOptionsDialog';
+import { useEditorOptions } from '../stores/editorOptionsStore';
+import { computeBgmLanes } from '../lib/bgmLanes';
+import type { BgmLaneLayout } from '../lib/bgmLanes';
 import type { PatternTemplate } from '../lib/patternTemplates';
 import type { KeyBinding, KeyAction } from '../lib/keyBindings';
 import { loadKeyBindings, normalizeKeyCombo, buildActionMap, TOOL_ACTION_MAP } from '../lib/keyBindings';
@@ -62,7 +66,7 @@ import { computeDensityMap, densityToColor } from '../lib/densityMap';
 import type { MinimapDensityEntry, MinimapBookmark } from '@rhythm-archive/bms-editor';
 // WaveformOverlay removed. It requires NoteChartEditor internal coordinate sync to work correctly
 
-type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | 'addBookmark' | 'clipboardHistory' | 'noteColor' | null;
+type ModalType = 'noteSearch' | 'bpmTap' | 'measureInsert' | 'measureDelete' | 'keyBindings' | 'autoChart' | 'midi' | 'autoSaveRecovery' | 'replaceKeysound' | 'addBookmark' | 'clipboardHistory' | 'noteColor' | 'editorOptions' | null;
 type OverlayType = 'diff' | 'audioSlicer' | 'playTest' | null;
 
 /** Isolated playback time display. Subscribes only to playbackTime/playbackDuration to avoid re-rendering the entire Editor */
@@ -155,9 +159,11 @@ function formatTime(sec: number): string {
 // The bridge components below subscribe instead, blocking re-renders of the Editor body.
 
 /** NoteChartEditor: subscribes to currentBeat only for scrollToBeat */
-function NoteChartEditorBridge(props: Omit<NoteChartEditorProps, 'scrollToBeat'>) {
+function NoteChartEditorBridge(props: Omit<NoteChartEditorProps, 'scrollToBeat' | 'dragAxisLock' | 'bgmLanesInView'>) {
   const scrollToBeat = useEditorStore(s => s.currentBeat);
-  return <NoteChartEditor {...props} scrollToBeat={scrollToBeat} />;
+  const dragAxisLock = useEditorOptions(s => s.dragAxisLock);
+  const bgmLanesInView = useEditorOptions(s => s.bgmLanesInView);
+  return <NoteChartEditor {...props} scrollToBeat={scrollToBeat} dragAxisLock={dragAxisLock} bgmLanesInView={bgmLanesInView} />;
 }
 
 /** Minimap: isolated currentBeat subscription */
@@ -516,21 +522,16 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           measure,
           fraction,
           channel: n.channel || '',
+          ...(n.bgmLine !== undefined ? { sourceBgmLine: n.bgmLine } : {}),
         };
       });
 
-      // Assign bgmChannel to BGM notes (group same-tick notes into separate lanes)
-      const bgmTickGroups = new Map<number, EditableBMSNote[]>();
+      // Spread same-tick BGM notes over separate lanes (packed from the left,
+      // or on the #xxx01 line they were written on — editor option)
+      const bgmLanes = computeBgmLanes(editableNotes, useEditorOptions.getState().bgmLaneLayout);
       for (const n of editableNotes) {
-        if (n.noteType !== 'bgm') continue;
-        const group = bgmTickGroups.get(n.tick);
-        if (group) group.push(n);
-        else bgmTickGroups.set(n.tick, [n]);
-      }
-      for (const group of bgmTickGroups.values()) {
-        for (let i = 0; i < group.length; i++) {
-          group[i].bgmChannel = i;
-        }
+        const ch = bgmLanes.get(n.id);
+        if (ch !== undefined) n.bgmChannel = ch;
       }
 
       // Load .bms.meta sidecar before committing the notes. The key mode in it
@@ -687,6 +688,35 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const handleSelectBgmNotesByKeysound = useCallback((keysoundId: string) => {
     store.selectByFilter({ keysounds: [canonId(keysoundId)], noteTypes: ['bgm'] });
   }, []);
+
+  // Several keysounds at once (e.g. every sample of one instrument)
+  const handleSelectNotesByKeysounds = useCallback((keysoundIds: string[], { bgmOnly }: { bgmOnly: boolean }) => {
+    store.selectByFilter({ keysounds: keysoundIds.map(canonId), ...(bgmOnly ? { noteTypes: ['bgm'] } : {}) });
+    const count = useEditorStore.getState().selectedNotes.size;
+    if (count > 0) showToast(t('editor:routes.editor.keysoundSelection.selected', { count }), 'success');
+    else showToast(t('editor:routes.editor.keysoundSelection.none'), 'error');
+  }, [showToast]);
+
+  // BGM manager: click selects a channel's notes of one keysound, Ctrl+click adds them
+  const handleSelectBgmManagerNotes = useCallback((ids: string[], additive?: boolean) => {
+    if (!additive) { store.selectNotes(ids); return; }
+    const selected = useEditorStore.getState().selectedNotes;
+    // Ctrl+click on a group that is already fully selected takes it back out
+    const allSelected = ids.every((id) => selected.has(id));
+    store.selectNotes(ids.filter((id) => selected.has(id) === allSelected), true);
+  }, []);
+
+  const handleRelayoutBgmLanes = useCallback((layout: BgmLaneLayout) => {
+    const state = useEditorStore.getState();
+    if (layout === 'source' && !state.notes.some((n) => n.noteType === 'bgm' && n.sourceBgmLine !== undefined)) {
+      showToast(t('editor:routes.editor.bgmLanes.noSourceLines'), 'warning');
+      return;
+    }
+    const changed = store.relayoutBgmLanes(layout);
+    showToast(changed > 0
+      ? t('editor:routes.editor.bgmLanes.arranged', { count: changed })
+      : t('editor:routes.editor.bgmLanes.unchanged'), changed > 0 ? 'success' : 'info');
+  }, [showToast]);
 
   const handleReplaceKeysound = useCallback((keysoundId: string) => {
     setReplaceKeysoundTarget(keysoundId);
@@ -1866,6 +1896,14 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 <span className="h-3.5 w-3.5 rounded-sm border border-zinc-500 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #88aaff 0%, #ff4444 50%, #666 100%)' }} />
                 {t('editor:routes.editor.header.noteColorLabel')}
               </button>
+              <button
+                onClick={() => { openModal('editorOptions'); setShowToolMenu(false); }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+                data-testid="editor-options-btn"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5 text-zinc-400" />
+                {t('editor:routes.editor.header.editorOptionsLabel')}
+              </button>
             </div>
           )}
         </div>
@@ -1916,6 +1954,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 highlightKeysound={highlightKeysound}
                 onHighlightKeysound={store.setHighlightKeysound}
                 onSelectBgmNotes={handleSelectBgmNotesByKeysound}
+                onSelectNotesByKeysounds={handleSelectNotesByKeysounds}
               />
             ) : (
               <PatternLibraryPanel
@@ -2262,7 +2301,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               onPreview={previewKeysound}
               isAudioReady={isAudioReady}
               showBgmManager
-              onSelectBgmNotes={(ids) => store.selectNotes(ids)}
+              onSelectBgmNotes={handleSelectBgmManagerNotes}
+              onRelayoutBgmLanes={handleRelayoutBgmLanes}
               onDeleteNotes={store.deleteNotes}
               bgmSoloChannel={bgmSoloChannel}
               bgmMutedChannels={bgmMutedChannels}
@@ -2922,6 +2962,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         colors={customColors}
         onSetColor={(key, value) => store.setCustomColor(key, value)}
         onResetAll={store.resetCustomColors}
+      />
+
+      {/* ===== EDITOR OPTIONS DIALOG ===== */}
+      <EditorOptionsDialog
+        open={activeModal === 'editorOptions'}
+        onClose={() => setActiveModal(null)}
       />
 
       {/* ===== TOAST STACK ===== */}

@@ -136,13 +136,18 @@
     },
     "bgmManager": {
       "channelStats": "{{notes}}개 노트, {{keysounds}}종 키음",
-      "clickToSelect": "클릭: 선택",
+      "clickToSelect": "클릭: 선택 · Ctrl+클릭: 선택에 추가",
       "muteOff": "뮤트 해제",
       "muteOn": "이 채널 뮤트",
       "soloOff": "솔로 해제",
       "soloOn": "이 채널만 솔로",
       "title": "BGM 매니저 ({{count}}개)",
-      "title_other": "BGM 매니저 ({{count}}개)"
+      "title_other": "BGM 매니저 ({{count}}개)",
+      "arrangeLabel": "레인 배치",
+      "arrangePacked": "왼쪽 정렬",
+      "arrangePackedTooltip": "같은 박자의 BGM 노트를 왼쪽 레인부터 채웁니다 (Ctrl+Z로 되돌리기)",
+      "arrangeSource": "원본 줄 순서",
+      "arrangeSourceTooltip": "파일의 #xxx01 줄 순서(BMSE·iBMSC의 B1, B2… 열)대로 레인에 놓습니다. 악기별로 열을 나눠 쓴 차트에서 악기를 한 레인에 모을 수 있습니다 (Ctrl+Z로 되돌리기)"
     },
     "header": {
       "artistField": "아티스트",
@@ -184,7 +189,8 @@
         "highlightOff": "하이라이트 해제",
         "highlightOn": "차트에서 하이라이트",
         "replace": "키음 일괄 교체...",
-        "selectBgm": "이 키음 BGM 노트 선택"
+        "selectBgm": "이 키음 BGM 노트 선택",
+        "selectBgmChecked": "선택한 키음 {{count}}개의 BGM 노트 선택"
       },
       "countSummary": "{{count}}개 키음",
       "empty": "키음이 없습니다",
@@ -209,7 +215,14 @@
         "unsupportedFormat": "지원하지 않는 형식: {{name}} (WAV/OGG/MP3만 가능)",
         "uploadFailed": "업로드 실패"
       },
-      "uploadTooltip": "키음 파일 업로드"
+      "uploadTooltip": "키음 파일 업로드",
+      "multiSelectHint": "Ctrl+클릭: 여러 개 선택 · Shift+클릭: 범위 선택 · 폴더 Ctrl+클릭: 폴더 전체",
+      "checkedSummary": "키음 {{count}}개 선택됨",
+      "clearChecked": "키음 선택 해제",
+      "selectBgmNotes": "BGM 노트 선택",
+      "selectBgmNotesTooltip": "선택한 키음을 쓰는 BGM 노트를 곡 전체에서 선택합니다",
+      "selectAllNotes": "모든 노트 선택",
+      "selectAllNotesTooltip": "선택한 키음을 쓰는 노트를 레인·BGM 구분 없이 모두 선택합니다"
     },
     "minimap": {
       "navigationTooltip": "클릭/드래그하여 이동",
@@ -371,7 +384,8 @@
         "saveBtnUnsaved": "저장 (Ctrl+S)",
         "saveTitle": "저장 (Ctrl+S)",
         "settingsLabel": "설정",
-        "settingsTitle": "설정 메뉴"
+        "settingsTitle": "설정 메뉴",
+        "editorOptionsLabel": "편집 옵션"
       },
       "inputDialog": {
         "bpmAdd": "BPM 추가",
@@ -528,6 +542,17 @@
         "writerSlotDropped_other": "겹친 지뢰 노트 {{count}}개는 저장할 수 없어 제외했습니다",
         "writerSlotRerouted": "같은 레인의 같은 위치에 겹친 오브젝트 {{count}}개는 키음을 BGM 채널에 저장했습니다",
         "writerSlotRerouted_other": "같은 레인의 같은 위치에 겹친 오브젝트 {{count}}개는 키음을 BGM 채널에 저장했습니다"
+      },
+      "keysoundSelection": {
+        "selected": "노트 {{count}}개를 선택했습니다",
+        "selected_other": "노트 {{count}}개를 선택했습니다",
+        "none": "선택한 키음을 쓰는 노트가 없습니다"
+      },
+      "bgmLanes": {
+        "arranged": "BGM 노트 {{count}}개의 레인을 옮겼습니다 (Ctrl+Z로 되돌리기)",
+        "arranged_other": "BGM 노트 {{count}}개의 레인을 옮겼습니다 (Ctrl+Z로 되돌리기)",
+        "unchanged": "BGM 레인이 이미 그 배치입니다",
+        "noSourceLines": "원본 줄 정보가 있는 BGM 노트가 없습니다 (편집기에서 놓은 노트·bmson은 줄 정보가 없습니다)"
       }
     }
   },

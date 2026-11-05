@@ -77,6 +77,33 @@
       "tapsCount_other": "BPM ({{count}} taps)",
       "title": "BPM Tap"
     },
+    "editorOptions": {
+      "bgmLanesInView": {
+        "description": "With more BGM lanes than this the note area scrolls sideways (bottom scrollbar or Shift+wheel). Fewer lanes on screen make every lane wider.",
+        "label": "BGM lanes on screen"
+      },
+      "bgmLayout": {
+        "description": "Charts saved by this editor keep the layout stored in their .bms.meta. For the open chart, use \"Lanes\" in the BGM manager on the right.",
+        "label": "BGM lanes when a chart is opened",
+        "options": {
+          "packed": "Pack left (notes on the same beat fill lanes from the left)",
+          "source": "As in file (the B1, B2… columns of BMSE / iBMSC)"
+        }
+      },
+      "description": "Applied right away and kept on this computer for every chart.",
+      "dragAxis": {
+        "description": "Which way dragged notes may move. Selected notes can also be moved with the arrow keys (← → ↑ ↓).",
+        "label": "Note drag direction",
+        "options": {
+          "auto": "Lock to the direction first moved (sideways or up/down)",
+          "free": "Freely",
+          "horizontal": "Sideways only (timing kept)",
+          "vertical": "Up/down only (lane kept)"
+        }
+      },
+      "resetButton": "Restore defaults",
+      "title": "Editor options"
+    },
     "keyBindings": {
       "conflictBadge": "conflict",
       "conflictSummary": "{{count}} bindings conflict",

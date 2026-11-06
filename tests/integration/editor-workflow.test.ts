@@ -35,6 +35,12 @@ function makeNote(
   };
 }
 
+/** BGM note whose keysound a pattern / generated note takes over. */
+function makeBgm(id: number, beat: number, keysound: string): EditableBMSNote {
+  const { measure, fraction } = beatToMF(beat);
+  return { id: `bgm-${id}`, beat, measure, fraction, keysound, noteType: 'bgm', bgmChannel: 0, channel: '01' } as EditableBMSNote;
+}
+
 const LANE_IDS = ['SC', '1', '2', '3', '4', '5', '6', '7'];
 
 function initStoreWithNotes(notes: EditableBMSNote[], nextId?: number) {
@@ -322,7 +328,7 @@ describe('Editor Workflow: Cross-module interactions', () => {
 
   describe('Pattern workflow', () => {
     it('12. Apply pattern -> notes created at correct positions', () => {
-      initStoreWithNotes([], 1);
+      initStoreWithNotes([makeBgm(1, 4, 'A1'), makeBgm(2, 4.5, 'A2'), makeBgm(3, 5, 'A3')], 4);
 
       const pattern: PatternTemplate = {
         id: 'test-stairs',
@@ -340,10 +346,12 @@ describe('Editor Workflow: Cross-module interactions', () => {
       };
 
       const laneIds = ['1', '2', '3', '4', '5', '6', '7'];
-      useEditorStore.getState().applyPattern(pattern, laneIds, 4, '2', '01');
+      useEditorStore.getState().applyPattern(pattern, laneIds, 4, '2');
 
       const state = useEditorStore.getState();
+      // the BGM notes were handed over to the new notes
       expect(state.notes.length).toBe(3);
+      expect(state.notes.every((n) => n.noteType === 'playable')).toBe(true);
 
       const sorted = [...state.notes].sort((a, b) => a.beat - b.beat);
       // startColumn='2' is at index 1 in laneIds, so:
@@ -356,6 +364,7 @@ describe('Editor Workflow: Cross-module interactions', () => {
       expect(sorted[1].column).toBe('3');
       expect(sorted[2].beat).toBe(5);
       expect(sorted[2].column).toBe('4');
+      expect(sorted.map((n) => n.keysound)).toEqual(['A1', 'A2', 'A3']);
     });
 
     it('13. Selection to pattern -> pattern data has correct offsets', () => {
@@ -386,8 +395,8 @@ describe('Editor Workflow: Cross-module interactions', () => {
       expect(sorted[2].columnIndex).toBe(1); // '3' -> idx 2, minus minCol=1 -> 1
     });
 
-    it('14. Apply pattern -> undo -> pattern removed', () => {
-      initStoreWithNotes([], 1);
+    it('14. Apply pattern -> undo -> pattern removed and BGM notes restored', () => {
+      initStoreWithNotes([makeBgm(1, 0, 'A1'), makeBgm(2, 0, 'A2')], 3);
 
       const pattern: PatternTemplate = {
         id: 'test-chord',
@@ -404,11 +413,12 @@ describe('Editor Workflow: Cross-module interactions', () => {
       };
 
       const laneIds = ['1', '2', '3'];
-      useEditorStore.getState().applyPattern(pattern, laneIds, 0, '1', '01');
-      expect(useEditorStore.getState().notes.length).toBe(2);
+      useEditorStore.getState().applyPattern(pattern, laneIds, 0, '1');
+      expect(useEditorStore.getState().notes.filter((n) => n.noteType === 'playable').length).toBe(2);
+      expect(useEditorStore.getState().notes.some((n) => n.noteType === 'bgm')).toBe(false);
 
       useEditorStore.getState().undo();
-      expect(useEditorStore.getState().notes.length).toBe(0);
+      expect(useEditorStore.getState().notes.map((n) => n.id).sort()).toEqual(['bgm-1', 'bgm-2']);
     });
   });
 

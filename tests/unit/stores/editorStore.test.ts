@@ -1,4 +1,4 @@
-import { useEditorStore } from '../../../src/renderer/stores/editorStore';
+import { useEditorStore, DEFAULT_LAYER_CONFIG } from '../../../src/renderer/stores/editorStore';
 
 // --- Helpers ---
 
@@ -1278,9 +1278,15 @@ describe('Patterns', () => {
       beatLength: 2,
     };
 
+    // A placed note takes over the BGM note sounding at its beat; without one it is not placed.
+    const seedBgm = (beats: number[]) => seedNotes(beats.map((beat, i) => mockNote({
+      id: `bgm-${i}`, beat, column: undefined, noteType: 'bgm', keysound: `B${i}`, bgmChannel: 0,
+    })));
+    const playable = () => store().notes.filter((n) => n.noteType === 'playable');
+
     it('should create notes from pattern at given position', () => {
-      seedNotes([]);
-      act().applyPattern(simplePattern as any, laneIds, 0, 'K1', '01');
+      seedBgm([0, 1, 2]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K1');
       expect(store().notes).toHaveLength(3);
       expect(store().notes[0].beat).toBe(0);
       expect(store().notes[0].column).toBe('K1');
@@ -1291,25 +1297,25 @@ describe('Patterns', () => {
     });
 
     it('should offset by startBeat', () => {
-      seedNotes([]);
-      act().applyPattern(simplePattern as any, laneIds, 8, 'K1', '01');
+      seedBgm([8, 9]);
+      act().applyPattern(simplePattern as any, laneIds, 8, 'K1');
       expect(store().notes[0].beat).toBe(8);
       expect(store().notes[1].beat).toBe(9);
     });
 
     it('should offset by startColumn', () => {
-      seedNotes([]);
-      act().applyPattern(simplePattern as any, laneIds, 0, 'K3', '01');
+      seedBgm([0, 1, 2]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K3');
       expect(store().notes[0].column).toBe('K3');
       expect(store().notes[1].column).toBe('K4');
       expect(store().notes[2].column).toBe('K5');
     });
 
     it('should skip notes that fall outside lane range', () => {
-      seedNotes([]);
-      act().applyPattern(simplePattern as any, laneIds, 0, 'K6', '01');
+      seedBgm([0, 1, 2]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K6');
       // K6=index5, col0->K6, col1->K7(6), col2->index7 (out of range)
-      expect(store().notes).toHaveLength(2);
+      expect(playable()).toHaveLength(2);
     });
 
     it('should skip notes with negative beats', () => {
@@ -1317,41 +1323,55 @@ describe('Patterns', () => {
         ...simplePattern,
         notes: [{ beatOffset: -1, columnIndex: 0, noteType: 'playable' as const }],
       };
-      seedNotes([]);
-      act().applyPattern(pattern as any, laneIds, 0, 'K1', '01');
-      expect(store().notes).toHaveLength(0);
+      seedBgm([-1]);
+      act().applyPattern(pattern as any, laneIds, 0, 'K1');
+      expect(playable()).toHaveLength(0);
     });
 
     it('should assign new IDs', () => {
-      seedNotes([]);
-      act().applyPattern(simplePattern as any, laneIds, 0, 'K1', '01');
+      seedBgm([0, 1, 2]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K1');
       const ids = store().notes.map((n) => n.id);
       expect(new Set(ids).size).toBe(3); // all unique
     });
 
     it('should select applied notes', () => {
-      seedNotes([]);
-      act().applyPattern(simplePattern as any, laneIds, 0, 'K1', '01');
+      seedBgm([0, 1, 2]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K1');
       expect(store().selectedNotes.size).toBe(3);
     });
 
-    it('should use provided keysound', () => {
+    it('should place nothing where no BGM is sounding, and report how many were skipped', () => {
       seedNotes([]);
-      act().applyPattern(simplePattern as any, laneIds, 0, 'K1', 'FF');
-      expect(store().notes[0].keysound).toBe('FF');
+      expect(act().applyPattern(simplePattern as any, laneIds, 0, 'K1')).toEqual({ placed: 0, noKeysound: 3 });
+      expect(store().notes).toHaveLength(0);
+      expect(store().undoStack).toHaveLength(0);
+    });
+
+    it('should move the BGM keysound at each beat onto the placed note', () => {
+      seedNotes([
+        mockNote({ id: 'bgm-1', beat: 0, column: undefined, noteType: 'bgm', keysound: 'AA', bgmChannel: 0 }),
+        mockNote({ id: 'bgm-2', beat: 2, column: undefined, noteType: 'bgm', keysound: 'BB', bgmChannel: 0 }),
+        mockNote({ id: 'bgm-3', beat: 5, column: undefined, noteType: 'bgm', keysound: 'CC', bgmChannel: 0 }),
+      ]);
+      expect(act().applyPattern(simplePattern as any, laneIds, 0, 'K1')).toEqual({ placed: 2, noKeysound: 1 }); // beat 1 has no BGM
+      const byBeat = new Map(playable().map((n) => [n.beat, n.keysound]));
+      expect([...byBeat.entries()]).toEqual([[0, 'AA'], [2, 'BB']]);
+      // taken BGM notes are gone, the untouched one stays
+      expect(store().notes.filter((n) => n.noteType === 'bgm').map((n) => n.id)).toEqual(['bgm-3']);
     });
 
     it('should do nothing with empty pattern', () => {
       const emptyPattern = { ...simplePattern, notes: [] };
       seedNotes([]);
-      act().applyPattern(emptyPattern as any, laneIds, 0, 'K1', '01');
+      act().applyPattern(emptyPattern as any, laneIds, 0, 'K1');
       expect(store().notes).toHaveLength(0);
     });
 
     it('should do nothing with empty laneIds', () => {
-      seedNotes([]);
-      act().applyPattern(simplePattern as any, [], 0, 'K1', '01');
-      expect(store().notes).toHaveLength(0);
+      seedBgm([0]);
+      act().applyPattern(simplePattern as any, [], 0, 'K1');
+      expect(playable()).toHaveLength(0);
     });
 
     it('should handle LN patterns with endBeatOffset', () => {
@@ -1359,15 +1379,176 @@ describe('Patterns', () => {
         ...simplePattern,
         notes: [{ beatOffset: 0, columnIndex: 0, noteType: 'long' as const, endBeatOffset: 4 }],
       };
-      seedNotes([]);
-      act().applyPattern(lnPattern as any, laneIds, 2, 'K1', '01');
+      seedBgm([2]);
+      act().applyPattern(lnPattern as any, laneIds, 2, 'K1');
       expect(store().notes[0].endBeat).toBe(6); // 2 + 4
     });
 
     it('should push undo entry', () => {
-      seedNotes([]);
-      act().applyPattern(simplePattern as any, laneIds, 0, 'K1', '01');
+      seedBgm([0, 1, 2]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K1');
       expect(store().undoStack).toHaveLength(1);
+    });
+
+    it('should take invisible notes as sources too', () => {
+      seedNotes([mockNote({ id: 'inv-1', beat: 0, column: 'K7', noteType: 'invisible', keysound: 'IV' })]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K1');
+      expect(store().notes).toHaveLength(1);
+      expect(store().notes[0].id.startsWith('note-')).toBe(true);
+      expect(store().notes[0].keysound).toBe('IV');
+    });
+
+    it('should take an invisible note in the same lane and beat instead of treating it as occupying the spot', () => {
+      seedNotes([mockNote({ id: 'inv-1', beat: 0, column: 'K1', noteType: 'invisible', keysound: 'IV' })]);
+      expect(act().applyPattern(simplePattern as any, laneIds, 0, 'K1')).toEqual({ placed: 1, noKeysound: 2 });
+      expect(store().notes.map((n) => [n.noteType, n.column, n.keysound])).toEqual([['playable', 'K1', 'IV']]);
+    });
+
+    it('should still treat a landmine in the same lane and beat as occupying the spot', () => {
+      seedNotes([
+        mockNote({ id: 'mine-1', beat: 0, column: 'K1', noteType: 'landmine', keysound: '05' }),
+        mockNote({ id: 'bgm-1', beat: 0, column: undefined, noteType: 'bgm', keysound: 'AA', bgmChannel: 0 }),
+      ]);
+      expect(act().applyPattern(simplePattern as any, laneIds, 0, 'K1')).toEqual({ placed: 0, noKeysound: 2 });
+      expect(store().notes.map((n) => n.id).sort()).toEqual(['bgm-1', 'mine-1']);
+    });
+
+    it('should never take notes from a locked layer', () => {
+      seedBgm([0, 1, 2]);
+      useEditorStore.setState({ layerConfig: { ...DEFAULT_LAYER_CONFIG, bgm: { ...DEFAULT_LAYER_CONFIG.bgm, locked: true } } });
+      expect(act().applyPattern(simplePattern as any, laneIds, 0, 'K1')).toEqual({ placed: 0, noKeysound: 3 });
+      expect(store().notes.filter((n) => n.noteType === 'bgm')).toHaveLength(3);
+      expect(store().undoStack).toHaveLength(0);
+    });
+
+    it('should carry layered keysounds (additionalKeysounds) over to the placed note', () => {
+      const layers = [{ keysound: 'ZZ', layerType: 'bgm' }];
+      seedNotes([mockNote({ id: 'bgm-1', beat: 0, column: undefined, noteType: 'bgm', keysound: 'AA', bgmChannel: 0, additionalKeysounds: layers })]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K1');
+      expect(store().notes[0].keysound).toBe('AA');
+      expect(store().notes[0].additionalKeysounds).toEqual(layers);
+    });
+
+    it('should not let a duplicate-skipped note consume a source', () => {
+      seedNotes([
+        mockNote({ id: 'key-1', beat: 0, column: 'K1', keysound: 'KK' }), // already occupies pattern note 0
+        mockNote({ id: 'bgm-1', beat: 0, column: undefined, noteType: 'bgm', keysound: 'AA', bgmChannel: 0 }),
+      ]);
+      expect(act().applyPattern(simplePattern as any, laneIds, 0, 'K1')).toEqual({ placed: 0, noKeysound: 2 });
+      expect(store().notes.map((n) => n.id).sort()).toEqual(['bgm-1', 'key-1']);
+    });
+
+    it('should hand each BGM note to one pattern note even when two sit in the same window', () => {
+      const chord = {
+        ...simplePattern,
+        notes: [
+          { beatOffset: 0, columnIndex: 0, noteType: 'playable' as const },
+          { beatOffset: 0, columnIndex: 1, noteType: 'playable' as const },
+        ],
+      };
+      seedNotes([mockNote({ id: 'bgm-1', beat: 0.1, column: undefined, noteType: 'bgm', keysound: 'AA', bgmChannel: 0 })]);
+      expect(act().applyPattern(chord as any, laneIds, 0, 'K1')).toEqual({ placed: 1, noKeysound: 1 });
+      expect(playable()).toHaveLength(1);
+    });
+
+    it('should not take over for landmine/invisible pattern notes: they keep the current keysound and leave BGM alone', () => {
+      const pattern = {
+        ...simplePattern,
+        notes: [
+          { beatOffset: 0, columnIndex: 0, noteType: 'landmine' as const },
+          { beatOffset: 1, columnIndex: 1, noteType: 'invisible' as const },
+        ],
+      };
+      seedBgm([0, 1]);
+      useEditorStore.setState({ currentKeysound: '0Z' });
+      expect(act().applyPattern(pattern as any, laneIds, 0, 'K1')).toEqual({ placed: 2, noKeysound: 0 });
+      expect(store().notes.filter((n) => n.noteType === 'bgm')).toHaveLength(2);
+      expect(store().notes.filter((n) => n.noteType !== 'bgm').map((n) => [n.noteType, n.keysound])).toEqual([['landmine', '0Z'], ['invisible', '0Z']]);
+    });
+
+    it('should restore the BGM notes with one undo', () => {
+      seedBgm([0, 1, 2]);
+      act().applyPattern(simplePattern as any, laneIds, 0, 'K1');
+      expect(store().notes.some((n) => n.noteType === 'bgm')).toBe(false);
+      act().undo();
+      expect(store().notes.map((n) => n.id).sort()).toEqual(['bgm-0', 'bgm-1', 'bgm-2']);
+    });
+  });
+
+  describe('applyGeneratedNotes()', () => {
+    const gen = (beat: number, columnIndex: number, extra: Record<string, unknown> = {}) => ({ beat, columnIndex, noteType: 'playable' as const, ...extra });
+    const bgm = (id: string, beat: number, keysound: string) =>
+      mockNote({ id, beat, column: undefined, noteType: 'bgm', keysound, bgmChannel: 0 });
+    const playable = () => store().notes.filter((n) => n.noteType === 'playable');
+
+    it('moves the BGM keysounds onto the generated notes and removes the sources', () => {
+      seedNotes([bgm('b0', 0, 'AA'), bgm('b1', 1, 'BB'), bgm('b9', 9, 'ZZ')]);
+      const r = act().applyGeneratedNotes([gen(0, 0), gen(1, 2)], laneIds);
+      expect(r).toEqual({ placed: 2, noKeysound: 0, occupied: 0 });
+      expect(playable().map((n) => [n.beat, n.column, n.keysound])).toEqual([[0, 'K1', 'AA'], [1, 'K3', 'BB']]);
+      expect(store().notes.filter((n) => n.noteType === 'bgm').map((n) => n.id)).toEqual(['b9']);
+    });
+
+    it('takes over an invisible note in the same lane and beat', () => {
+      seedNotes([mockNote({ id: 'inv-1', beat: 0, column: 'K1', noteType: 'invisible', keysound: 'IV' })]);
+      expect(act().applyGeneratedNotes([gen(0, 0)], laneIds)).toEqual({ placed: 1, noKeysound: 0, occupied: 0 });
+      expect(store().notes.map((n) => [n.noteType, n.column, n.keysound])).toEqual([['playable', 'K1', 'IV']]);
+    });
+
+    it('skips notes where nothing is sounding and counts them', () => {
+      seedNotes([bgm('b0', 0, 'AA')]);
+      expect(act().applyGeneratedNotes([gen(0, 0), gen(4, 1)], laneIds)).toEqual({ placed: 1, noKeysound: 1, occupied: 0 });
+      expect(playable()).toHaveLength(1);
+    });
+
+    it('drops notes overlapping an existing note in the same column and does not consume a source for them', () => {
+      seedNotes([mockNote({ id: 'key-1', beat: 0, column: 'K1', keysound: 'KK' }), bgm('b0', 0, 'AA')]);
+      expect(act().applyGeneratedNotes([gen(0, 0)], laneIds)).toEqual({ placed: 0, noKeysound: 0, occupied: 1 });
+      expect(store().notes.map((n) => n.id).sort()).toEqual(['b0', 'key-1']);
+    });
+
+    it('does nothing (no undo entry) when nothing can be placed', () => {
+      seedNotes([]);
+      expect(act().applyGeneratedNotes([gen(0, 0)], laneIds)).toEqual({ placed: 0, noKeysound: 1, occupied: 0 });
+      expect(store().undoStack).toHaveLength(0);
+      expect(store().hasUnsavedChanges).toBe(false);
+    });
+
+    it('is a single undo step that restores the BGM notes', () => {
+      seedNotes([bgm('b0', 0, 'AA'), bgm('b1', 1, 'BB')]);
+      act().applyGeneratedNotes([gen(0, 0), gen(1, 1)], laneIds);
+      expect(store().undoStack).toHaveLength(1);
+      act().undo();
+      expect(store().notes.map((n) => n.id).sort()).toEqual(['b0', 'b1']);
+    });
+
+    it('drops the taken BGM notes from the selection', () => {
+      seedNotes([bgm('b0', 0, 'AA'), bgm('b1', 1, 'BB')]);
+      act().selectNotes(['b0', 'b1']);
+      act().applyGeneratedNotes([gen(0, 0)], laneIds);
+      expect([...store().selectedNotes]).toEqual(['b1']);
+    });
+
+    it('never takes notes from a locked layer', () => {
+      seedNotes([bgm('b0', 0, 'AA')]);
+      useEditorStore.setState({ layerConfig: { ...DEFAULT_LAYER_CONFIG, bgm: { ...DEFAULT_LAYER_CONFIG.bgm, locked: true } } });
+      expect(act().applyGeneratedNotes([gen(0, 0)], laneIds)).toEqual({ placed: 0, noKeysound: 1, occupied: 0 });
+      expect(store().notes.map((n) => n.id)).toEqual(['b0']);
+    });
+
+    it('keeps long-note ends and normalises beats to ticks', () => {
+      seedNotes([bgm('b0', 0, 'AA')]);
+      act().applyGeneratedNotes([gen(0, 0, { endBeat: 1 })], laneIds);
+      const n = playable()[0];
+      expect(n.endBeat).toBe(1);
+      expect(n.tick).toBe(0);
+      expect(n.endTick).toBe(960);
+    });
+
+    it('rebuilds the note index (only playable lane notes are indexed)', () => {
+      seedNotes([bgm('b0', 0, 'AA'), bgm('b1', 1, 'BB')]);
+      act().applyGeneratedNotes([gen(0, 0), gen(1, 1)], laneIds);
+      expect(store()._noteIndex.size).toBe(2);
     });
   });
 

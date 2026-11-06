@@ -499,6 +499,7 @@
       },
       "toast": {
         "audioLoadFailed": "Failed to load audio: {{message}}",
+        "autoChartNoKeysound": "Skipped {{count}} notes with no BGM keysound at their beat",
         "autoChartSkipped": "Skipped {{count}} generated notes overlapping existing ones",
         "encodingFallback": "Some characters cannot be written in the original encoding ({{encoding}}); saved as UTF-8 with BOM",
         "highResWarning": "{{count}} note(s) outside standard resolution (192), may cause compatibility issues",

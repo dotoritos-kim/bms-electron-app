@@ -193,6 +193,7 @@
       },
       "toast": {
         "audioLoadFailed": "Audio konnte nicht geladen werden: {{message}}",
+        "autoChartNoKeysound": "{{count}} Noten ohne BGM-Keysound an ihrer Position übersprungen",
         "autoChartSkipped": "{{count}} erzeugte Noten übersprungen (überlappen vorhandene)",
         "encodingFallback": "Einige Zeichen passen nicht in die ursprüngliche Kodierung ({{encoding}}); als UTF-8 mit BOM gespeichert",
         "highResWarning_one": "{{count}} Note außerhalb der Standardauflösung (192), kann Kompatibilitätsprobleme verursachen",

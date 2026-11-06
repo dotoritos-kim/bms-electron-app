@@ -494,6 +494,7 @@
       },
       "toast": {
         "audioLoadFailed": "오디오 로드 실패: {{message}}",
+        "autoChartNoKeysound": "BGM이 없는 위치의 노트 {{count}}개는 놓지 않음",
         "autoChartSkipped": "기존 노트와 겹치는 {{count}}개는 건너뜀",
         "encodingFallback": "원본 인코딩({{encoding}})으로 표현할 수 없는 문자가 있어 UTF-8(BOM)로 저장했습니다",
         "highResWarning": "{{count}}개 노트가 표준 해상도(192) 범위 밖, 일부 플레이어에서 호환 문제 가능",

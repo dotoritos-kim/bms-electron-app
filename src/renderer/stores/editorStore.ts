@@ -11,6 +11,7 @@ import type {
 } from '@rhythm-archive/bms-core';
 import { styleForKeyMode, columnMappingForStyle, canonicalObjectId, isBase62Headers } from '@rhythm-archive/bms-core';
 import { isKeyLane } from '../lib/autoChart';
+import type { GeneratedNote } from '../lib/autoChart';
 import { playedLanes } from '../lib/keyModeLanes';
 import type { EditorTool, SelectedNoteType, GridSnap, KeyMode } from '@rhythm-archive/bms-editor';
 import { getLaneIds } from '@rhythm-archive/bms-editor';
@@ -19,6 +20,7 @@ import { createBeatConverter, beatToMF44 } from '../lib/beatConverter';
 import type { BeatConverter, MeasureFraction } from '../lib/beatConverter';
 import { beatToTick, tickToBeat, TICKS_PER_BEAT } from '../lib/tickUtils';
 import { computeBgmLanes, type BgmLaneLayout } from '../lib/bgmLanes';
+import { buildKeysoundPool, matchKeysounds } from '../lib/autoKeysound';
 
 // --- Raw header parser (for applyRawHeaders action) ---
 
@@ -193,6 +195,64 @@ function syncFromBeat(beat: number, converter: BeatConverter): { tick: number; b
   const resolvedBeat = tickToBeat(tick); // normalize to tick boundary
   const { measure, fraction } = converter.beatToMF(resolvedBeat);
   return { tick, beat: resolvedBeat, measure, fraction };
+}
+
+/** A note an action (pattern / AI chart) wants to place. */
+interface PlacementRequest {
+  beat: number;
+  column: string;
+  noteType: NoteType;
+  endBeat?: number;
+}
+
+export interface PlaceResult {
+  /** Notes actually placed. */
+  placed: number;
+  /** Notes skipped because no BGM/invisible note was sounding at their beat. */
+  noKeysound: number;
+}
+
+/**
+ * Builds the notes for placement requests.
+ *
+ * A playable note takes over the BGM/invisible note sounding at its beat (the
+ * source is moved, not copied; listed in `consumedIds`). Where nothing is
+ * sounding it is skipped: a keysound-less note ('00') cannot be written to a
+ * BMS file and would vanish on save. Notes of other types (landmine, invisible,
+ * bgm) are not takeover candidates and keep the current keysound. Notes in
+ * locked layers are never taken.
+ */
+function buildPlacement(
+  s: EditorState,
+  requests: readonly PlacementRequest[],
+  converter: BeatConverter,
+): { notes: EditableBMSNote[]; consumedIds: Set<string>; noKeysound: number; nextId: number } {
+  const ordered = [...requests].sort((a, b) => a.beat - b.beat);
+  const takeovers = ordered.filter((r) => noteLayer(r) === 'playable');
+  const pool = buildKeysoundPool(s.notes.filter((n) => !isNoteLocked(s.layerConfig, n)));
+  const { matches, consumedIds } = matchKeysounds(pool, takeovers.map((r) => r.beat));
+  const matchOf = new Map(takeovers.map((r, i) => [r, matches[i]]));
+
+  let nextId = s.nextNoteId;
+  let noKeysound = 0;
+  const notes: EditableBMSNote[] = [];
+  for (const r of ordered) {
+    const taken = noteLayer(r) === 'playable' ? matchOf.get(r) : { keysound: s.currentKeysound, additionalKeysounds: undefined };
+    if (!taken) { noKeysound++; continue; }
+    const endTick = r.endBeat !== undefined ? beatToTick(r.endBeat) : undefined;
+    notes.push({
+      id: `note-${nextId++}`,
+      ...syncFromBeat(r.beat, converter),
+      column: r.column,
+      noteType: r.noteType,
+      keysound: taken.keysound,
+      additionalKeysounds: taken.additionalKeysounds,
+      channel: '',
+      endBeat: endTick !== undefined ? tickToBeat(endTick) : undefined,
+      endTick,
+    } as EditableBMSNote);
+  }
+  return { notes, consumedIds: new Set(consumedIds), noKeysound, nextId };
 }
 
 /** Shared: recalculate measure/fraction for notes/bpmChanges/stopEvents when timeSignatures change */
@@ -665,7 +725,10 @@ interface EditorState {
   removeWavDefinitions: (keysoundIds: string[]) => void;
 
   // Patterns
-  applyPattern: (pattern: PatternTemplate, laneIds: string[], startBeat: number, startColumn: string, keysound: string) => void;
+  /** Playable notes take over the BGM/invisible keysound at their beat; see `buildPlacement`. */
+  applyPattern: (pattern: PatternTemplate, laneIds: string[], startBeat: number, startColumn: string) => PlaceResult;
+  /** AI chart notes: same takeover rule; `occupied` counts notes dropped for overlapping an existing note. */
+  applyGeneratedNotes: (generated: GeneratedNote[], laneIds: string[]) => PlaceResult & { occupied: number };
   selectionToPatternData: (laneIds: string[]) => { notes: PatternNote[]; columnCount: number; beatLength: number } | null;
 }
 
@@ -2133,20 +2196,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   // --- Patterns ---
-  applyPattern: (pattern, laneIds, startBeat, startColumn, keysound) => {
+  applyPattern: (pattern, laneIds, startBeat, startColumn) => {
     const s = get();
-    if (pattern.notes.length === 0 || laneIds.length === 0) return;
-    s.pushUndo('Apply pattern');
+    if (pattern.notes.length === 0 || laneIds.length === 0) return { placed: 0, noKeysound: 0 };
     const converter = getConverter(get);
     const startColIdx = laneIds.indexOf(startColumn);
     const baseCol = startColIdx >= 0 ? startColIdx : 0;
-    // Build set of existing note positions for duplicate prevention
+    // Build set of existing note positions for duplicate prevention. An invisible note
+    // only blocks non-playable pattern notes: for a playable one it is a keysound source.
     const existingPositions = new Set<string>();
+    const invisiblePositions = new Set<string>();
     for (const n of s.notes) {
-      if (n.column) existingPositions.add(`${n.beat.toFixed(6)}:${n.column}`);
+      if (n.column) (n.noteType === 'invisible' ? invisiblePositions : existingPositions).add(`${n.beat.toFixed(6)}:${n.column}`);
     }
-    let nextId = s.nextNoteId;
-    const newNotes: EditableBMSNote[] = [];
+    const requests: PlacementRequest[] = [];
     for (const pn of pattern.notes) {
       const colIdx = baseCol + pn.columnIndex;
       if (colIdx < 0 || colIdx >= laneIds.length) continue;
@@ -2154,35 +2217,55 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (beat < 0) continue;
       const col = laneIds[colIdx];
       const posKey = `${beat.toFixed(6)}:${col}`;
-      if (existingPositions.has(posKey)) continue; // Skip duplicates
+      const noteType = pn.noteType || 'playable';
+      if (existingPositions.has(posKey) || (noteLayer({ noteType }) !== 'playable' && invisiblePositions.has(posKey))) continue; // Skip duplicates
       existingPositions.add(posKey);
-      const synced = syncFromBeat(beat, converter);
-      const endBeat = pn.endBeatOffset !== undefined ? startBeat + pn.endBeatOffset : undefined;
-      const endTick = endBeat !== undefined ? beatToTick(endBeat) : undefined;
-      newNotes.push({
-        id: `note-${nextId++}`,
-        ...synced,
+      requests.push({
+        beat,
         column: col,
-        noteType: pn.noteType || 'playable',
-        keysound,
-        channel: '',
-        endBeat: endTick !== undefined ? tickToBeat(endTick) : undefined,
-        endTick,
-      } as EditableBMSNote);
+        noteType,
+        endBeat: pn.endBeatOffset !== undefined ? startBeat + pn.endBeatOffset : undefined,
+      });
     }
-    const newIndex = new Map(s._noteIndex);
-    for (const n of newNotes) {
-      if (n.noteType === 'playable' && n.column) {
-        newIndex.set(noteIndexKey(n.beat, n.column), n.id);
-      }
-    }
+    const placement = buildPlacement(s, requests, converter);
+    if (placement.notes.length === 0) return { placed: 0, noKeysound: placement.noKeysound };
+    s.pushUndo('Apply pattern');
+    const notes = [...s.notes.filter((n) => !placement.consumedIds.has(n.id)), ...placement.notes];
     set({
-      notes: [...s.notes, ...newNotes],
-      nextNoteId: nextId,
-      _noteIndex: newIndex,
+      notes,
+      nextNoteId: placement.nextId,
+      _noteIndex: buildNoteIndex(notes),
       hasUnsavedChanges: true,
-      selectedNotes: new Set(newNotes.map((n) => n.id)),
+      selectedNotes: new Set(placement.notes.map((n) => n.id)),
     });
+    return { placed: placement.notes.length, noKeysound: placement.noKeysound };
+  },
+
+  applyGeneratedNotes: (generated, laneIds) => {
+    const s = get();
+    // Drop generated notes that would sit on top of an existing note in the same
+    // column (within half a 32nd); the user keeps what they wrote. An invisible note in
+    // the lane is a keysound source for the new playable note, not an obstacle.
+    const occupiedKeys = new Set(s.notes.filter((n) => n.column && n.noteType !== 'invisible').map((n) => `${n.column}@${Math.round(n.beat * 16)}`));
+    const requests: PlacementRequest[] = [];
+    for (const gn of generated) {
+      const column = laneIds[gn.columnIndex] || laneIds[0] || '';
+      if (occupiedKeys.has(`${laneIds[gn.columnIndex] || ''}@${Math.round(gn.beat * 16)}`)) continue;
+      requests.push({ beat: gn.beat, column, noteType: gn.noteType, endBeat: gn.endBeat });
+    }
+    const occupied = generated.length - requests.length;
+    const placement = buildPlacement(s, requests, getConverter(get));
+    if (placement.notes.length === 0) return { placed: 0, noKeysound: placement.noKeysound, occupied };
+    s.pushUndo('Auto-generate chart');
+    const notes = [...s.notes.filter((n) => !placement.consumedIds.has(n.id)), ...placement.notes];
+    set({
+      notes,
+      nextNoteId: placement.nextId,
+      _noteIndex: buildNoteIndex(notes),
+      hasUnsavedChanges: true,
+      selectedNotes: new Set([...s.selectedNotes].filter((id) => !placement.consumedIds.has(id))),
+    });
+    return { placed: placement.notes.length, noKeysound: placement.noKeysound, occupied };
   },
 
   selectionToPatternData: (laneIds) => {

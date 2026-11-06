@@ -494,6 +494,7 @@
       },
       "toast": {
         "audioLoadFailed": "オーディオの読み込みに失敗: {{message}}",
+        "autoChartNoKeysound": "BGMキー音がない位置のノート{{count}}件はスキップ",
         "autoChartSkipped": "既存ノートと重なる {{count}}件をスキップ",
         "encodingFallback": "元のエンコーディング({{encoding}})で表せない文字があるため、UTF-8(BOM付き)で保存しました",
         "highResWarning": "{{count}}ノーツが標準解像度(192)範囲外。一部プレイヤーで互換性問題の可能性",

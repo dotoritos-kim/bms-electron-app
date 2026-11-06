@@ -189,6 +189,7 @@
       },
       "toast": {
         "audioLoadFailed": "音频加载失败：{{message}}",
+        "autoChartNoKeysound": "已跳过 {{count}} 个该位置没有 BGM 键音的音符",
         "autoChartSkipped": "已跳过 {{count}} 个与现有音符重叠的生成音符",
         "encodingFallback": "部分字符无法用原编码({{encoding}})表示，已保存为带 BOM 的 UTF-8",
         "highResWarning_other": "{{count}} 个音符超出标准分辨率（192），可能导致兼容性问题",

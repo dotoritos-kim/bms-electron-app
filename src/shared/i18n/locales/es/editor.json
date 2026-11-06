@@ -197,6 +197,7 @@
       },
       "toast": {
         "audioLoadFailed": "No se pudo cargar el audio: {{message}}",
+        "autoChartNoKeysound": "Se omitieron {{count}} notas sin keysound de BGM en su posición",
         "autoChartSkipped": "Se omitieron {{count}} notas generadas que se superponen a las existentes",
         "encodingFallback": "Algunos caracteres no caben en la codificación original ({{encoding}}); se guardó como UTF-8 con BOM",
         "highResWarning_many": "{{count}} notas fuera de la resolución estándar (192), puede causar problemas de compatibilidad",

@@ -61,6 +61,7 @@ import { AccessibleDialog } from '../components/AccessibleDialog';
 import { ToastStack, useToastStack } from '../components/ToastStack';
 import { isKeyLane } from '../lib/autoChart';
 import type { GeneratedNote } from '../lib/autoChart';
+
 import { createBeatConverter } from '../lib/beatConverter';
 import { computeDensityMap, densityToColor } from '../lib/densityMap';
 import type { MinimapDensityEntry, MinimapBookmark } from '@rhythm-archive/bms-editor';
@@ -833,9 +834,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     // Prevent duplicate insertion at the same beat (accidental double-click guard)
     const last = lastPatternInsertRef.current;
     if (last && last.patternId === pattern.id && Math.abs(last.beat - beat) < 0.01) return;
-    lastPatternInsertRef.current = { patternId: pattern.id, beat };
-    store.applyPattern(pattern, laneIds, beat, laneIds[0] || '', s.currentKeysound);
-  }, [laneIds]);
+    const { placed, noKeysound } = store.applyPattern(pattern, laneIds, beat, laneIds[0] || '');
+    // Only a placement arms the guard, so a retry after adding BGM at the same beat still works.
+    if (placed > 0) lastPatternInsertRef.current = { patternId: pattern.id, beat };
+    if (noKeysound > 0) showToast(t('editor:routes.editor.toast.autoChartNoKeysound', { count: noKeysound }), 'info');
+  }, [laneIds, showToast, t]);
 
   const handleSaveSelectionAsPattern = useCallback(() => {
     const result = store.selectionToPatternData(laneIds);
@@ -2878,38 +2881,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           currentBeat={useEditorStore.getState().currentBeat}
           gridSnap={gridSnap}
           onApplyNotes={(allGenerated: GeneratedNote[]) => {
-            const s = useEditorStore.getState();
-            // Drop generated notes that would sit on top of an existing note in
-            // the same column (within half a 32nd); the user keeps what they wrote.
-            const occupied = new Set(s.notes.filter((n) => n.column).map((n) => `${n.column}@${Math.round(n.beat * 16)}`));
-            const generatedNotes = allGenerated.filter((gn) => !occupied.has(`${laneIds[gn.columnIndex] || ''}@${Math.round(gn.beat * 16)}`));
-            const skipped = allGenerated.length - generatedNotes.length;
-            if (skipped > 0) showToast(t('editor:routes.editor.toast.autoChartSkipped', { count: skipped }), 'info');
-            if (generatedNotes.length === 0) return;
-            let nextId = s.nextNoteId;
-            const newNotes: EditableBMSNote[] = generatedNotes.map((gn) => {
-              const col = laneIds[gn.columnIndex] || laneIds[0] || '';
-              const { measure, fraction } = store.beatToMF(gn.beat);
-              const tick = beatToTick(gn.beat);
-              const endTick = gn.endBeat !== undefined ? beatToTick(gn.endBeat) : undefined;
-              return {
-                id: `note-${nextId++}`,
-                beat: gn.beat,
-                tick,
-                column: col,
-                noteType: gn.noteType,
-                keysound: s.currentKeysound,
-                measure,
-                fraction,
-                channel: '',
-                endBeat: gn.endBeat,
-                endTick,
-              };
-            });
-            // Single undo entry; beats normalised to ticks and the note index rebuilt.
-            useEditorStore.setState({ nextNoteId: nextId });
-            store.addNotesBulk(newNotes, 'Auto-generate chart');
-            showToast(t('editor:routes.editor.toast.notesGenerated', { count: newNotes.length }), 'success');
+            // Playable notes take over the BGM/invisible keysound at their beat; the store skips
+            // notes with nothing sounding (a keysound-less note cannot be saved).
+            const { placed, noKeysound, occupied } = store.applyGeneratedNotes(allGenerated, laneIds);
+            if (occupied > 0) showToast(t('editor:routes.editor.toast.autoChartSkipped', { count: occupied }), 'info');
+            if (noKeysound > 0) showToast(t('editor:routes.editor.toast.autoChartNoKeysound', { count: noKeysound }), 'info');
+            if (placed > 0) showToast(t('editor:routes.editor.toast.notesGenerated', { count: placed }), 'success');
           }}
         />
       )}

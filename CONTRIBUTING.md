@@ -16,13 +16,13 @@ checks every PR must clear before it can be merged.
      The custom `no-hardcoded-korean` ESLint rule in `scripts/` catches this in
      CI; running `npm run i18n:check` locally surfaces drift in locale JSON.
    - When you add a new user-facing string, add the key to the relevant
-     locale namespace (`common`, `app`, `errors`) for **all enabled
+     locale namespace (`common`, `app`, `errors`, `editor`, `player`) for **all enabled
      locales** simultaneously. Empty values fail CI.
 
 ## i18n contributions
 
-The project ships with two locales (`ko`, `en`) actively enabled and five
-more (`ja`, `zh`, `es`, `de`, `ru`) declared in the i18n infrastructure but
+The project ships with three locales (`ko`, `en`, `ja`) actively enabled and
+four more (`zh`, `es`, `de`, `ru`) declared in the i18n infrastructure but
 gated behind `ENABLED_LOCALES` until reviewed. To enable or update a gated
 locale:
 
@@ -40,8 +40,9 @@ basis for human review, never as the final commit. Mark such PRs with the
 ### Adding a new key
 
 1. Add the key to the relevant `ko` JSON (e.g. `src/shared/i18n/locales/ko/app.json`).
-2. Add the equivalent to the `en` JSON. Keep keys parallel.
-3. For other locales, leave the key omitted; CI will fail until the parser
+2. Add the equivalent to the `en` and `ja` JSON (every locale in
+   `ENABLED_LOCALES`). Keep keys parallel.
+3. For gated locales, leave the key omitted; CI will fail until the parser
    either inserts a placeholder or you supply the translation.
 4. Reference it in code via `t('namespace:key.path')`. Never inline it.
 
@@ -49,7 +50,8 @@ basis for human review, never as the final commit. Mark such PRs with the
 
 These packages do **not** depend on `react-i18next`. They expose an
 `I18nProvider` context that consumers populate (see [`bms-editor/I18N.md`](
-../bms-editor/I18N.md) and [`bms-player/I18N.md`](../bms-player/I18N.md)).
+vendor/bms-editor/I18N.md) and [`bms-player/I18N.md`](vendor/bms-player/I18N.md)).
+Both packages live under `vendor/` as git submodules.
 When you add a key inside a library package:
 
 1. Add it to the package's `src/i18n/defaults.ts` with an English default.
@@ -64,11 +66,13 @@ When you add a key inside a library package:
 - External-facing docs (`README.md`, `CONTRIBUTING.md`, `docs/en/*`) are
   written in **English** as the source of truth. Korean equivalents
   (`README.ko.md`, `docs/ko/*`) are translations and must be updated in the
-  same PR or labelled `docs-translation-pending`.
+  same PR or labelled `docs-translation-pending`. `README.md` is still
+  written in Korean; until it is translated, keep it and `README.ko.md`
+  in sync.
 - Internal docs under `.planning/**` stay in Korean. They are working
   notes, not external artefacts.
 - Each translated document carries a `last_synced: <commit-sha>` frontmatter
-  field; the `scripts/docs-drift-check` job warns when sources drift.
+  field; `node scripts/docs-drift-check.cjs` warns when sources drift.
 
 ## Code style
 
@@ -87,8 +91,8 @@ When you add a key inside a library package:
 - Imperative mood (`add`, `fix`, `refactor`).
 - Keep PRs small and focused. Refactors and feature work belong in
   separate PRs.
-- The release pipeline is tag-driven; do **not** bump `package.json`
-  versions in feature PRs.
+- Releases are cut by release-please (version bump, `CHANGELOG.md`, tag);
+  do **not** bump `package.json` versions in feature PRs.
 
 ## Reporting issues
 

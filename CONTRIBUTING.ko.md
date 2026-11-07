@@ -16,11 +16,11 @@
      `scripts/eslint-no-hardcoded-korean.cjs` 룰이 CI에서 차단합니다.
      `npm run i18n:check`로 로컬에서 미리 확인 가능합니다.
    - 새 사용자 노출 문자열은 활성화된 모든 로케일의 적절한 네임스페이스
-     (`common`, `app`, `errors`)에 키를 동시에 추가하세요. 빈 값은 CI 실패.
+     (`common`, `app`, `errors`, `editor`, `player`)에 키를 동시에 추가하세요. 빈 값은 CI 실패.
 
 ## i18n 기여
 
-현재 활성화 로케일은 `ko`, `en` 두 개이며 `ja`, `zh`, `es`, `de`, `ru`는
+현재 활성화 로케일은 `ko`, `en`, `ja` 세 개이며 `zh`, `es`, `de`, `ru`는
 인프라는 갖춰져 있지만 `ENABLED_LOCALES`에서 제외되어 있습니다.
 
 | 작업 | 필요 리뷰어 |
@@ -37,15 +37,16 @@
 ### 새 키 추가 절차
 
 1. `ko` JSON에 키 추가 (예: `src/shared/i18n/locales/ko/app.json`).
-2. `en` JSON에 동일 키 영문 작성. 키 트리는 평행 유지.
-3. 다른 로케일은 비워 두면 CI가 placeholder 또는 번역을 요청.
+2. `en`, `ja` JSON(`ENABLED_LOCALES`의 모든 로케일)에 동일 키 작성. 키 트리는 평행 유지.
+3. 비활성 로케일은 비워 두면 CI가 placeholder 또는 번역을 요청.
 4. 코드에서 `t('namespace:key.path')`로 참조. 인라인 금지.
 
 ### 라이브러리 패키지(`bms-editor`, `bms-player`)
 
 라이브러리는 `react-i18next`에 의존하지 **않습니다**. 컨슈머가 채우는
 `I18nProvider` Context를 노출합니다 ([bms-editor/I18N.md](
-../bms-editor/I18N.md), [bms-player/I18N.md](../bms-player/I18N.md) 참조).
+vendor/bms-editor/I18N.md), [bms-player/I18N.md](vendor/bms-player/I18N.md) 참조).
+두 패키지는 `vendor/` 아래 git submodule로 들어 있습니다.
 라이브러리 내부에 키를 추가할 때:
 
 1. `src/i18n/defaults.ts`에 영문 기본값으로 추가.
@@ -57,10 +58,11 @@
 
 - 외부 공개 문서(`README.md`, `CONTRIBUTING.md`, `docs/en/*`)는 **영문이
   source of truth**. 한국어 번역(`README.ko.md`, `docs/ko/*`)은 같은
-  PR에서 갱신하거나 `docs-translation-pending` 라벨을 붙여 주세요.
+  PR에서 갱신하거나 `docs-translation-pending` 라벨을 붙여 주세요. `README.md`는
+  아직 한국어로 작성되어 있어서, 영문화 전까지 `README.ko.md`와 같은 내용을 유지합니다.
 - `.planning/**` 내부 문서는 한국어로만 작성합니다. 외부 산출물이 아닌 작업 노트입니다.
 - 번역 문서는 frontmatter `last_synced: <commit-sha>` 필드를 가지며,
-  `scripts/docs-drift-check` 잡이 drift를 경고합니다.
+  `node scripts/docs-drift-check.cjs`가 drift를 경고합니다.
 
 ## 코드 스타일
 
@@ -76,7 +78,7 @@
 
 - 명령형 (`add`, `fix`, `refactor`).
 - PR은 작고 한 가지에 집중. 리팩토링과 기능은 별도 PR.
-- 릴리스는 태그 기반. 기능 PR에서 `package.json` 버전을 올리지 마세요.
+- 릴리스는 release-please가 만듭니다(버전 bump, `CHANGELOG.md`, 태그). 기능 PR에서 `package.json` 버전을 올리지 마세요.
 
 ## 이슈 보고
 

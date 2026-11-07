@@ -2,6 +2,8 @@
 
 > 작성일: 2026-04-05
 > 범위: 단위 테스트, 통합 테스트, E2E 테스트, Beatoraja 호환성 테스트, CI/CD 파이프라인
+>
+> 2~9장의 수치는 작성일 기준이다. v0.7.0(2026-11-07) 기준 현황(Vitest 56개 파일 1,422 tests, Playwright E2E 16개 spec)과 이후 추가된 테스트는 [QA_CHANGELOG.md 9장](QA_CHANGELOG.md#9-v051--v070-테스트-변경-2026-10-21--2026-11-07)을 본다. 10장 CI 구성은 2026-11-07 기준으로 갱신했다.
 
 ---
 
@@ -304,12 +306,16 @@ AudioContext 상태 머신, 미사용 시 안전한 폴백.
 ```
 push/PR to main/master
   ├── unit-test (windows-latest)
-  │   ├── npm ci
+  │   ├── checkout (submodule 포함)
+  │   ├── npm ci --legacy-peer-deps (root + vendor/*)
+  │   ├── sibling 패키지 빌드 (bms-core / bms-player / bms-editor)
+  │   ├── npm run i18n:check (locale JSON 정합성, 실패해도 계속)
+  │   ├── npm run lint:i18n (하드코딩 한국어 금지)
   │   ├── vitest run (unit + integration + compatibility)
   │   ├── vitest run --coverage
   │   └── upload coverage artifact
   └── e2e-test (windows-latest, needs unit-test)
-      ├── npm ci
+      ├── checkout (submodule 포함) + npm ci + sibling 패키지 빌드
       ├── playwright install
       ├── electron-vite build
       ├── playwright test
@@ -320,11 +326,12 @@ push/PR to main/master
 
 ```
 Daily 03:00 UTC (or manual)
-  ├── mutation-test
-  │   ├── stryker run
+  ├── mutation-test (ubuntu-latest, 10.3의 대상 4개를 matrix로 나눠 실행)
+  │   ├── Stryker 증분 캐시 복원
+  │   ├── stryker run --mutate <대상>
   │   └── upload mutation report
-  └── compatibility-test
-      └── vitest run tests/compatibility/
+  └── compatibility-test (windows-latest)
+      └── npm run test:compat
 ```
 
 ### 10.3 Stryker 뮤테이션 테스트 대상
@@ -334,7 +341,7 @@ Daily 03:00 UTC (or manual)
 | editorStore.ts | 50+ 액션, 조건 분기 다수 |
 | autoChart.ts | 알고리즘 로직, 수치 경계값 |
 | keyBindings.ts | 문자열 정규화, 미묘한 버그 가능 |
-| ipc/file.ts | WAV 헤더 바이트 오프셋 — 1바이트 차이 = 파일 손상 |
+| ipc/file.ts | WAV 헤더 바이트 오프셋: 1바이트 차이 = 파일 손상 |
 
 임계값: high 80%, low 60%, break 50%
 
@@ -371,8 +378,8 @@ npm run test:all
 
 | 항목 | 우선순위 | 설명 |
 |------|---------|------|
-| ~~midiInput.ts 커버리지~~ | ~~Medium~~ | ✅ 완료 — Web MIDI API 모킹으로 100% 커버리지 달성 |
-| ~~file.ts dialog 핸들러~~ | ~~Medium~~ | ✅ 완료 — saveAs, importKeysounds, openAudioFile, saveWavSlices 추가 (96.8%) |
+| ~~midiInput.ts 커버리지~~ | ~~Medium~~ | ✅ 완료: Web MIDI API 모킹으로 100% 커버리지 달성 |
+| ~~file.ts dialog 핸들러~~ | ~~Medium~~ | ✅ 완료: saveAs, importKeysounds, openAudioFile, saveWavSlices 추가 (96.8%) |
 | 비주얼 리그레션 | Low | Playwright 스크린샷 비교 자동화 |
 | Beatoraja 실제 구동 | Low | CI에 Beatoraja headless 설치 및 BMS 로딩 검증 |
 | LR2 호환 검증 | Low | 포맷 준수로 대체 (LR2는 자동화 불가) |

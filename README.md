@@ -15,8 +15,12 @@
 
 ### 주요 기능
 
-- **Player**: 채보 재생, 키사운드 / 오디오 슬라이서, 파형 오버레이
-- **Editor**: 노트 편집, BPM Tap, MIDI 매핑, 패턴 라이브러리, 자동 채보
+- **Player**: 채보 재생, 키음 재생, 채보의 `#RANK` / `#DEFEXRANK` / `#TOTAL`을 판정·게이지에 반영
+- **Editor**: 노트 편집 (단노트를 롱노트로 변환, 끝을 드래그해 롱노트 길이 조절), BPM Tap, MIDI 매핑, 패턴 라이브러리, AI 자동 채보, 오디오 슬라이서, 파형 오버레이
+- **키 모드**: 4K~48K. 4K / 6K / 8K (U_E Yuipack) 채보는 Qwilight가 읽는 방식(`#4K` / `#6K` / `#8K` 명령과 IIDX 채널)으로 저장하고 다시 열어도 키 모드가 유지됩니다.
+- **BGM 레인 / 키음**: BGM 레인을 파일의 `#xxx01` 줄 순서(BMSE / iBMSC의 B1, B2… 열)대로 배치, 키음 패널에서 Ctrl/Shift+클릭으로 키음 여러 개를 골라 해당 노트를 한 번에 선택, AI 채보와 패턴 배치는 같은 박자에서 울리는 BGM 키음을 노트로 옮겨 받습니다 (울리는 키음이 없으면 노트를 놓지 않음).
+- **에디터 옵션** (설정 → 에디터 옵션): 노트 드래그 방향, 채보를 열 때의 BGM 레인 배치, 화면에 보이는 BGM 레인 수
+- **저장**: 원본 인코딩(Shift_JIS, EUC-KR, UTF-8 BOM 등) 그대로 저장, 모델링하지 않은 채널 보존, `#EXBPMxx` / `#LNTYPE 2` 지원
 - **세션 복원**: 마지막으로 열었던 파일과 라우트를 자동으로 복구
 - **파일 연관(File Association)**: `.bms` / `.bme` / `.bml` / `.pms` / `.bmson` 더블클릭으로 실행
 - **메뉴 단축키**: `Ctrl+O` / `Ctrl+Shift+O` / `Ctrl+S` / `Ctrl+Shift+S`
@@ -69,6 +73,10 @@ npm run dev
 | `npm run test:e2e` | Playwright E2E |
 | `npm run test:all` | Vitest + Playwright 전부 실행 |
 | `npm run test:mutation` | Stryker 변이 테스트 |
+| `npm run i18n:extract` | 소스에서 i18n 키를 추출해 locale JSON 갱신 |
+| `npm run i18n:check` | locale JSON이 소스와 어긋나면 실패 |
+| `npm run lint:i18n` | 하드코딩 한국어 금지 ESLint 룰 |
+| `npm run format` / `format:check` | Prettier 적용 / 검사 |
 
 ## 프로젝트 구조
 
@@ -78,8 +86,9 @@ bms-electron-app/
 │   ├── main/                  # Electron Main 프로세스
 │   │   ├── index.ts           # 앱 부트, BrowserWindow 생성
 │   │   ├── menu.ts            # 애플리케이션 메뉴
-│   │   └── ipc/               # IPC 핸들러 (file / audio / handle)
-│   ├── preload/               # contextBridge — window.api 노출
+│   │   ├── ipc/               # IPC 핸들러 (file / audio / locale / handle / validate)
+│   │   └── store/, i18n/      # 로케일 저장, 메인 프로세스 메뉴 번역
+│   ├── preload/               # contextBridge: window.api 노출
 │   ├── renderer/              # React 19 + Vite 렌더러
 │   │   ├── App.tsx
 │   │   ├── routes/            # Home / Player / Editor
@@ -91,9 +100,10 @@ bms-electron-app/
 │   ├── bms-core/              # 파서 / 도메인 모델 / 오디오 엔진 코어
 │   ├── bms-player/            # 플레이어 UI 및 노트 렌더링
 │   └── bms-editor/            # 채보 에디터
-├── scripts/                   # dev.js, generate-test-fixtures.ts ...
+├── scripts/                   # dev.js, generate-test-fixtures.ts, generate-app-icon.py ...
 ├── tests/                     # Vitest + Playwright
-├── docs/                      # QA 전략 / 변경 이력 / 프롬프트 기록
+├── build/                     # 앱 아이콘 (icon.ico / icon.png)
+├── docs/                      # BMS 스펙 준수 현황 / QA 전략 / 변경 이력 / 프롬프트 기록
 ├── electron.vite.config.ts
 ├── .gitmodules                # vendor/* submodule URL 정의
 ├── playwright.config.ts
@@ -124,6 +134,8 @@ npm run package     # NSIS 설치 파일 + Portable 빌드 → dist/
 - `productName`: `BMS Desktop`
 - 타겟: `nsis` (인스톨러), `portable` (단일 실행 파일)
 - 파일 연관: `.bms` / `.bme` / `.bml` / `.pms` / `.bmson`
+- 아이콘: `build/icon.ico` (`scripts/generate-app-icon.py`로 다시 생성)
+- 인스톨러: 설치 경로 선택 가능, 바탕화면 / 시작 메뉴 바로가기 `BMS Desktop` 생성
 
 ### GitHub Releases 자동 배포
 
@@ -140,6 +152,8 @@ npm run package     # NSIS 설치 파일 + Portable 빌드 → dist/
    - `npm run build --workspace=...`로 sibling 패키지 빌드
    - `bms-electron-app` 빌드 + `electron-builder --win --publish always`
    - NSIS / Portable 인스톨러를 GitHub Releases에 첨부 + 워크플로 아티팩트로도 업로드
+
+코드 서명은 선택 사항입니다. `WIN_CSC_LINK` / `WIN_CSC_KEY_PASSWORD` secret이 있으면 electron-builder가 서명하고, 비어 있으면 서명 없이 빌드합니다.
 
 커밋 메시지 규칙:
 
@@ -172,6 +186,9 @@ npm run package     # NSIS 설치 파일 + Portable 빌드 → dist/
 
 ## 관련 문서
 
-- [REFACTOR-PLAN.md](REFACTOR-PLAN.md): 진행 중인 리팩터링 계획
+- [CHANGELOG.md](CHANGELOG.md): 릴리스별 변경 사항
+- [CONTRIBUTING.md](CONTRIBUTING.md): 기여 가이드
+- [docs/BMS_SPEC_COMPLIANCE.md](docs/BMS_SPEC_COMPLIANCE.md): BMS 명령별 지원 현황
+- [REFACTOR-PLAN.md](REFACTOR-PLAN.md): 2026-05 리팩터링 분석·계획 기록
 - [docs/QA_TEST_STRATEGY.md](docs/QA_TEST_STRATEGY.md)
 - [docs/QA_CHANGELOG.md](docs/QA_CHANGELOG.md)

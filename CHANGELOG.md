@@ -11,6 +11,75 @@ This file is automatically maintained by [release-please](https://github.com/goo
 
 * **editor:** AI chart and pattern placement take over the BGM keysounds ([50bb91b](https://github.com/dotoritos-kim/bms-electron-app/commit/50bb91bf44399636a6e26a6c33388f82916d22f6))
 
+## [0.6.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.8...v0.6.0) (2026-11-05)
+
+
+### Features
+
+* **editor:** BGM lanes as written in the file, multi-keysound selection, editor options ([b5ce6be](https://github.com/dotoritos-kim/bms-electron-app/commit/b5ce6bef93f405def5d7ba0825d9984047a31ded))
+
+
+### Bug Fixes
+
+* **renderer:** editor no longer crashes when opened before the locale loads ([000b6c7](https://github.com/dotoritos-kim/bms-electron-app/commit/000b6c73b7968e0fbe6718a2c2297862435c27ff))
+* **editor:** tidy the BGM lane / multi-select / editor option texts (ko, en, ja) ([6b6d122](https://github.com/dotoritos-kim/bms-electron-app/commit/6b6d122460db2ab620c779b9c112adccaa40de16))
+
+
+### Performance Improvements
+
+* **io:** read the sidecar and chart folder once; skip unchanged autosaves ([a877497](https://github.com/dotoritos-kim/bms-electron-app/commit/a8774973dcb269eb7e46ff4718668f829043bc6b))
+
+## [0.5.8](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.7...v0.5.8) (2026-10-28)
+
+
+### Bug Fixes
+
+* **editor:** lengthen / shorten notes by dragging their end; grab zones follow note thickness ([091b197](https://github.com/dotoritos-kim/bms-electron-app/commit/091b1977bc151071571b8d22bc8f1245d75ff3d9))
+
+## [0.5.7](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.6...v0.5.7) (2026-10-28)
+
+
+### Bug Fixes
+
+* **editor:** turn placed short notes into long notes and grab notes more easily ([f1cecbf](https://github.com/dotoritos-kim/bms-electron-app/commit/f1cecbfe3444cd4faa6d5d83e93508c23ba1aa9c))
+
+## [0.5.6](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.5...v0.5.6) (2026-10-27)
+
+
+### Bug Fixes
+
+* **editor:** save and open 4K / 6K / 8K (U_E Yuipack) charts the way Qwilight reads them ([c9065a3](https://github.com/dotoritos-kim/bms-electron-app/commit/c9065a363ee50cc2f2f2794808092f304a26d630))
+
+## [0.5.5](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.4...v0.5.5) (2026-10-26)
+
+
+### Bug Fixes
+
+* **editor:** keep the chosen key mode (4K/6K/8K) across save and reopen ([90b867f](https://github.com/dotoritos-kim/bms-electron-app/commit/90b867f7cfa520bc2d39749b17a1111a9569da66))
+
+## [0.5.4](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.3...v0.5.4) (2026-10-21)
+
+
+### Bug Fixes
+
+* **i18n:** replace em dashes in locale strings ([bbcc055](https://github.com/dotoritos-kim/bms-electron-app/commit/bbcc055f9c94f78172949848cb91614b3f501340))
+
+## [0.5.3](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.2...v0.5.3) (2026-10-21)
+
+## [0.5.2](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.1...v0.5.2) (2026-10-21)
+
+
+### Features
+
+* **release:** add app icon, desktop shortcut, optional code signing ([d77a706](https://github.com/dotoritos-kim/bms-electron-app/commit/d77a706b038f732bd616507a837acdfb9c4129fe))
+
+## [0.5.1](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.5.0...v0.5.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **i18n:** fix locale bugs and translate remaining English strings ([b6c8bde](https://github.com/dotoritos-kim/bms-electron-app/commit/b6c8bdea22b3ea86e728650a4d98da30e4d60269))
+
 ## [0.5.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.4.0...v0.5.0) (2026-10-21)
 
 

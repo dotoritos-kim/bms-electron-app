@@ -156,7 +156,7 @@ QA_TEST_STRATEGY.md 설계 문서를 기반으로 테스트 인프라를 구축�
 | 파일 | 변경 | 설명 |
 |------|------|------|
 | `src/main/ipc/audio.ts` | Modified | BUG-001: entries 선언 위치 이동 |
-| `src/renderer/routes/Editor.tsx` | Modified | BUG-002: TDZ 에러 — ref 패턴 전환 |
+| `src/renderer/routes/Editor.tsx` | Modified | BUG-002: TDZ 에러: ref 패턴 전환 |
 
 ### 테스트 파일 (신규 생성)
 
@@ -177,7 +177,7 @@ QA_TEST_STRATEGY.md 설계 문서를 기반으로 테스트 인프라를 구축�
 | `tests/integration/editor-workflow.test.ts` | 20 | 크로스 모듈 워크플로우 |
 | `tests/compatibility/format-compliance.test.ts` | 30 | BMS 사양 준수 |
 | `tests/compatibility/writer-snapshots.test.ts` | 15 | BMSWriter 출력 스냅샷 |
-| `tests/e2e/electron-app.ts` | — | Playwright 공유 fixture |
+| `tests/e2e/electron-app.ts` | - | Playwright 공유 fixture |
 | `tests/e2e/home.spec.ts` | 5 | 홈 화면 시나리오 |
 | `tests/e2e/editor.spec.ts` | 10 | 에디터 시나리오 |
 | `tests/e2e/player.spec.ts` | 4 | 플레이어 시나리오 |
@@ -287,7 +287,7 @@ npm run test:all
 - 이전 QA 세션에서 12개 전 모드 레인 설정 검증 완료
 - 레인 개수, ID, 스크래치/FZ, 폭, 색상, x좌표 단조 증가 등 전수 검증
 
-#### Phase 2: 트랜스폼 정합성 — 키 모드 교차 검증 (신규)
+#### Phase 2: 트랜스폼 정합성: 키 모드 교차 검증 (신규)
 
 - **파일**: `tests/unit/stores/editorStore-transforms.test.ts` (115 테스트)
 - **Tier A 4개 대표 모드**: 7K (IIDX SP), 9K (PMS), 14K (IIDX DP), 24K (KB DP)
@@ -301,7 +301,7 @@ npm run test:all
 - **24K 특수 테스트**: 1→24, 12→13, 24→1
 - **9K 특수 테스트**: 중앙 레인(5) 미러 불변, 1→9
 
-#### Phase 3: RTL 컴포넌트 테스트 — 다이얼로그 (신규)
+#### Phase 3: RTL 컴포넌트 테스트: 다이얼로그 (신규)
 
 | 파일 | 테스트 수 | 주요 검증 항목 |
 |------|----------|--------------|
@@ -321,7 +321,7 @@ npm run test:all
   - `formatTime`: m:ss 포맷, 소수 절삭
   - 스토어 UI 상태: 패널 토글, Toast, BackConfirm, InputDialog, AudioPhase, 볼륨, A-B 루프
 
-#### Phase 5: Playwright E2E — 키 모드별 렌더링 (업데이트)
+#### Phase 5: Playwright E2E: 키 모드별 렌더링 (업데이트)
 
 - **파일**: `tests/e2e/editor-keymodes.spec.ts` (~48 시나리오)
 - 12개 전 모드 로딩 + 크래시 미발생 + 제목 표시 + 스크린샷
@@ -330,7 +330,7 @@ npm run test:all
 - 키보드 모드 (8K, 9K, 12K, 18K): 스크래치 없는 렌더링
 - 확장 모드 (24K, 48K): 좁은 레인 렌더링, 기본 조작 응답
 
-#### Phase 6: Playwright E2E — 다이얼로그 심층 인터랙션 (업데이트)
+#### Phase 6: Playwright E2E: 다이얼로그 심층 인터랙션 (업데이트)
 
 - **파일**: `tests/e2e/editor-dialogs.spec.ts` (~30 시나리오)
 - **추가된 테스트**:
@@ -361,9 +361,9 @@ npm run test:all
 
 | 파일 | 유형 | 테스트 수 |
 |------|------|----------|
-| `tests/setup.ts` | 설정 | — |
-| `tests/utils/renderWithStore.tsx` | 헬퍼 | — |
-| `scripts/generate-test-fixtures.ts` | 스크립트 | — |
+| `tests/setup.ts` | 설정 | - |
+| `tests/utils/renderWithStore.tsx` | 헬퍼 | - |
+| `scripts/generate-test-fixtures.ts` | 스크립트 | - |
 | `tests/unit/stores/editorStore-transforms.test.ts` | 단위 | 115 |
 | `tests/unit/components/KeyBindingsDialog.test.tsx` | RTL | 20 |
 | `tests/unit/components/AutoChartDialog.test.tsx` | RTL | 16 |
@@ -374,8 +374,8 @@ npm run test:all
 | `tests/e2e/editor-dialogs.spec.ts` | E2E | ~30 |
 | `tests/e2e/editor-performance.spec.ts` | E2E | 5 |
 | `tests/e2e/editor-accessibility.spec.ts` | E2E | ~15 |
-| `tests/e2e/fixtures/test-{4k..48k}.bms` | 픽스처 | — |
-| `tests/e2e/fixtures/test-stress.bms` | 픽스처 | — |
+| `tests/e2e/fixtures/test-{4k..48k}.bms` | 픽스처 | - |
+| `tests/e2e/fixtures/test-stress.bms` | 픽스처 | - |
 
 ### 7.4 수정된 기존 파일
 
@@ -419,8 +419,9 @@ npx playwright test tests/e2e/editor-keymodes.spec.ts
 3. **data-testid 유지**: E2E 테스트가 `[data-testid="..."]` 셀렉터에 의존하므로,
    Editor.tsx의 data-testid 어트리뷰트를 임의 제거하면 E2E 실패.
 
-4. **Vitest import 금지**: `vitest.config.ts`에 `globals: true`가 설정되어 있으므로
-   테스트 파일에서 `import { describe, it, ... } from 'vitest'`를 절대 사용하지 않아야 함.
+4. **Vitest 전역 사용 권장**: `vitest.config.ts`에 `globals: true`가 설정되어 있으므로
+   테스트 파일에서 `import { describe, it, ... } from 'vitest'` 없이 전역을 쓰는 것을 기본으로 함.
+   2026-04 당시에는 충돌이 났지만 v0.7.0 기준 명시 import 파일 14개도 통과한다(9.4 참고).
    전역 함수(`describe`, `it`, `expect`, `vi`, `beforeEach` 등)를 직접 사용.
 
 2. **E2E 환경변수**: Playwright Electron 테스트 시 `ELECTRON_RUN_AS_NODE` 환경변수가
@@ -428,3 +429,40 @@ npx playwright test tests/e2e/editor-keymodes.spec.ts
 
 3. **Editor.tsx 콜백 순서**: 키보드 핸들러에서 참조하는 콜백을 추가/변경할 경우,
    해당 콜백이 `useEffect` 이전에 선언되어야 함. 이후에 선언해야 하는 경우 ref 패턴 사용.
+
+---
+
+## 9. v0.5.1 ~ v0.7.0 테스트 변경 (2026-10-21 ~ 2026-11-07)
+
+### 9.1 현재 수치 (v0.7.0, 2026-11-07 `npx vitest run` 기준)
+
+| 항목 | v0.5.0 | v0.7.0 |
+|------|--------|--------|
+| Vitest 테스트 파일 | 46개 | 56개 (1,422 tests, all passed) |
+| Playwright E2E spec | 15개 | 16개 (`test()` 162개) |
+
+### 9.2 신규 테스트 파일
+
+| 파일 | 케이스 | 대상 (커밋) |
+|------|--------|-------------|
+| `tests/i18n/locale-store.test.ts` | 4 | 시작 로케일 결정 (활성 로케일만 OS 로케일 / `APP_TEST_LANG` 반영) (b6c8bde) |
+| `tests/i18n/menu-dialog-titles.test.ts` | 2 | 메인 프로세스 BMS 파일 다이얼로그 제목, 메뉴 사전 없는 로케일은 영어 (b6c8bde) |
+| `tests/unit/lib/keyModePersistence.test.ts` | 15 | 4K/6K/8K 키 모드 저장 후 다시 열기 유지 (90b867f) |
+| `tests/unit/lib/yuipack.test.ts` | 16 | U_E Yuipack 4K/6K/8K를 Qwilight 방식(`#4K`/`#6K`/`#8K`, IIDX 채널)으로 저장/로드 (c9065a3) |
+| `tests/unit/stores/editorStore-longNoteConvert.test.ts` | 11 | 놓인 단노트의 롱노트 변환 (f1cecbf) |
+| `tests/unit/i18n/initBeforeLocale.test.tsx` | 1 | 로케일 로드 전 에디터 진입 시 크래시 (000b6c7) |
+| `tests/unit/lib/bgmLanes.test.ts` | 9 | 파일의 `#xxx01` 줄 순서대로 BGM 레인 배치 (b5ce6be) |
+| `tests/unit/components/KeysoundPanelMultiSelect.test.tsx` | 6 | 키음 패널 Ctrl/Shift+클릭 다중 선택 (b5ce6be) |
+| `tests/unit/stores/editorOptionsStore.test.ts` | 4 | 에디터 옵션 저장/복원 (b5ce6be) |
+| `tests/e2e/editor-bgm-lanes.spec.ts` | 8 | BGM 레인 배치, 다중 선택, 드래그 방향 옵션 E2E (b5ce6be) |
+| `tests/unit/lib/autoKeysound.test.ts` | 10 | AI 채보 / 패턴 배치의 BGM 키음 인계 (50bb91b) |
+
+### 9.3 픽스처 변경
+
+- `tests/e2e/fixtures/test-4k.bms`, `test-6k.bms`, `test-8k.bms`: Qwilight 레인 배치(4K = 1,2,4,5 / 6K = 1,2,3,5,6,7 / 8K = 16 + 1~7)와 `#4K`/`#6K`/`#8K` 명령에 맞춰 `scripts/generate-test-fixtures.ts`로 재생성.
+- `tests/e2e/fixtures/test-bgm-columns.bms` 신규: 악기별 `#xxx01` 줄을 가진 BGM 레인 E2E용 채보.
+- `tests/e2e/editor-canvas.spec.ts`: 단노트를 롱노트로 변환 (f1cecbf), 롱노트 끝 드래그로 길이 조절과 노트 두께를 따르는 잡기 영역 (091b197) 시나리오 추가.
+
+### 9.4 참고
+
+- 8장 4번(`import from 'vitest'` 금지)과 달리 현재 14개 테스트 파일이 `vitest`에서 명시적으로 import하며(`vi`만 6개, `describe`/`it`/`expect` 등 8개) 모두 통과한다.

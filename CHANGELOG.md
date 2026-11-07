@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.7.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.6.0...v0.7.0) (2026-11-07)
+
+
+### Features
+
+* **editor:** AI chart and pattern placement take over the BGM keysounds ([50bb91b](https://github.com/dotoritos-kim/bms-electron-app/commit/50bb91bf44399636a6e26a6c33388f82916d22f6))
+
 ## [0.5.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.4.0...v0.5.0) (2026-10-21)
 
 

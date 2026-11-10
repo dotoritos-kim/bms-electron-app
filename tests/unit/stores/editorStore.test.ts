@@ -1202,6 +1202,39 @@ describe('Simple Setters', () => {
     expect(store().hasUnsavedChanges).toBe(true);
   });
 
+  describe('markSaved', () => {
+    it('takes each BGM note\'s lane as its line in the saved file and clears the unsaved flag', () => {
+      seedNotes([
+        mockNote({ id: 'moved', noteType: 'bgm', column: undefined, bgmChannel: 3, sourceBgmLine: 0 }),
+        mockNote({ id: 'placed', noteType: 'bgm', column: undefined, bgmChannel: 1, tick: 960 }),
+        mockNote({ id: 'same', noteType: 'bgm', column: undefined, bgmChannel: 2, sourceBgmLine: 2, tick: 1920 }),
+        mockNote({ id: 'key', column: 'K1', tick: 0 }),
+      ]);
+      act().setHasUnsavedChanges(true);
+      const sameBefore = store().notes.find((n) => n.id === 'same');
+
+      act().markSaved();
+
+      const byId = (id: string) => store().notes.find((n) => n.id === id)!;
+      expect(byId('moved').sourceBgmLine).toBe(3);
+      expect(byId('placed').sourceBgmLine).toBe(1);
+      expect(byId('same')).toBe(sameBefore); // untouched notes keep their identity
+      expect(byId('key').sourceBgmLine).toBeUndefined();
+      expect(store().hasUnsavedChanges).toBe(false);
+      // "As written in the file" now reproduces the saved layout: nothing to rearrange.
+      expect(act().relayoutBgmLanes('source')).toBe(0);
+    });
+
+    it('is the saved point: undoing a later edit comes back clean', () => {
+      seedNotes([mockNote({ id: 'b', noteType: 'bgm', column: undefined, bgmChannel: 2, sourceBgmLine: 0 })]);
+      act().markSaved();
+      act().deleteNotes(['b']);
+      expect(store().hasUnsavedChanges).toBe(true);
+      act().undo();
+      expect(store().hasUnsavedChanges).toBe(false);
+    });
+  });
+
   it('setInputDialog', () => {
     act().setInputDialog({ type: 'bpm-add', defaultValue: '120', beat: 0 });
     expect(store().inputDialog?.type).toBe('bpm-add');

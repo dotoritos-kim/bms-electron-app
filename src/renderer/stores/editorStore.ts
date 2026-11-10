@@ -670,6 +670,12 @@ interface EditorState {
   setCurrentBeat: (beat: number) => void;
   setKeyMode: (keyMode: KeyMode) => void;
   setHasUnsavedChanges: (value: boolean) => void;
+  /**
+   * The chart was just written to its file: clears the unsaved flag and takes
+   * each BGM note's lane as the line it now has in the file, so "as written
+   * in the file" follows the file that was saved, not the one that was opened.
+   */
+  markSaved: () => void;
   setInputDialog: (dialog: InputDialog | null) => void;
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
@@ -2037,6 +2043,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setHasUnsavedChanges: (value) => set((s) => (value
     ? { hasUnsavedChanges: true }
     : { hasUnsavedChanges: false, _savedPoint: savedPointOf(s) })),
+  markSaved: () => set((s) => {
+    // The writer puts a BGM note on line `bgmChannel` (0-999) of its measure.
+    const writtenLine = (n: EditableBMSNote) =>
+      (Number.isInteger(n.bgmChannel) && n.bgmChannel! >= 0 && n.bgmChannel! <= 999 ? n.bgmChannel : undefined);
+    const stale = (n: EditableBMSNote) => n.noteType === 'bgm' && writtenLine(n) !== undefined && n.sourceBgmLine !== writtenLine(n);
+    const notes = s.notes.some(stale)
+      ? s.notes.map((n) => (stale(n) ? { ...n, sourceBgmLine: writtenLine(n) } : n))
+      : s.notes;
+    return { notes, hasUnsavedChanges: false, _savedPoint: savedPointOf({ ...s, notes }) };
+  }),
   setInputDialog: (dialog) => set({ inputDialog: dialog }),
   toggleLeftPanel: () => set((s) => ({ showLeftPanel: !s.showLeftPanel })),
   toggleRightPanel: () => set((s) => ({ showRightPanel: !s.showRightPanel })),

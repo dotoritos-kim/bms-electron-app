@@ -1054,7 +1054,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         if (!metaSaved) showToast(t('editor:routes.editor.toast.metaSaveFailed'), 'warning');
         metaSidecarExistsRef.current = true;
       }
-      store.setHasUnsavedChanges(false);
+      store.markSaved();
       showToast(t('editor:routes.editor.toast.saved'), 'success');
       return true;
     } catch (err) {
@@ -1110,7 +1110,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         });
         const metaSaved = await window.api.file.saveMeta(newPath, serializeMeta(meta)).then(() => true, () => false);
         if (!metaSaved) showToast(t('editor:routes.editor.toast.metaSaveFailed'), 'warning');
-        store.setHasUnsavedChanges(false);
+        store.markSaved();
         showToast(t('editor:routes.editor.toast.savedAs'), 'success');
         // Continue editing the file just written, not the old path.
         if (newPath !== file.path && onOpenFile) {

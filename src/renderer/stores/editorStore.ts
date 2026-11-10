@@ -19,7 +19,7 @@ import type { PatternTemplate, PatternNote } from '../lib/patternTemplates';
 import { createBeatConverter, beatToMF44 } from '../lib/beatConverter';
 import type { BeatConverter, MeasureFraction } from '../lib/beatConverter';
 import { beatToTick, tickToBeat, TICKS_PER_BEAT } from '../lib/tickUtils';
-import { computeBgmLanes, type BgmLaneLayout } from '../lib/bgmLanes';
+import { computeBgmLanes, settleBgmLanes, type BgmLaneLayout } from '../lib/bgmLanes';
 import { buildKeysoundPool, matchKeysounds } from '../lib/autoKeysound';
 
 // --- Raw header parser (for applyRawHeaders action) ---
@@ -355,6 +355,15 @@ interface SavedPoint {
   headers: BMSHeaderData | null;
   /** Key mode decides the saved channel layout, so changing it is an unsaved change too. */
   keyMode?: KeyMode;
+}
+
+/**
+ * `placed` (BGM notes just moved or pasted) with any lane that is taken on its
+ * tick, by `existing` or by another of them, changed to the nearest free one.
+ */
+function settleBgm<T extends EditableBMSNote>(existing: readonly EditableBMSNote[], placed: T[], direction: 1 | -1 = 1): T[] {
+  const lanes = settleBgmLanes(existing, placed, direction);
+  return lanes.size === 0 ? placed : placed.map((n) => (lanes.has(n.id) ? { ...n, bgmChannel: lanes.get(n.id) } : n));
 }
 
 function savedPointOf(s: SavedPoint): SavedPoint {
@@ -1024,7 +1033,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     // The delta is already snapped by the caller; re-snapping each note's
     // absolute position would merge off-grid notes (1/192, triplets...) together.
     const deltaTicks = delta.beat ? beatToTick(delta.beat) : 0;
-    const movedNotes = s.notes.map((n) => {
+    const movedRaw = s.notes.map((n) => {
       if (!idsSet.has(n.id)) return n;
       const curTick = n.tick ?? beatToTick(n.beat);
       const newTick = Math.max(0, curTick + deltaTicks);
@@ -1047,6 +1056,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
       return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat, column: newColumn, bgmChannel: newBgmChannel };
     });
+    // A moved BGM note must not land on a lane another BGM note has on that tick
+    // (locked notes stay where they are and are placed around).
+    const bgmLanes = settleBgmLanes(
+      movedRaw.filter((n) => !idsSet.has(n.id)),
+      movedRaw.filter((n) => idsSet.has(n.id)),
+      (delta.columnDelta ?? 0) < 0 ? -1 : 1,
+    );
+    const movedNotes = bgmLanes.size === 0
+      ? movedRaw
+      : movedRaw.map((n) => (bgmLanes.has(n.id) ? { ...n, bgmChannel: bgmLanes.get(n.id) } : n));
     // Add new positions
     for (const n of movedNotes) {
       if (idsSet.has(n.id) && n.noteType === 'playable' && n.column) {
@@ -1626,7 +1645,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const newIndex = new Map(s._noteIndex);
     let nextId = s.nextNoteId;
     const offsetTicks = beatToTick(offset);
-    const pasted = s.clipboard.map((n) => {
+    const pasted = settleBgm(s.notes, s.clipboard.map((n) => {
       const curTick = n.tick ?? beatToTick(n.beat);
       const newTick = curTick + offsetTicks;
       const synced = syncFromTick(newTick, converter);
@@ -1640,7 +1659,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         endTick: newEndTick,
         endBeat: newEndBeat,
       };
-    });
+    }));
     // Update index for pasted playable notes
     for (const n of pasted) {
       if (n.noteType === 'playable' && n.column) {
@@ -1665,7 +1684,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     let nextId = s.nextNoteId;
     let droppedCount = 0;
 
-    const pasted: EditableBMSNote[] = [];
+    const pastedRaw: EditableBMSNote[] = [];
     const offsetTicks = beatToTick(offset);
     for (const n of s.clipboard) {
       const curTick = n.tick ?? beatToTick(n.beat);
@@ -1686,8 +1705,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         droppedCount++;
         continue;
       }
-      pasted.push(newNote);
+      pastedRaw.push(newNote);
     }
+    // Pasted BGM notes take a free lane where theirs is taken
+    const pasted = settleBgm(s.notes, pastedRaw);
 
     // Detect conflicts (playable notes at same beat+column)
     const conflicts: PasteAnalysis['conflicts'] = [];

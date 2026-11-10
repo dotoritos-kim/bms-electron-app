@@ -58,3 +58,49 @@ export function computeBgmLanes(
   }
   return result;
 }
+
+/**
+ * Lanes for BGM notes that were just put somewhere (moved, pasted). A note
+ * whose lane is taken on its tick, by a note already there or by an earlier
+ * one of `placed`, goes to the nearest free lane: to the right, or to the left
+ * first when the notes were moved left (`direction` -1), so a note stepped
+ * left with the keyboard passes the taken lane instead of stopping at it.
+ * Returns the new lane of the notes that have to change lane.
+ *
+ * Same rule as the site editor (U_E-storage-project bgmLanes.ts). Two BGM
+ * notes on one lane and tick would be drawn on top of each other, and the
+ * writer moves one of them to another line on save.
+ */
+export function settleBgmLanes(
+  existing: readonly EditableBMSNote[],
+  placed: readonly EditableBMSNote[],
+  direction: 1 | -1 = 1,
+): Map<string, number> {
+  const result = new Map<string, number>();
+  const ticks = new Set<number>();
+  for (const n of placed) if (n.noteType === 'bgm') ticks.add(n.tick);
+  if (ticks.size === 0) return result;
+
+  const taken = new Map<number, Set<number>>();
+  for (const tick of ticks) taken.set(tick, new Set());
+  for (const n of existing) {
+    if (n.noteType === 'bgm') taken.get(n.tick)?.add(n.bgmChannel ?? 0);
+  }
+  // In lane order, so notes that clash with each other keep their left-to-right order
+  const ordered = placed
+    .filter((n) => n.noteType === 'bgm')
+    .sort((a, b) => (a.bgmChannel ?? 0) - (b.bgmChannel ?? 0));
+  for (const n of ordered) {
+    const used = taken.get(n.tick)!;
+    const want = Math.max(0, n.bgmChannel ?? 0);
+    let ch = want;
+    if (direction < 0) {
+      while (ch >= 0 && used.has(ch)) ch--;
+      if (ch < 0) ch = want;
+    }
+    while (used.has(ch)) ch++;
+    used.add(ch);
+    if (ch !== n.bgmChannel) result.set(n.id, ch);
+  }
+  return result;
+}

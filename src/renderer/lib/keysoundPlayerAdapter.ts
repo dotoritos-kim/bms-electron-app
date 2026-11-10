@@ -9,6 +9,9 @@ export interface KeysoundPlayer {
   readonly isReady: boolean;
   play(keysoundId: string, offset?: number, scheduledTime?: number, volume?: number): void;
   stopAll(): void;
+  /** Freeze / continue every keysound (game pause keeps long BGM samples). */
+  pauseAll(): void;
+  resumeAll(): void;
   dispose(): void;
   readonly preloader?: AudioPreloader;
 }
@@ -38,6 +41,14 @@ export function createKeysoundPlayerAdapter(audioPreloader: AudioPreloader, base
 
     stopAll() {
       audioPreloader.stopAllAudio();
+    },
+
+    pauseAll() {
+      audioPreloader.pauseAllAudio();
+    },
+
+    resumeAll() {
+      audioPreloader.resumeAllAudio();
     },
 
     dispose() {

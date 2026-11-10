@@ -193,7 +193,7 @@
     "backAria": "Zurück zur Startseite",
     "errorTitle": "Fehler",
     "exitConfirm": "Ein Spiel läuft gerade. Wirklich verlassen?",
-    "keyBindingsHint": "Tastenbelegungen können unter Editor > Werkzeuge > Tastenbelegungen geändert werden",
+    "keyBindingsHint": "Die Tasten dieses Tastenmodus stehen auf dem Startbildschirm",
     "loadingChart": "Chart wird geladen...",
     "loadingKeysounds": "Keysounds werden geladen... {{loaded}}/{{total}}"
   },

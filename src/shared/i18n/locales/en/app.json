@@ -288,7 +288,7 @@
     "backAria": "Back to home",
     "errorTitle": "Error",
     "exitConfirm": "A game is in progress. Are you sure you want to leave?",
-    "keyBindingsHint": "Key bindings can be changed in Editor > Tools > Key Bindings",
+    "keyBindingsHint": "The keys for this key mode are listed on the ready screen",
     "loadingChart": "Loading chart...",
     "loadingKeysounds": "Loading keysounds... {{loaded}}/{{total}}"
   },

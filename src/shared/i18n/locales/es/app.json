@@ -201,7 +201,7 @@
     "backAria": "Volver al inicio",
     "errorTitle": "Error",
     "exitConfirm": "Hay una partida en curso. ¿Seguro que quieres salir?",
-    "keyBindingsHint": "Los atajos de teclado se pueden cambiar en Editor > Herramientas > Atajos de teclado",
+    "keyBindingsHint": "Las teclas de este modo se muestran en la pantalla de inicio",
     "loadingChart": "Cargando chart...",
     "loadingKeysounds": "Cargando keysounds... {{loaded}}/{{total}}"
   },

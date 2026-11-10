@@ -1,0 +1,29 @@
+*---------------------- HEADER FIELD
+
+#PLAYER 1
+#GENRE Test
+#TITLE Play Fixture
+#ARTIST QA Tester
+#BPM 150
+#PLAYLEVEL 1
+#RANK 2
+#TOTAL 300
+#LNTYPE 1
+
+*---------------------- WAV DEFINITIONS
+#WAV01 bgm.wav
+#WAV02 kick.wav
+#WAV03 snare.wav
+#WAV04 long.wav
+
+*---------------------- MAIN DATA FIELD
+
+#00101:01
+#00111:02020202
+#00112:00030003
+
+#00211:02030203
+#00255:00040400
+
+#00311:02020202
+#00316:03000000

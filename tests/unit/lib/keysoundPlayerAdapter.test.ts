@@ -4,12 +4,24 @@ function createMockPreloader() {
   return {
     playAudioSync: vi.fn(),
     stopAllAudio: vi.fn(),
+    pauseAllAudio: vi.fn(),
+    resumeAllAudio: vi.fn(),
     releaseAllResources: vi.fn(),
   };
 }
 
 describe('keysoundPlayerAdapter', () => {
   describe('createKeysoundPlayerAdapter', () => {
+    it('pauseAll() / resumeAll() freeze and continue the preloader audio (game pause keeps the BGM)', () => {
+      const mock = createMockPreloader();
+      const adapter = createKeysoundPlayerAdapter(mock as any);
+      adapter.pauseAll();
+      expect(mock.pauseAllAudio).toHaveBeenCalledTimes(1);
+      expect(mock.stopAllAudio).not.toHaveBeenCalled();
+      adapter.resumeAll();
+      expect(mock.resumeAllAudio).toHaveBeenCalledTimes(1);
+    });
+
     it('isReady returns true', () => {
       const mock = createMockPreloader();
       const adapter = createKeysoundPlayerAdapter(mock as any);

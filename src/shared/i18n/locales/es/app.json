@@ -201,7 +201,7 @@
     "backAria": "Volver al inicio",
     "errorTitle": "Error",
     "exitConfirm": "Hay una partida en curso. ¿Seguro que quieres salir?",
-    "keyBindingsHint": "Las teclas de este modo se muestran en la pantalla de inicio",
+    "keyBindingsHint": "Las teclas de este modo se muestran en la pantalla de inicio; cámbialas con el botón Teclas",
     "loadingChart": "Cargando chart...",
     "loadingKeysounds": "Cargando keysounds... {{loaded}}/{{total}}"
   },

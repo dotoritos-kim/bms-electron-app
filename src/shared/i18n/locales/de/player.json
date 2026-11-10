@@ -30,5 +30,16 @@
     "paused": "Pausiert",
     "completed": "Abgeschlossen",
     "failed": "Gescheitert"
+  },
+  "screens": {
+    "keys": {
+      "cancel": "Abbrechen",
+      "help": "Spur anklicken, dann die Taste drücken. Eine bereits belegte Taste wird zwischen den Spuren getauscht.",
+      "listening": "Drücken...",
+      "open": "Tasten",
+      "reset": "Zurücksetzen",
+      "save": "Speichern",
+      "title": "Tasten"
+    }
   }
 }

@@ -25,6 +25,15 @@
     "poor": "POOR"
   },
   "screens": {
+    "keys": {
+      "cancel": "취소",
+      "help": "레인을 누른 뒤 사용할 키를 누르세요. 이미 쓰는 키는 두 레인의 키가 서로 바뀝니다.",
+      "listening": "입력...",
+      "open": "키 설정",
+      "reset": "기본값",
+      "save": "저장",
+      "title": "키 설정"
+    },
     "pause": {
       "exit": "나가기",
       "restart": "다시 시작",

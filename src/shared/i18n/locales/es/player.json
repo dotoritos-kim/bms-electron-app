@@ -30,5 +30,16 @@
     "paused": "Pausado",
     "completed": "Completado",
     "failed": "Fallido"
+  },
+  "screens": {
+    "keys": {
+      "cancel": "Cancelar",
+      "help": "Haz clic en un carril y pulsa su tecla. Una tecla ya usada se intercambia entre carriles.",
+      "listening": "Pulsa...",
+      "open": "Teclas",
+      "reset": "Restablecer",
+      "save": "Guardar",
+      "title": "Teclas"
+    }
   }
 }

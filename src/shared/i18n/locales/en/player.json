@@ -25,6 +25,15 @@
     "poor": "POOR"
   },
   "screens": {
+    "keys": {
+      "cancel": "Cancel",
+      "help": "Click a lane, then press its key. A key already in use swaps lanes.",
+      "listening": "Press...",
+      "open": "Key Settings",
+      "reset": "Reset",
+      "save": "Save",
+      "title": "Key Settings"
+    },
     "pause": {
       "exit": "EXIT",
       "restart": "RESTART",

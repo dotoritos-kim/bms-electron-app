@@ -185,7 +185,7 @@
     "backAria": "返回主页",
     "errorTitle": "错误",
     "exitConfirm": "游戏进行中，确定要离开吗？",
-    "keyBindingsHint": "此键位模式的按键显示在开始画面",
+    "keyBindingsHint": "此键位模式的按键显示在开始画面，可通过按键设置修改",
     "loadingChart": "正在加载谱面...",
     "loadingKeysounds": "正在加载键音... {{loaded}}/{{total}}"
   },

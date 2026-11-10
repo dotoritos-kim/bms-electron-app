@@ -193,7 +193,7 @@
     "backAria": "Zurück zur Startseite",
     "errorTitle": "Fehler",
     "exitConfirm": "Ein Spiel läuft gerade. Wirklich verlassen?",
-    "keyBindingsHint": "Die Tasten dieses Tastenmodus stehen auf dem Startbildschirm",
+    "keyBindingsHint": "Die Tasten dieses Tastenmodus stehen auf dem Startbildschirm; dort mit „Tasten“ änderbar",
     "loadingChart": "Chart wird geladen...",
     "loadingKeysounds": "Keysounds werden geladen... {{loaded}}/{{total}}"
   },

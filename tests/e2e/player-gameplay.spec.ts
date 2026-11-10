@@ -102,4 +102,38 @@ test.describe('Player gameplay', () => {
     expect(judged).not.toBeNull();
     expect(judged!.slice(1).reduce((sum, n) => sum + Number(n), 0)).toBeGreaterThan(0);
   });
+
+  test('key settings: rebind a lane on the ready screen and play with the new key', async ({ window }) => {
+    // Bindings live in localStorage, which outlives the test: start and end on the defaults.
+    const clearBindings = () => window.evaluate(() => localStorage.removeItem('bms_key_bindings'));
+    await clearBindings();
+    try {
+      await openPlayer(window, PLAY_DIR, 'play.bms');
+      await window.getByTestId('open-key-settings').click();
+      await window.getByTestId('key-slot-1').click();
+      await window.keyboard.press('KeyQ');
+      await expect(window.getByTestId('key-slot-1')).toContainText('Q');
+      // Space belongs to the dialog while it is open: the game must not start behind it.
+      await window.keyboard.press('Space');
+      await expect(window.getByTestId('lane-keys')).toBeVisible();
+      await window.getByRole('dialog').getByText('저장').click();
+      await expect(window.getByRole('dialog')).toHaveCount(0);
+      expect(await window.getByTestId('lane-keys').locator('span').allTextContents())
+        .toEqual(['L-Shift', 'Q', 'D', 'F', 'Space', 'J']); // the fixture is a 5K chart
+
+      // Lane 1 has a note every 0.4 s from 1.6 s on: Q now hits them.
+      await window.keyboard.press('Space');
+      await window.waitForTimeout(1300);
+      for (let i = 0; i < 20; i++) {
+        await window.keyboard.press('KeyQ');
+        await window.waitForTimeout(100);
+      }
+      const body = (await window.locator('body').textContent()) || '';
+      const judged = /PG(\d+)GR(\d+)GD(\d+)BD(\d+)/.exec(body);
+      expect(judged).not.toBeNull();
+      expect(judged!.slice(1).reduce((sum, n) => sum + Number(n), 0)).toBeGreaterThan(0);
+    } finally {
+      await clearBindings();
+    }
+  });
 });

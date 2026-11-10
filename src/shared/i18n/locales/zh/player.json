@@ -30,5 +30,16 @@
     "paused": "已暂停",
     "completed": "完成",
     "failed": "失败"
+  },
+  "screens": {
+    "keys": {
+      "cancel": "取消",
+      "help": "点击轨道后按下要使用的按键。已被使用的按键会在两条轨道间互换。",
+      "listening": "请按键...",
+      "open": "按键设置",
+      "reset": "默认",
+      "save": "保存",
+      "title": "按键设置"
+    }
   }
 }

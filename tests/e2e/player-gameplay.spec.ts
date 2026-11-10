@@ -55,6 +55,23 @@ test.describe('Player gameplay', () => {
     expect(body).toContain('MISS0');
   });
 
+  test('autoplay turned on mid-song takes over from there', async ({ window }) => {
+    await openPlayer(window, PLAY_DIR, 'play.bms');
+    await window.keyboard.press('Space');
+    // Nobody plays: the first notes (from 1.6 s) run out of their window.
+    await expect(window.locator('body')).toContainText(/MS[1-9]/, { timeout: 10000 });
+    await window.locator('input[type=checkbox]').check();
+
+    await expect(window.locator('body')).toContainText('다시 도전', { timeout: 20000 });
+    const body = (await window.locator('body').textContent()) || '';
+    const result = /PGREAT(\d+)GREAT\d+GOOD\d+BAD\d+POOR\d+MISS(\d+)/.exec(body);
+    expect(result).not.toBeNull();
+    // The rest of the chart was played by autoplay; the early misses stay.
+    expect(Number(result![1])).toBeGreaterThanOrEqual(8);
+    expect(Number(result![2])).toBeGreaterThanOrEqual(1);
+    expect(Number(result![1]) + Number(result![2])).toBe(17);
+  });
+
   test('pause freezes the audio and resuming continues the same BGM', async ({ window }) => {
     await recordWorkletMessages(window);
     await openPlayer(window, PLAY_DIR, 'play.bms');

@@ -457,6 +457,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   const playbackOffsetRef = useRef(0);
   const speedRef = useRef(1);
   const playbackBeatRef = useRef(0);
+  // handleSeekBeat is defined further down; callbacks above it reach it through this ref
+  const handleSeekBeatRef = useRef<(beat: number) => void>(() => {});
   const editedTimingRef = useRef<Timing | null>(null);
   const zoomControlRef = useRef<ZoomControl | null>(null);
   const [currentBeatScale, setCurrentBeatScale] = useState(20);
@@ -680,7 +682,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       n.additionalKeysounds?.some((ak: { keysound: string }) => ak.keysound === id)
     );
     if (first) {
-      store.setCurrentBeat(first.beat);
+      handleSeekBeatRef.current(first.beat);
     } else {
       showToast(t('editor:routes.editor.keysoundNoNotes'), 'error');
     }
@@ -1554,15 +1556,31 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   }, [audioPhase, handlePlaybackPause, handlePlaybackPlay]);
   handlePlaybackToggleRef.current = handlePlaybackToggle;
 
+  /** Move the playback position to `sec` (view at `beat`), playing or not. */
+  const seekPlayback = useCallback((sec: number, beat: number) => {
+    const wasPlaying = isPlayingRef.current;
+
+    playbackOffsetRef.current = sec;
+    store.setPlaybackTime(sec);
+    playbackBeatRef.current = beat;
+    store.setCurrentBeat(beat);
+
+    if (audioSchedulerRef.current) {
+      // Always update Worker position (even when paused, for accurate resume)
+      audioPreloaderRef.current?.stopAllAudio();
+      audioSchedulerRef.current.seek(sec, speedRef.current);
+    }
+    if (!wasPlaying) {
+      const phase = useEditorStore.getState().audioPhase;
+      if (phase === 'playing') store.setAudioPhase('paused');
+    }
+  }, []);
+
   const handleSeek = useCallback((targetSec: number) => {
     const timing = editedTimingRef.current;
     if (!timing) return;
     const dur = useEditorStore.getState().playbackDuration;
     const clampedSec = Math.max(0, Math.min(targetSec, dur));
-    const wasPlaying = isPlayingRef.current;
-
-    playbackOffsetRef.current = clampedSec;
-    store.setPlaybackTime(clampedSec);
 
     let lo = 0, hi = totalBeats;
     for (let i = 0; i < 30; i++) {
@@ -1570,19 +1588,19 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       if (timing.beatToSeconds(mid) < clampedSec) lo = mid;
       else hi = mid;
     }
-    playbackBeatRef.current = lo;
-    store.setCurrentBeat(lo);
+    seekPlayback(clampedSec, lo);
+  }, [totalBeats, seekPlayback]);
 
-    if (audioSchedulerRef.current) {
-      // Always update Worker position (even when paused, for accurate resume)
-      audioPreloaderRef.current?.stopAllAudio();
-      audioSchedulerRef.current.seek(clampedSec, speedRef.current);
+  /** Scroll / minimap / search jumps: move the playback position along with the view. */
+  const handleSeekBeat = useCallback((beat: number) => {
+    const timing = editedTimingRef.current;
+    if (!timing) {
+      store.setCurrentBeat(beat);
+      return;
     }
-    if (!wasPlaying) {
-      const phase = useEditorStore.getState().audioPhase;
-      if (phase === 'playing') store.setAudioPhase('paused');
-    }
-  }, [totalBeats]);
+    const dur = useEditorStore.getState().playbackDuration;
+    seekPlayback(Math.max(0, Math.min(timing.beatToSeconds(Math.max(0, beat)), dur)), beat);
+  }, [seekPlayback]);
 
   const handleBack = useCallback(() => {
     if (useEditorStore.getState().hasUnsavedChanges) {
@@ -1596,6 +1614,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
   // Keep refs in sync (avoid stale closures in handleSeek)
   useLayoutEffect(() => {
     handleSeekRef.current = handleSeek;
+    handleSeekBeatRef.current = handleSeekBeat;
   });
 
   // Keep actionMap in sync
@@ -2206,7 +2225,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                   highlightKeysound={highlightKeysound}
                   noteHeight={noteHeight}
                   hasUnsavedChanges={hasUnsavedChanges}
-                  onScrollChange={store.setCurrentBeat}
+                  onScrollChange={handleSeekBeat}
                   scrollBeatImperativeRef={audioPhase === 'playing' ? playbackBeatRef : undefined}
                   zoomControlRef={zoomControlRef}
                   onBeatScaleChange={setCurrentBeatScale}
@@ -2236,7 +2255,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
                 notes={notes}
                 totalBeats={totalBeats}
                 viewportBeats={16}
-                onNavigate={store.setCurrentBeat}
+                onNavigate={handleSeekBeat}
                 densityData={minimapDensityData}
                 bookmarks={minimapBookmarks}
                 hideHeader
@@ -2453,7 +2472,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               notes={notes}
               totalBeats={totalBeats}
               viewportBeats={16}
-              onNavigate={store.setCurrentBeat}
+              onNavigate={handleSeekBeat}
               densityData={minimapDensityData}
               bookmarks={minimapBookmarks}
               hideHeader
@@ -2813,7 +2832,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
           keyMode={keyMode}
           wavDefinitions={wavDefinitions}
           onSelectNotes={(ids: string[]) => store.selectNotes(ids)}
-          onNavigate={store.setCurrentBeat}
+          onNavigate={handleSeekBeat}
         />
       )}
 

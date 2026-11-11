@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.8.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.7.0...v0.8.0) (2026-11-11)
+
+
+### Features
+
+* **editor:** saving keeps the BGM columns (bms-core aa2bb61) ([9863e39](https://github.com/dotoritos-kim/bms-electron-app/commit/9863e39e660c82efdcab894fca06fdacfad03bf8))
+* **player:** game key settings on the ready screen ([2318546](https://github.com/dotoritos-kim/bms-electron-app/commit/2318546da9898159132c79561a60a9645b5b63f4))
+
+
+### Bug Fixes
+
+* **editor:** moved or pasted BGM notes never share a lane ([7890cd5](https://github.com/dotoritos-kim/bms-electron-app/commit/7890cd5e9cff216d6e23a00715ac77cae29595bf))
+* **editor:** scrolling, the minimap and note jumps move the playback position ([456612e](https://github.com/dotoritos-kim/bms-electron-app/commit/456612e9ab8466cdd4e3175bb2f7679755c14182))
+* **player:** notes stay on the music over a long song; autoplay switches mid-song ([4025ac6](https://github.com/dotoritos-kim/bms-electron-app/commit/4025ac671757143576a32c13b17a2681fd88ae2b))
+* **player:** pause keeps the BGM, every key mode is playable, lanes fill the window ([c86eb33](https://github.com/dotoritos-kim/bms-electron-app/commit/c86eb335a2c71e314d1f14b7fb03a70b1d8d00dc))
+
 ## [0.7.0](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.6.0...v0.7.0) (2026-11-07)
 
 

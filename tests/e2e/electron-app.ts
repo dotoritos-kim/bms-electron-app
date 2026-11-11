@@ -37,6 +37,16 @@ function snapshotFixtures(): () => void {
   };
 }
 
+/**
+ * Drops the saved session (last route and file). The app restores it on the
+ * next start, so a test that ended in the editor made the following test
+ * start there, with that chart's keysound errors in its console: whether
+ * "no console errors on startup" passed depended on which test ran before it.
+ */
+export async function forgetSession(page: Page): Promise<void> {
+  await page.evaluate(() => localStorage.removeItem('bms-session')).catch(() => {});
+}
+
 export const test = base.extend<{ electronApp: ElectronApplication; window: Page }>({
   // eslint-disable-next-line no-empty-pattern
   electronApp: async ({}, use) => {
@@ -59,6 +69,7 @@ export const test = base.extend<{ electronApp: ElectronApplication; window: Page
     // "quit" confirmation dialog, and nobody is there to answer it. close()
     // would hang until the teardown timeout. Confirm the close directly.
     for (const page of electronApp.windows()) {
+      await forgetSession(page);
       await page
         .evaluate(() => (window as unknown as { api: { app: { confirmClose: () => Promise<boolean> } } }).api.app.confirmClose())
         .catch(() => {});

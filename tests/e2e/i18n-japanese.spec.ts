@@ -14,6 +14,7 @@
  */
 import { test as base, _electron as electron, type ElectronApplication, type Page, expect } from '@playwright/test';
 import { resolve } from 'path';
+import { forgetSession } from './electron-app';
 
 const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
   // eslint-disable-next-line no-empty-pattern
@@ -31,6 +32,7 @@ const jaTest = base.extend<{ electronApp: ElectronApplication; window: Page }>({
       },
     });
     await use(electronApp);
+    for (const page of electronApp.windows()) await forgetSession(page);
     await electronApp.close();
   },
   window: async ({ electronApp }, use) => {

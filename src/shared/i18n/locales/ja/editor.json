@@ -135,6 +135,11 @@
       "tooltip": "現在位置付近のキーサウンドを時系列で表示します。クリックで該当キーサウンドを選択します。"
     },
     "bgmManager": {
+      "arrangeLabel": "レーン配置",
+      "arrangePacked": "左詰め",
+      "arrangePackedTooltip": "同じ拍のBGMノーツを左のレーンから詰めます (Ctrl+Zで復元可能)",
+      "arrangeSource": "元の順番",
+      "arrangeSourceTooltip": "ファイルの#xxx01行の順番でレーンに置きます。BMSE・iBMSCのB1, B2…列と同じなので、楽器ごとに列を分けた譜面は楽器ごとに1レーンにまとまります (Ctrl+Zで復元可能)",
       "channelStats": "{{notes}}ノーツ、{{keysounds}}種キーサウンド",
       "clickToSelect": "クリック: 選択 · Ctrl+クリック: 追加選択",
       "muteOff": "ミュート解除",
@@ -142,12 +147,7 @@
       "soloOff": "ソロ解除",
       "soloOn": "このチャンネルのみソロ",
       "title": "BGMマネージャ ({{count}})",
-      "title_other": "BGMマネージャ ({{count}})",
-      "arrangeLabel": "レーン配置",
-      "arrangePacked": "左詰め",
-      "arrangePackedTooltip": "同じ拍のBGMノーツを左のレーンから詰めます (Ctrl+Zで復元可能)",
-      "arrangeSource": "元の順番",
-      "arrangeSourceTooltip": "ファイルの#xxx01行の順番でレーンに置きます。BMSE・iBMSCのB1, B2…列と同じなので、楽器ごとに列を分けた譜面は楽器ごとに1レーンにまとまります (Ctrl+Zで復元可能)"
+      "title_other": "BGMマネージャ ({{count}})"
     },
     "header": {
       "artistField": "アーティスト",
@@ -183,6 +183,8 @@
       "titleField": "タイトル"
     },
     "keysound": {
+      "checkedSummary": "キーサウンド{{count}}個を選択中",
+      "clearChecked": "キーサウンドの選択を解除",
       "contextMenu": {
         "deleteUnused": "未使用キーサウンドを削除",
         "findNotes": "このキーサウンドを使うノーツを検索",
@@ -195,10 +197,16 @@
       "countSummary": "{{count}}個のキーサウンド",
       "empty": "キーサウンドなし",
       "filteredSummary": "({{count}}個フィルタ)",
+      "multiSelectHint": "Ctrl・Shift+クリックで複数選択",
+      "multiSelectHintDetail": "Ctrl+クリック: 1つずつ追加・解除\nShift+クリック: 範囲選択\nフォルダ名をCtrl+クリック: フォルダ全体",
       "noSearchResults": "検索結果なし",
       "noSilent": "無音 / No Sound",
       "previewHint": "ダブルクリックで試聴",
       "searchPlaceholder": "検索...",
+      "selectAllNotes": "すべてのノーツを選択",
+      "selectAllNotesTooltip": "これらのキーサウンドを使うノーツをレーン・BGMを問わず選択します",
+      "selectBgmNotes": "BGMノーツを選択",
+      "selectBgmNotesTooltip": "これらのキーサウンドを使うBGMノーツを曲全体から選択します",
       "title": "キーサウンド",
       "uploadButton": "アップロード",
       "uploadDialog": {
@@ -215,15 +223,7 @@
         "unsupportedFormat": "対応していない形式: {{name}} (WAV/OGG/MP3のみ)",
         "uploadFailed": "アップロード失敗"
       },
-      "uploadTooltip": "キーサウンドファイルをアップロード",
-      "multiSelectHint": "Ctrl・Shift+クリックで複数選択",
-      "checkedSummary": "キーサウンド{{count}}個を選択中",
-      "clearChecked": "キーサウンドの選択を解除",
-      "selectBgmNotes": "BGMノーツを選択",
-      "selectBgmNotesTooltip": "これらのキーサウンドを使うBGMノーツを曲全体から選択します",
-      "selectAllNotes": "すべてのノーツを選択",
-      "selectAllNotesTooltip": "これらのキーサウンドを使うノーツをレーン・BGMを問わず選択します",
-      "multiSelectHintDetail": "Ctrl+クリック: 1つずつ追加・解除\nShift+クリック: 範囲選択\nフォルダ名をCtrl+クリック: フォルダ全体"
+      "uploadTooltip": "キーサウンドファイルをアップロード"
     },
     "minimap": {
       "navigationTooltip": "クリック/ドラッグで移動",
@@ -326,6 +326,12 @@
         "saveAndLeave": "保存して終了",
         "title": "未保存の変更"
       },
+      "bgmLanes": {
+        "arranged": "BGMノーツ{{count}}個のレーンを移動しました (Ctrl+Zで復元可能)",
+        "arranged_other": "BGMノーツ{{count}}個のレーンを移動しました (Ctrl+Zで復元可能)",
+        "noSourceLines": "元の行の情報を持つBGMノーツがありません。エディタで置いたノーツとbmson譜面には行の情報がありません。",
+        "unchanged": "すでに同じ配置です"
+      },
       "bookmarkDialog": {
         "add": "追加",
         "addPrompt": "ブックマーク名を入力してください。",
@@ -374,6 +380,7 @@
         "aiChartLabel": "AI譜面生成",
         "audioSlicerLabel": "オーディオスライサー",
         "deleteMeasureTitle": "小節削除 (Ctrl+Shift+D)",
+        "editorOptionsLabel": "編集オプション",
         "insertMeasureTitle": "小節挿入 (Ctrl+Shift+I)",
         "keyBindingsLabel": "キーバインド設定",
         "measureLabel": "小節",
@@ -385,8 +392,7 @@
         "saveBtnUnsaved": "保存 (Ctrl+S)",
         "saveTitle": "保存 (Ctrl+S)",
         "settingsLabel": "設定",
-        "settingsTitle": "設定メニュー",
-        "editorOptionsLabel": "編集オプション"
+        "settingsTitle": "設定メニュー"
       },
       "inputDialog": {
         "bpmAdd": "BPM追加",
@@ -400,6 +406,11 @@
         "timeSigHint": "1.0 = 4/4、0.75 = 3/4、1.25 = 5/4、0.875 = 7/8"
       },
       "keysoundNoNotes": "このキーサウンドを使うノーツはありません",
+      "keysoundSelection": {
+        "none": "選択したキーサウンドを使うノーツはありません",
+        "selected": "ノーツ{{count}}個を選択しました",
+        "selected_other": "ノーツ{{count}}個を選択しました"
+      },
       "layerPanel": {
         "hideAria": "{{layer}} を隠す",
         "hideTitle": "隠す",
@@ -446,10 +457,6 @@
         "sidebarLabel": "マップ"
       },
       "navGuardMessage": "保存されていない変更があります。移動しますか?",
-      "playTest": {
-        "label": "プレイテスト",
-        "returnToEditor": "編集に戻る (Esc)"
-      },
       "playback": {
         "audioErrorTitle": "オーディオの読み込みに失敗しました。クリックして再試行",
         "bpmTapTitle": "BPMタップ",
@@ -467,6 +474,10 @@
         "stopTitle": "停止",
         "unmuteTitle": "ミュート解除",
         "volumeTitle": "音量: {{percent}}%"
+      },
+      "playTest": {
+        "label": "プレイテスト",
+        "returnToEditor": "編集に戻る (Esc)"
       },
       "replaceKeysound": {
         "cancel": "キャンセル",
@@ -495,7 +506,9 @@
       "toast": {
         "audioLoadFailed": "オーディオの読み込みに失敗: {{message}}",
         "autoChartNoKeysound": "BGMキー音がない位置のノート{{count}}件はスキップ",
+        "autoChartNoKeysound_other": "BGMキー音がない位置のノート{{count}}件はスキップ",
         "autoChartSkipped": "既存ノートと重なる {{count}}件をスキップ",
+        "autoChartSkipped_other": "既存ノートと重なる {{count}}件をスキップ",
         "encodingFallback": "元のエンコーディング({{encoding}})で表せない文字があるため、UTF-8(BOM付き)で保存しました",
         "highResWarning": "{{count}}ノーツが標準解像度(192)範囲外。一部プレイヤーで互換性問題の可能性",
         "highResWarning_other": "{{count}}ノーツが標準解像度(192)範囲外。一部プレイヤーで互換性問題の可能性",
@@ -512,6 +525,7 @@
         "keysoundsNoFreeId": "キーサウンドID 1295個がすべて使用中のため、{{count}}個のファイルを追加できませんでした",
         "keysoundsNoFreeId_other": "キーサウンドID 1295個がすべて使用中のため、{{count}}個のファイルを追加できませんでした",
         "longNoteUnchanged": "変換できるノーツがありません。ロングノーツにできるのはプレイアブルノーツのみで、同じレーンの次のノーツまで1グリッド以上の間隔が必要です。",
+        "metaSaveFailed": "エディター設定ファイル(.bms.meta)を保存できませんでした。次回開いたときにキーモードとエディター設定が復元されない場合があります",
         "notesGenerated": "{{count}}ノーツを生成しました",
         "notesGenerated_other": "{{count}}ノーツを生成しました",
         "pasteConflicts": "{{count}}個の重複ノーツを置換しました",
@@ -519,9 +533,9 @@
         "pasteDropped": "{{count}}個のノーツが現在のキーモード範囲外のため除外",
         "pasteDropped_other": "{{count}}個のノーツが現在のキーモード範囲外のため除外",
         "redoAction": "やり直し: {{description}}",
-        "saveFailed": "保存失敗: {{message}}",
         "saved": "保存完了",
         "savedAs": "名前を付けて保存完了",
+        "saveFailed": "保存失敗: {{message}}",
         "sliceLoadFailed": "オーディオファイルの読み込みに失敗: {{message}}",
         "sliceSaveFailed": "スライスの保存に失敗: {{message}}",
         "slicesSaved": "{{count}}個のスライスを保存しました",
@@ -533,9 +547,6 @@
         "writerDefsExhausted_other": "BPM/STOPの定義IDが不足し、{{count}}個の値を保存できませんでした",
         "writerInvalidValue": "無効なBPM/STOP値{{count}}個をスキップしました",
         "writerInvalidValue_other": "無効なBPM/STOP値{{count}}個をスキップしました",
-        "writerUnmappedLane": "このキーモードで書き出せないレーンのノーツ{{count}}個をスキップしました",
-        "writerUnmappedLane_other": "このキーモードで書き出せないレーンのノーツ{{count}}個をスキップしました",
-        "metaSaveFailed": "エディター設定ファイル(.bms.meta)を保存できませんでした。次回開いたときにキーモードとエディター設定が復元されない場合があります",
         "writerLnShortened": "次のノーツと接していたロングノーツ終端{{count}}個を1/192小節短くして保存しました",
         "writerLnShortened_other": "次のノーツと接していたロングノーツ終端{{count}}個を1/192小節短くして保存しました",
         "writerOutOfRange": "999小節を超えるオブジェクト{{count}}個は保存されませんでした",
@@ -543,18 +554,9 @@
         "writerSlotDropped": "重なった地雷ノーツ{{count}}個は保存できないため除外しました",
         "writerSlotDropped_other": "重なった地雷ノーツ{{count}}個は保存できないため除外しました",
         "writerSlotRerouted": "同じレーンの同じ位置に重なったオブジェクト{{count}}個は、キー音をBGMチャンネルに保存しました",
-        "writerSlotRerouted_other": "同じレーンの同じ位置に重なったオブジェクト{{count}}個は、キー音をBGMチャンネルに保存しました"
-      },
-      "keysoundSelection": {
-        "selected": "ノーツ{{count}}個を選択しました",
-        "selected_other": "ノーツ{{count}}個を選択しました",
-        "none": "選択したキーサウンドを使うノーツはありません"
-      },
-      "bgmLanes": {
-        "arranged": "BGMノーツ{{count}}個のレーンを移動しました (Ctrl+Zで復元可能)",
-        "arranged_other": "BGMノーツ{{count}}個のレーンを移動しました (Ctrl+Zで復元可能)",
-        "unchanged": "すでに同じ配置です",
-        "noSourceLines": "元の行の情報を持つBGMノーツがありません。エディタで置いたノーツとbmson譜面には行の情報がありません。"
+        "writerSlotRerouted_other": "同じレーンの同じ位置に重なったオブジェクト{{count}}個は、キー音をBGMチャンネルに保存しました",
+        "writerUnmappedLane": "このキーモードで書き出せないレーンのノーツ{{count}}個をスキップしました",
+        "writerUnmappedLane_other": "このキーモードで書き出せないレーンのノーツ{{count}}個をスキップしました"
       }
     }
   },

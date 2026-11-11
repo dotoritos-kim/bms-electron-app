@@ -6,6 +6,7 @@
     "autoDetectSuccess_other": "检测到 {{count}} 个片段。",
     "clearMarkersButton": "清除标记",
     "closeConfirm": "关闭切片器？将丢弃 {{count}} 个标记。",
+    "closeConfirm_other": "",
     "emptyFormats": "支持 WAV、MP3、OGG、FLAC",
     "emptyTitle": "打开音频文件以开始",
     "infoChannels": "声道",
@@ -29,8 +30,8 @@
   "dialogs": {
     "autoChart": {
       "applyButton": "应用",
-      "audioLoadFailed": "音频加载失败：{{message}}",
       "audioLoaded": "已加载（{{duration}}秒）",
+      "audioLoadFailed": "音频加载失败：{{message}}",
       "audioLoading": "加载中…",
       "audioOpenButton": "打开音频文件",
       "audioSection": "音频来源",
@@ -48,6 +49,7 @@
       "previewCol": "列",
       "previewLabel_other": "预览（{{count}} 个音符）",
       "previewMore": "... 还有 {{count}} 个",
+      "previewMore_other": "",
       "regenerateButton": "使用新种子重新生成",
       "scratchToggle": "包含皿轨",
       "seedLabel": "种子",
@@ -67,6 +69,23 @@
       "tapButton": "点击 (Space)",
       "tapsCount_other": "BPM（{{count}} 次点击）",
       "title": "BPM 点击检测"
+    },
+    "editorOptions": {
+      "bgmLanesInView": {
+        "description": "",
+        "label": ""
+      },
+      "bgmLayout": {
+        "description": "",
+        "label": ""
+      },
+      "description": "",
+      "dragAxis": {
+        "description": "",
+        "label": ""
+      },
+      "resetButton": "",
+      "title": ""
     },
     "keyBindings": {
       "conflictBadge": "冲突",
@@ -123,7 +142,8 @@
     }
   },
   "errors": {
-    "goHome": "返回主页"
+    "goHome": "返回主页",
+    "renderingTitle": ""
   },
   "home": {
     "actions": {
@@ -175,8 +195,11 @@
   },
   "navigation": {
     "discardLabel": "不保存",
+    "editLabel": "",
+    "homeLabel": "",
     "leaveLabel": "离开",
     "leaveTitle": "离开页面",
+    "playLabel": "",
     "quitTitle": "退出应用",
     "saveAndLeaveLabel": "保存并离开"
   },
@@ -190,7 +213,13 @@
     "loadingKeysounds": "正在加载键音... {{loaded}}/{{total}}"
   },
   "stats": {
+    "bgm": "",
     "duration": "时长",
-    "measures": "小节数"
+    "invisible": "",
+    "landmine": "",
+    "ln": "",
+    "measures": "小节数",
+    "nps": "",
+    "playable": ""
   }
 }

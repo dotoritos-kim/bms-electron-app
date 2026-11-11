@@ -16,8 +16,10 @@
  *   because empty translation strings are treated as missing.
  *
  * Scope:
- *   Operates on `ko` and `en` only. These are the locales that ship in
- *   ENABLED_LOCALES. Other locales remain empty for translator review.
+ *   Operates on the locales that ship in ENABLED_LOCALES (`ko`, `en`, `ja`).
+ *   An empty `_other` there is shown as an empty string wherever the text
+ *   has a count, instead of falling back to the un-suffixed key. Other
+ *   locales remain empty for translator review.
  *
  * Usage:
  *   `node scripts/i18n-fill-plurals.cjs`
@@ -31,7 +33,7 @@ const path = require('path');
 
 const PLURAL_SUFFIXES = ['_zero', '_one', '_two', '_few', '_many', '_other'];
 const NAMESPACES = ['app', 'common', 'editor', 'errors', 'player'];
-const FILL_LOCALES = ['ko', 'en'];
+const FILL_LOCALES = ['ko', 'en', 'ja'];
 const LOCALES_DIR = path.join(__dirname, '..', 'src', 'shared', 'i18n', 'locales');
 
 function fillPlurals(node) {

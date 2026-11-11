@@ -7,6 +7,11 @@
       "tooltip": "当前位置附近的键音（按时间顺序排列），点击可预览。"
     },
     "bgmManager": {
+      "arrangeLabel": "",
+      "arrangePacked": "",
+      "arrangePackedTooltip": "",
+      "arrangeSource": "",
+      "arrangeSourceTooltip": "",
       "channelStats": "{{notes}} 个音符，{{keysounds}} 个键音",
       "clickToSelect": "点击：选择",
       "muteOff": "取消静音",
@@ -31,6 +36,11 @@
         "discard": "不保存",
         "saveAndLeave": "保存并离开",
         "title": "未保存的更改"
+      },
+      "bgmLanes": {
+        "arranged_other": "",
+        "noSourceLines": "",
+        "unchanged": ""
       },
       "bookmarkDialog": {
         "add": "添加",
@@ -77,6 +87,7 @@
         "aiChartLabel": "AI 谱面生成器",
         "audioSlicerLabel": "音频切片器",
         "deleteMeasureTitle": "删除小节 (Ctrl+Shift+D)",
+        "editorOptionsLabel": "",
         "insertMeasureTitle": "插入小节 (Ctrl+Shift+I)",
         "keyBindingsLabel": "快捷键设置",
         "measureLabel": "小节",
@@ -102,6 +113,10 @@
         "timeSigHint": "1.0 = 4/4，0.75 = 3/4，1.25 = 5/4，0.875 = 7/8"
       },
       "keysoundNoNotes": "没有音符使用此键音",
+      "keysoundSelection": {
+        "none": "",
+        "selected_other": ""
+      },
       "layerPanel": {
         "hideAria": "隐藏 {{layer}}",
         "hideTitle": "隐藏",
@@ -142,10 +157,6 @@
         "sidebarLabel": "地图"
       },
       "navGuardMessage": "有未保存的更改，确定要离开吗？",
-      "playTest": {
-        "label": "试玩",
-        "returnToEditor": "返回编辑器 (Esc)"
-      },
       "playback": {
         "audioErrorTitle": "音频加载失败，点击重试",
         "bpmTapTitle": "BPM 点击检测",
@@ -163,6 +174,10 @@
         "stopTitle": "停止",
         "unmuteTitle": "取消静音",
         "volumeTitle": "音量：{{percent}}%"
+      },
+      "playTest": {
+        "label": "试玩",
+        "returnToEditor": "返回编辑器 (Esc)"
       },
       "replaceKeysound": {
         "cancel": "取消",
@@ -190,7 +205,9 @@
       "toast": {
         "audioLoadFailed": "音频加载失败：{{message}}",
         "autoChartNoKeysound": "已跳过 {{count}} 个该位置没有 BGM 键音的音符",
+        "autoChartNoKeysound_other": "",
         "autoChartSkipped": "已跳过 {{count}} 个与现有音符重叠的生成音符",
+        "autoChartSkipped_other": "",
         "encodingFallback": "部分字符无法用原编码({{encoding}})表示，已保存为带 BOM 的 UTF-8",
         "highResWarning_other": "{{count}} 个音符超出标准分辨率（192），可能导致兼容性问题",
         "keysoundDeleted": "键音 {{id}} 已删除（Ctrl+Z 可撤销）",
@@ -200,13 +217,15 @@
         "keysoundsImported_other": "已导入 {{count}} 个键音",
         "keysoundsMissing_other": "{{count}} 个键音文件无法加载，将保持静音：{{ids}}",
         "keysoundsNoFreeId_other": "{{count}} 个文件未添加：1295 个键音 ID 已全部占用",
+        "longNoteUnchanged": "",
+        "metaSaveFailed": "无法保存编辑器配置文件(.bms.meta)，下次打开时键位模式和编辑器设置可能无法恢复",
         "notesGenerated_other": "已生成 {{count}} 个音符",
         "pasteConflicts_other": "已替换 {{count}} 个冲突音符",
         "pasteDropped_other": "已排除 {{count}} 个超出键位模式范围的音符",
         "redoAction": "重做：{{description}}",
-        "saveFailed": "保存失败：{{message}}",
         "saved": "已保存",
         "savedAs": "另存为",
+        "saveFailed": "保存失败：{{message}}",
         "sliceLoadFailed": "音频文件加载失败：{{message}}",
         "sliceSaveFailed": "切片保存失败：{{message}}",
         "slicesSaved_other": "已保存 {{count}} 个切片",
@@ -214,12 +233,11 @@
         "undoAction": "撤销：{{description}}",
         "writerDefsExhausted_other": "{{count}} 个 BPM/STOP 值无法分配定义 ID（已全部占用）",
         "writerInvalidValue_other": "已跳过 {{count}} 个无效的 BPM/STOP 值",
-        "writerUnmappedLane_other": "已跳过 {{count}} 个位于此键位模式无法写入的轨道上的音符",
-        "metaSaveFailed": "无法保存编辑器配置文件(.bms.meta)，下次打开时键位模式和编辑器设置可能无法恢复",
         "writerLnShortened_other": "{{count}} 个长音符结尾与下一个音符相接，已缩短 1/192 小节后保存",
         "writerOutOfRange_other": "超过第 999 小节的 {{count}} 个对象未保存",
         "writerSlotDropped_other": "{{count}} 个重叠的地雷音符无法保存",
-        "writerSlotRerouted_other": "{{count}} 个对象与同一轨道同一位置的音符重叠，其键音已保存到 BGM 通道"
+        "writerSlotRerouted_other": "{{count}} 个对象与同一轨道同一位置的音符重叠，其键音已保存到 BGM 通道",
+        "writerUnmappedLane_other": "已跳过 {{count}} 个位于此键位模式无法写入的轨道上的音符"
       }
     }
   },

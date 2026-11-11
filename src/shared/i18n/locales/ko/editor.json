@@ -135,6 +135,11 @@
       "tooltip": "현재 위치 근처의 키음을 시간순으로 표시합니다. 클릭하면 해당 키음을 선택합니다."
     },
     "bgmManager": {
+      "arrangeLabel": "레인 배치",
+      "arrangePacked": "왼쪽 정렬",
+      "arrangePackedTooltip": "같은 박자의 BGM 노트를 왼쪽 레인부터 채웁니다 (Ctrl+Z로 복원 가능)",
+      "arrangeSource": "원본 순서",
+      "arrangeSourceTooltip": "파일의 #xxx01 줄 순서대로 레인에 놓습니다. BMSE·iBMSC의 B1, B2… 열과 같아서, 악기별로 열을 나눈 차트는 악기마다 한 레인에 모입니다 (Ctrl+Z로 복원 가능)",
       "channelStats": "{{notes}}개 노트, {{keysounds}}종 키음",
       "clickToSelect": "클릭: 선택 · Ctrl+클릭: 추가 선택",
       "muteOff": "뮤트 해제",
@@ -142,12 +147,7 @@
       "soloOff": "솔로 해제",
       "soloOn": "이 채널만 솔로",
       "title": "BGM 매니저 ({{count}}개)",
-      "title_other": "BGM 매니저 ({{count}}개)",
-      "arrangeLabel": "레인 배치",
-      "arrangePacked": "왼쪽 정렬",
-      "arrangePackedTooltip": "같은 박자의 BGM 노트를 왼쪽 레인부터 채웁니다 (Ctrl+Z로 복원 가능)",
-      "arrangeSource": "원본 순서",
-      "arrangeSourceTooltip": "파일의 #xxx01 줄 순서대로 레인에 놓습니다. BMSE·iBMSC의 B1, B2… 열과 같아서, 악기별로 열을 나눈 차트는 악기마다 한 레인에 모입니다 (Ctrl+Z로 복원 가능)"
+      "title_other": "BGM 매니저 ({{count}}개)"
     },
     "header": {
       "artistField": "아티스트",
@@ -183,6 +183,8 @@
       "titleField": "제목"
     },
     "keysound": {
+      "checkedSummary": "키음 {{count}}개 선택됨",
+      "clearChecked": "키음 선택 해제",
       "contextMenu": {
         "deleteUnused": "미사용 키음 삭제",
         "findNotes": "이 키음 사용 노트 찾기",
@@ -195,10 +197,16 @@
       "countSummary": "{{count}}개 키음",
       "empty": "키음이 없습니다",
       "filteredSummary": "({{count}}개 필터)",
+      "multiSelectHint": "Ctrl·Shift+클릭으로 여러 키음 선택",
+      "multiSelectHintDetail": "Ctrl+클릭: 하나씩 추가·해제\nShift+클릭: 범위 선택\n폴더 이름 Ctrl+클릭: 폴더 전체",
       "noSearchResults": "검색 결과 없음",
       "noSilent": "무음 / No Sound",
       "previewHint": "더블클릭으로 미리듣기",
       "searchPlaceholder": "검색...",
+      "selectAllNotes": "모든 노트 선택",
+      "selectAllNotesTooltip": "이 키음들을 쓰는 노트를 레인·BGM 구분 없이 선택합니다",
+      "selectBgmNotes": "BGM 노트 선택",
+      "selectBgmNotesTooltip": "이 키음들을 쓰는 BGM 노트를 곡 전체에서 선택합니다",
       "title": "키음",
       "uploadButton": "업로드",
       "uploadDialog": {
@@ -215,15 +223,7 @@
         "unsupportedFormat": "지원하지 않는 형식: {{name}} (WAV/OGG/MP3만 가능)",
         "uploadFailed": "업로드 실패"
       },
-      "uploadTooltip": "키음 파일 업로드",
-      "multiSelectHint": "Ctrl·Shift+클릭으로 여러 키음 선택",
-      "checkedSummary": "키음 {{count}}개 선택됨",
-      "clearChecked": "키음 선택 해제",
-      "selectBgmNotes": "BGM 노트 선택",
-      "selectBgmNotesTooltip": "이 키음들을 쓰는 BGM 노트를 곡 전체에서 선택합니다",
-      "selectAllNotes": "모든 노트 선택",
-      "selectAllNotesTooltip": "이 키음들을 쓰는 노트를 레인·BGM 구분 없이 선택합니다",
-      "multiSelectHintDetail": "Ctrl+클릭: 하나씩 추가·해제\nShift+클릭: 범위 선택\n폴더 이름 Ctrl+클릭: 폴더 전체"
+      "uploadTooltip": "키음 파일 업로드"
     },
     "minimap": {
       "navigationTooltip": "클릭/드래그하여 이동",
@@ -326,6 +326,12 @@
         "saveAndLeave": "저장 후 나가기",
         "title": "저장하지 않은 변경사항"
       },
+      "bgmLanes": {
+        "arranged": "BGM 노트 {{count}}개의 레인을 옮김 (Ctrl+Z로 복원 가능)",
+        "arranged_other": "BGM 노트 {{count}}개의 레인을 옮김 (Ctrl+Z로 복원 가능)",
+        "noSourceLines": "원본 줄 정보가 있는 BGM 노트가 없습니다. 편집기에서 놓은 노트와 bmson 차트에는 줄 정보가 없습니다.",
+        "unchanged": "이미 같은 배치입니다"
+      },
       "bookmarkDialog": {
         "add": "추가",
         "addPrompt": "북마크 이름을 입력하세요.",
@@ -374,6 +380,7 @@
         "aiChartLabel": "AI 차트 생성",
         "audioSlicerLabel": "오디오 슬라이서",
         "deleteMeasureTitle": "마디 삭제 (Ctrl+Shift+D)",
+        "editorOptionsLabel": "편집 옵션",
         "insertMeasureTitle": "마디 삽입 (Ctrl+Shift+I)",
         "keyBindingsLabel": "키 바인딩 설정",
         "measureLabel": "마디",
@@ -385,8 +392,7 @@
         "saveBtnUnsaved": "저장 (Ctrl+S)",
         "saveTitle": "저장 (Ctrl+S)",
         "settingsLabel": "설정",
-        "settingsTitle": "설정 메뉴",
-        "editorOptionsLabel": "편집 옵션"
+        "settingsTitle": "설정 메뉴"
       },
       "inputDialog": {
         "bpmAdd": "BPM 추가",
@@ -400,6 +406,11 @@
         "timeSigHint": "1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8"
       },
       "keysoundNoNotes": "이 키음을 사용하는 노트가 없습니다",
+      "keysoundSelection": {
+        "none": "선택한 키음을 쓰는 노트가 없습니다",
+        "selected": "노트 {{count}}개 선택됨",
+        "selected_other": "노트 {{count}}개 선택됨"
+      },
       "layerPanel": {
         "hideAria": "{{layer}} 숨기기",
         "hideTitle": "숨기기",
@@ -446,10 +457,6 @@
         "sidebarLabel": "맵"
       },
       "navGuardMessage": "저장하지 않은 변경사항이 있습니다. 이동하시겠습니까?",
-      "playTest": {
-        "label": "플레이 테스트",
-        "returnToEditor": "편집으로 돌아가기 (Esc)"
-      },
       "playback": {
         "audioErrorTitle": "오디오 로드에 실패했습니다. 클릭하여 재시도",
         "bpmTapTitle": "BPM 탭",
@@ -467,6 +474,10 @@
         "stopTitle": "정지",
         "unmuteTitle": "음소거 해제",
         "volumeTitle": "볼륨: {{percent}}%"
+      },
+      "playTest": {
+        "label": "플레이 테스트",
+        "returnToEditor": "편집으로 돌아가기 (Esc)"
       },
       "replaceKeysound": {
         "cancel": "취소",
@@ -495,7 +506,9 @@
       "toast": {
         "audioLoadFailed": "오디오 로드 실패: {{message}}",
         "autoChartNoKeysound": "BGM이 없는 위치의 노트 {{count}}개는 놓지 않음",
+        "autoChartNoKeysound_other": "BGM이 없는 위치의 노트 {{count}}개는 놓지 않음",
         "autoChartSkipped": "기존 노트와 겹치는 {{count}}개는 건너뜀",
+        "autoChartSkipped_other": "기존 노트와 겹치는 {{count}}개는 건너뜀",
         "encodingFallback": "원본 인코딩({{encoding}})으로 표현할 수 없는 문자가 있어 UTF-8(BOM)로 저장했습니다",
         "highResWarning": "{{count}}개 노트가 표준 해상도(192) 범위 밖, 일부 플레이어에서 호환 문제 가능",
         "highResWarning_other": "{{count}}개 노트가 표준 해상도(192) 범위 밖, 일부 플레이어에서 호환 문제 가능",
@@ -512,6 +525,7 @@
         "keysoundsNoFreeId": "키음 ID 1295개를 모두 사용 중이라 파일 {{count}}개를 추가하지 못했습니다",
         "keysoundsNoFreeId_other": "키음 ID 1295개를 모두 사용 중이라 파일 {{count}}개를 추가하지 못했습니다",
         "longNoteUnchanged": "바꿀 수 있는 노트가 없습니다. 롱노트는 플레이 노트만 가능하며, 같은 레인의 다음 노트까지 그리드 한 칸 이상 여유가 필요합니다.",
+        "metaSaveFailed": "에디터 설정 파일(.bms.meta)을 저장하지 못했습니다. 다음에 열 때 키 모드와 에디터 설정이 복원되지 않을 수 있습니다",
         "notesGenerated": "{{count}}개 노트 생성 완료",
         "notesGenerated_other": "{{count}}개 노트 생성 완료",
         "pasteConflicts": "{{count}}개 중복 노트 교체됨",
@@ -519,9 +533,9 @@
         "pasteDropped": "{{count}}개 노트가 현재 키 모드 범위 밖이라 제외됨",
         "pasteDropped_other": "{{count}}개 노트가 현재 키 모드 범위 밖이라 제외됨",
         "redoAction": "다시 실행: {{description}}",
-        "saveFailed": "저장 실패: {{message}}",
         "saved": "저장 완료",
         "savedAs": "다른 이름으로 저장 완료",
+        "saveFailed": "저장 실패: {{message}}",
         "sliceLoadFailed": "오디오 파일 로드 실패: {{message}}",
         "sliceSaveFailed": "슬라이스 저장 실패: {{message}}",
         "slicesSaved": "{{count}}개 슬라이스 저장 완료",
@@ -533,9 +547,6 @@
         "writerDefsExhausted_other": "BPM/STOP 정의 ID가 부족해 값 {{count}}개를 저장하지 못했습니다",
         "writerInvalidValue": "잘못된 BPM/STOP 값 {{count}}개를 건너뛰었습니다",
         "writerInvalidValue_other": "잘못된 BPM/STOP 값 {{count}}개를 건너뛰었습니다",
-        "writerUnmappedLane": "이 키 모드에서 쓸 수 없는 레인의 노트 {{count}}개를 건너뛰었습니다",
-        "writerUnmappedLane_other": "이 키 모드에서 쓸 수 없는 레인의 노트 {{count}}개를 건너뛰었습니다",
-        "metaSaveFailed": "에디터 설정 파일(.bms.meta)을 저장하지 못했습니다. 다음에 열 때 키 모드와 에디터 설정이 복원되지 않을 수 있습니다",
         "writerLnShortened": "다음 노트와 맞닿은 롱노트 끝 {{count}}개를 1/192 마디만큼 줄여 저장했습니다",
         "writerLnShortened_other": "다음 노트와 맞닿은 롱노트 끝 {{count}}개를 1/192 마디만큼 줄여 저장했습니다",
         "writerOutOfRange": "999마디를 넘는 오브젝트 {{count}}개는 저장하지 않았습니다",
@@ -543,18 +554,9 @@
         "writerSlotDropped": "겹친 지뢰 노트 {{count}}개는 저장할 수 없어 제외했습니다",
         "writerSlotDropped_other": "겹친 지뢰 노트 {{count}}개는 저장할 수 없어 제외했습니다",
         "writerSlotRerouted": "같은 레인의 같은 위치에 겹친 오브젝트 {{count}}개는 키음을 BGM 채널에 저장했습니다",
-        "writerSlotRerouted_other": "같은 레인의 같은 위치에 겹친 오브젝트 {{count}}개는 키음을 BGM 채널에 저장했습니다"
-      },
-      "keysoundSelection": {
-        "selected": "노트 {{count}}개 선택됨",
-        "selected_other": "노트 {{count}}개 선택됨",
-        "none": "선택한 키음을 쓰는 노트가 없습니다"
-      },
-      "bgmLanes": {
-        "arranged": "BGM 노트 {{count}}개의 레인을 옮김 (Ctrl+Z로 복원 가능)",
-        "arranged_other": "BGM 노트 {{count}}개의 레인을 옮김 (Ctrl+Z로 복원 가능)",
-        "unchanged": "이미 같은 배치입니다",
-        "noSourceLines": "원본 줄 정보가 있는 BGM 노트가 없습니다. 편집기에서 놓은 노트와 bmson 차트에는 줄 정보가 없습니다."
+        "writerSlotRerouted_other": "같은 레인의 같은 위치에 겹친 오브젝트 {{count}}개는 키음을 BGM 채널에 저장했습니다",
+        "writerUnmappedLane": "이 키 모드에서 쓸 수 없는 레인의 노트 {{count}}개를 건너뛰었습니다",
+        "writerUnmappedLane_other": "이 키 모드에서 쓸 수 없는 레인의 노트 {{count}}개를 건너뛰었습니다"
       }
     }
   },

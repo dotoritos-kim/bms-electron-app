@@ -7,6 +7,7 @@
     "autoDetectSuccess_other": "{{count}}個の区間を検出しました。",
     "clearMarkersButton": "マーカーをクリア",
     "closeConfirm": "スライサーを閉じますか？ マーカー {{count}}件が破棄されます。",
+    "closeConfirm_other": "スライサーを閉じますか？ マーカー {{count}}件が破棄されます。",
     "emptyFormats": "WAV、MP3、OGG、FLACに対応",
     "emptyTitle": "オーディオファイルを開いて開始してください",
     "infoChannels": "チャンネル",
@@ -30,8 +31,8 @@
   "dialogs": {
     "autoChart": {
       "applyButton": "適用",
-      "audioLoadFailed": "オーディオの読み込みに失敗: {{message}}",
       "audioLoaded": "ロード済み ({{duration}}秒)",
+      "audioLoadFailed": "オーディオの読み込みに失敗: {{message}}",
       "audioLoading": "読み込み中...",
       "audioOpenButton": "オーディオファイルを開く",
       "audioSection": "オーディオソース",
@@ -51,6 +52,7 @@
       "previewLabel": "プレビュー ({{count}}個のノーツ)",
       "previewLabel_other": "プレビュー ({{count}}個のノーツ)",
       "previewMore": "... 他 {{count}}件",
+      "previewMore_other": "... 他 {{count}}件",
       "regenerateButton": "新しいシードで再生成",
       "scratchToggle": "スクラッチを含む",
       "seedLabel": "シード",

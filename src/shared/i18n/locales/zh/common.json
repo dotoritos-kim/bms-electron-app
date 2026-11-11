@@ -1,12 +1,14 @@
 {
   "actions": {
     "cancel": "取消",
+    "close": "",
     "dismiss": "关闭通知",
     "retry": "重试",
     "save": "保存"
   },
   "language": {
     "current": "当前语言：{{name}}",
-    "label": "语言"
+    "label": "语言",
+    "loadFailed": ""
   }
 }

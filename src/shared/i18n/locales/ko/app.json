@@ -7,6 +7,7 @@
     "autoDetectSuccess_other": "{{count}}개 구간이 감지되었습니다.",
     "clearMarkersButton": "마커 초기화",
     "closeConfirm": "슬라이서를 닫을까요? 마커 {{count}}개가 사라집니다.",
+    "closeConfirm_other": "슬라이서를 닫을까요? 마커 {{count}}개가 사라집니다.",
     "emptyFormats": "WAV, MP3, OGG, FLAC 지원",
     "emptyTitle": "오디오 파일을 열어 시작하세요",
     "infoChannels": "채널",
@@ -30,8 +31,8 @@
   "dialogs": {
     "autoChart": {
       "applyButton": "적용",
-      "audioLoadFailed": "오디오 로드 실패: {{message}}",
       "audioLoaded": "로드됨 ({{duration}}s)",
+      "audioLoadFailed": "오디오 로드 실패: {{message}}",
       "audioLoading": "로딩...",
       "audioOpenButton": "오디오 파일 열기",
       "audioSection": "오디오 소스",
@@ -51,6 +52,7 @@
       "previewLabel": "미리보기 ({{count}}개 노트)",
       "previewLabel_other": "미리보기 ({{count}}개 노트)",
       "previewMore": "... 외 {{count}}개",
+      "previewMore_other": "... 외 {{count}}개",
       "regenerateButton": "새 시드로 다시 생성",
       "scratchToggle": "스크래치 포함",
       "seedLabel": "시드",

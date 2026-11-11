@@ -3,11 +3,14 @@
     "addMarkerButton": "Agregar marcador",
     "autoDetectButton": "Detectar automáticamente",
     "autoDetectNoResults": "No se detectaron inicios. Intente subir el control de sensibilidad.",
-    "autoDetectSuccess_many": "{{count}} segmentos detectados.",
     "autoDetectSuccess_one": "{{count}} segmento detectado.",
+    "autoDetectSuccess_many": "{{count}} segmentos detectados.",
     "autoDetectSuccess_other": "{{count}} segmentos detectados.",
     "clearMarkersButton": "Borrar marcadores",
     "closeConfirm": "¿Cerrar el cortador? Se perderán {{count}} marcador(es).",
+    "closeConfirm_one": "",
+    "closeConfirm_many": "",
+    "closeConfirm_other": "",
     "emptyFormats": "Compatible con WAV, MP3, OGG, FLAC",
     "emptyTitle": "Abre un archivo de audio para comenzar",
     "infoChannels": "Canales",
@@ -31,15 +34,15 @@
   "dialogs": {
     "autoChart": {
       "applyButton": "Aplicar",
-      "audioLoadFailed": "No se pudo cargar el audio: {{message}}",
       "audioLoaded": "Cargado ({{duration}}s)",
+      "audioLoadFailed": "No se pudo cargar el audio: {{message}}",
       "audioLoading": "Cargando...",
       "audioOpenButton": "Abrir archivo de audio",
       "audioSection": "Fuente de audio",
       "difficultyLabel": "Dificultad",
       "generateButton": "Generar chart",
-      "generatedSummary_many": "{{count}} notas generadas",
       "generatedSummary_one": "{{count}} nota generada",
+      "generatedSummary_many": "{{count}} notas generadas",
       "generatedSummary_other": "{{count}} notas generadas",
       "gridSnapToggle": "Ajuste a cuadrícula",
       "lnRatioLabel": "Proporción de notas largas",
@@ -50,17 +53,20 @@
       "offsetLabel": "Desfase",
       "previewBeat": "Pulso",
       "previewCol": "Col",
-      "previewLabel_many": "Vista previa ({{count}} notas)",
       "previewLabel_one": "Vista previa ({{count}} nota)",
+      "previewLabel_many": "Vista previa ({{count}} notas)",
       "previewLabel_other": "Vista previa ({{count}} notas)",
       "previewMore": "... +{{count}} más",
+      "previewMore_one": "",
+      "previewMore_many": "",
+      "previewMore_other": "",
       "regenerateButton": "Regenerar con una semilla nueva",
       "scratchToggle": "Incluir scratch",
       "seedLabel": "Semilla",
       "suggestButton": "Sugerir patrón",
       "suggestCountLabel": "Notas a generar",
-      "suggestExplanation_many": "Analiza las notas existentes y propone la siguiente frase. El chart actual contiene {{count}} notas.",
       "suggestExplanation_one": "Analiza las notas existentes y propone la siguiente frase. El chart actual contiene {{count}} nota.",
+      "suggestExplanation_many": "Analiza las notas existentes y propone la siguiente frase. El chart actual contiene {{count}} notas.",
       "suggestExplanation_other": "Analiza las notas existentes y propone la siguiente frase. El chart actual contiene {{count}} notas.",
       "tabs": {
         "generate": "Audio → chart",
@@ -73,15 +79,32 @@
       "resetButton": "Restablecer",
       "resetIndicator": "restablecido",
       "tapButton": "Golpear (Space)",
-      "tapsCount_many": "BPM ({{count}} golpes)",
       "tapsCount_one": "BPM ({{count}} golpe)",
+      "tapsCount_many": "BPM ({{count}} golpes)",
       "tapsCount_other": "BPM ({{count}} golpes)",
       "title": "Golpear BPM"
     },
+    "editorOptions": {
+      "bgmLanesInView": {
+        "description": "",
+        "label": ""
+      },
+      "bgmLayout": {
+        "description": "",
+        "label": ""
+      },
+      "description": "",
+      "dragAxis": {
+        "description": "",
+        "label": ""
+      },
+      "resetButton": "",
+      "title": ""
+    },
     "keyBindings": {
       "conflictBadge": "conflicto",
-      "conflictSummary_many": "{{count}} atajos en conflicto",
       "conflictSummary_one": "{{count}} atajo en conflicto",
+      "conflictSummary_many": "{{count}} atajos en conflicto",
       "conflictSummary_other": "{{count}} atajos en conflicto",
       "listening": "Presiona una tecla...",
       "resetDefaults": "Restablecer valores predeterminados",
@@ -119,15 +142,15 @@
       "title": "Colores de notas"
     },
     "patternLibrary": {
-      "applyTooltip_many": "Haz clic para aplicar en la posición actual\n{{count}} notas, {{beats}} tiempos",
       "applyTooltip_one": "Haz clic para aplicar en la posición actual\n{{count}} nota, {{beats}} tiempos",
+      "applyTooltip_many": "Haz clic para aplicar en la posición actual\n{{count}} notas, {{beats}} tiempos",
       "applyTooltip_other": "Haz clic para aplicar en la posición actual\n{{count}} notas, {{beats}} tiempos",
       "deleteTooltip": "Eliminar",
       "empty": "Sin patrones",
       "noSearchResults": "Sin resultados",
       "panelTitle": "Biblioteca de patrones",
-      "patternStats_many": "{{count}} notas · {{beats}} tiempos",
       "patternStats_one": "{{count}} nota · {{beats}} tiempos",
+      "patternStats_many": "{{count}} notas · {{beats}} tiempos",
       "patternStats_other": "{{count}} notas · {{beats}} tiempos",
       "saveDialog": {
         "namePlaceholder": "Nombre del patrón",
@@ -139,7 +162,8 @@
     }
   },
   "errors": {
-    "goHome": "Ir al inicio"
+    "goHome": "Ir al inicio",
+    "renderingTitle": ""
   },
   "home": {
     "actions": {
@@ -191,8 +215,11 @@
   },
   "navigation": {
     "discardLabel": "No guardar",
+    "editLabel": "",
+    "homeLabel": "",
     "leaveLabel": "Salir",
     "leaveTitle": "Salir de la página",
+    "playLabel": "",
     "quitTitle": "Salir",
     "saveAndLeaveLabel": "Guardar y salir"
   },
@@ -206,7 +233,13 @@
     "loadingKeysounds": "Cargando keysounds... {{loaded}}/{{total}}"
   },
   "stats": {
+    "bgm": "",
     "duration": "Duración",
-    "measures": "Compases"
+    "invisible": "",
+    "landmine": "",
+    "ln": "",
+    "measures": "Compases",
+    "nps": "",
+    "playable": ""
   }
 }

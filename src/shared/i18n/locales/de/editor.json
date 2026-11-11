@@ -7,6 +7,11 @@
       "tooltip": "Schlüsselklänge nahe der aktuellen Position, in chronologischer Reihenfolge. Klicken zum Vorhören."
     },
     "bgmManager": {
+      "arrangeLabel": "",
+      "arrangePacked": "",
+      "arrangePackedTooltip": "",
+      "arrangeSource": "",
+      "arrangeSourceTooltip": "",
       "channelStats": "{{notes}} Noten, {{keysounds}} Schlüsselklänge",
       "clickToSelect": "Klick: auswählen",
       "muteOff": "Stummschaltung aufheben",
@@ -32,6 +37,12 @@
         "discard": "Nicht speichern",
         "saveAndLeave": "Speichern und verlassen",
         "title": "Ungespeicherte Änderungen"
+      },
+      "bgmLanes": {
+        "arranged_one": "",
+        "arranged_other": "",
+        "noSourceLines": "",
+        "unchanged": ""
       },
       "bookmarkDialog": {
         "add": "Hinzufügen",
@@ -80,6 +91,7 @@
         "aiChartLabel": "KI-Chart-Generator",
         "audioSlicerLabel": "Audio-Slicer",
         "deleteMeasureTitle": "Takt löschen (Ctrl+Shift+D)",
+        "editorOptionsLabel": "",
         "insertMeasureTitle": "Takt einfügen (Ctrl+Shift+I)",
         "keyBindingsLabel": "Tastenbelegungen",
         "measureLabel": "Takt",
@@ -105,6 +117,11 @@
         "timeSigHint": "1,0 = 4/4, 0,75 = 3/4, 1,25 = 5/4, 0,875 = 7/8"
       },
       "keysoundNoNotes": "Keine Noten verwenden diesen Schlüsselklang",
+      "keysoundSelection": {
+        "none": "",
+        "selected_one": "",
+        "selected_other": ""
+      },
       "layerPanel": {
         "hideAria": "{{layer}} ausblenden",
         "hideTitle": "Ausblenden",
@@ -145,10 +162,6 @@
         "sidebarLabel": "Karte"
       },
       "navGuardMessage": "Es gibt ungespeicherte Änderungen. Trotzdem verlassen?",
-      "playTest": {
-        "label": "Spieltest",
-        "returnToEditor": "Zurück zum Editor (Esc)"
-      },
       "playback": {
         "audioErrorTitle": "Audio konnte nicht geladen werden, klicken zum Wiederholen",
         "bpmTapTitle": "BPM-Tipp",
@@ -166,6 +179,10 @@
         "stopTitle": "Stopp",
         "unmuteTitle": "Stummschaltung aufheben",
         "volumeTitle": "Lautstärke: {{percent}}%"
+      },
+      "playTest": {
+        "label": "Spieltest",
+        "returnToEditor": "Zurück zum Editor (Esc)"
       },
       "replaceKeysound": {
         "cancel": "Abbrechen",
@@ -194,7 +211,11 @@
       "toast": {
         "audioLoadFailed": "Audio konnte nicht geladen werden: {{message}}",
         "autoChartNoKeysound": "{{count}} Noten ohne BGM-Keysound an ihrer Position übersprungen",
+        "autoChartNoKeysound_one": "",
+        "autoChartNoKeysound_other": "",
         "autoChartSkipped": "{{count}} erzeugte Noten übersprungen (überlappen vorhandene)",
+        "autoChartSkipped_one": "",
+        "autoChartSkipped_other": "",
         "encodingFallback": "Einige Zeichen passen nicht in die ursprüngliche Kodierung ({{encoding}}); als UTF-8 mit BOM gespeichert",
         "highResWarning_one": "{{count}} Note außerhalb der Standardauflösung (192), kann Kompatibilitätsprobleme verursachen",
         "highResWarning_other": "{{count}} Noten außerhalb der Standardauflösung (192), kann Kompatibilitätsprobleme verursachen",
@@ -210,6 +231,8 @@
         "keysoundsMissing_other": "{{count}} Schlüsselklang-Datei(en) konnten nicht geladen werden und bleiben stumm: {{ids}}",
         "keysoundsNoFreeId_one": "{{count}} Datei(en) nicht hinzugefügt: alle 1295 Schlüsselklang-IDs sind belegt",
         "keysoundsNoFreeId_other": "{{count}} Datei(en) nicht hinzugefügt: alle 1295 Schlüsselklang-IDs sind belegt",
+        "longNoteUnchanged": "",
+        "metaSaveFailed": "Die Editor-Begleitdatei (.bms.meta) konnte nicht gespeichert werden; Tastenmodus und Editor-Einstellungen werden beim nächsten Öffnen eventuell nicht wiederhergestellt",
         "notesGenerated_one": "{{count}} Note generiert",
         "notesGenerated_other": "{{count}} Noten generiert",
         "pasteConflicts_one": "{{count}} konflikthafte Note ersetzt",
@@ -217,9 +240,9 @@
         "pasteDropped_one": "{{count}} Note außerhalb des Tastenmodus-Bereichs ausgeschlossen",
         "pasteDropped_other": "{{count}} Noten außerhalb des Tastenmodus-Bereichs ausgeschlossen",
         "redoAction": "Wiederholen: {{description}}",
-        "saveFailed": "Speichern fehlgeschlagen: {{message}}",
         "saved": "Gespeichert",
         "savedAs": "Gespeichert als",
+        "saveFailed": "Speichern fehlgeschlagen: {{message}}",
         "sliceLoadFailed": "Audiodatei konnte nicht geladen werden: {{message}}",
         "sliceSaveFailed": "Slices konnten nicht gespeichert werden: {{message}}",
         "slicesSaved_one": "{{count}} Segment gespeichert",
@@ -231,9 +254,6 @@
         "writerDefsExhausted_other": "{{count}} BPM/STOP-Wert(e) erhielten keine Definitions-ID (alle belegt)",
         "writerInvalidValue_one": "{{count}} ungültige BPM/STOP-Wert(e) wurden übersprungen",
         "writerInvalidValue_other": "{{count}} ungültige BPM/STOP-Wert(e) wurden übersprungen",
-        "writerUnmappedLane_one": "{{count}} Note(n) in einer Spur, die dieser Tastenmodus nicht schreiben kann, wurden übersprungen",
-        "writerUnmappedLane_other": "{{count}} Note(n) in einer Spur, die dieser Tastenmodus nicht schreiben kann, wurden übersprungen",
-        "metaSaveFailed": "Die Editor-Begleitdatei (.bms.meta) konnte nicht gespeichert werden; Tastenmodus und Editor-Einstellungen werden beim nächsten Öffnen eventuell nicht wiederhergestellt",
         "writerLnShortened_one": "{{count}} Long-Note-Ende(n) berührten die nächste Note und wurden um 1/192 Takt gekürzt",
         "writerLnShortened_other": "{{count}} Long-Note-Ende(n) berührten die nächste Note und wurden um 1/192 Takt gekürzt",
         "writerOutOfRange_one": "{{count}} Objekt(e) jenseits von Takt 999 wurden nicht gespeichert",
@@ -241,7 +261,9 @@
         "writerSlotDropped_one": "{{count}} überlappende Minen konnten nicht gespeichert werden",
         "writerSlotDropped_other": "{{count}} überlappende Minen konnten nicht gespeichert werden",
         "writerSlotRerouted_one": "{{count}} Objekt(e) lagen an derselben Position derselben Spur; ihre Schlüsselklänge wurden im BGM-Kanal gespeichert",
-        "writerSlotRerouted_other": "{{count}} Objekt(e) lagen an derselben Position derselben Spur; ihre Schlüsselklänge wurden im BGM-Kanal gespeichert"
+        "writerSlotRerouted_other": "{{count}} Objekt(e) lagen an derselben Position derselben Spur; ihre Schlüsselklänge wurden im BGM-Kanal gespeichert",
+        "writerUnmappedLane_one": "{{count}} Note(n) in einer Spur, die dieser Tastenmodus nicht schreiben kann, wurden übersprungen",
+        "writerUnmappedLane_other": "{{count}} Note(n) in einer Spur, die dieser Tastenmodus nicht schreiben kann, wurden übersprungen"
       }
     }
   },

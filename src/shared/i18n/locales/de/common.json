@@ -1,12 +1,14 @@
 {
   "actions": {
     "cancel": "Abbrechen",
+    "close": "",
     "dismiss": "Benachrichtigung schließen",
     "retry": "Wiederholen",
     "save": "Speichern"
   },
   "language": {
     "current": "Aktuelle Sprache: {{name}}",
-    "label": "Sprache"
+    "label": "Sprache",
+    "loadFailed": ""
   }
 }

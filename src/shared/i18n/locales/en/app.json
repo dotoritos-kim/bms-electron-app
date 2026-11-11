@@ -7,6 +7,8 @@
     "autoDetectSuccess_other": "{{count}} segments detected.",
     "clearMarkersButton": "Clear markers",
     "closeConfirm": "Close the slicer? {{count}} marker(s) will be discarded.",
+    "closeConfirm_one": "Close the slicer? {{count}} marker(s) will be discarded.",
+    "closeConfirm_other": "Close the slicer? {{count}} marker(s) will be discarded.",
     "emptyFormats": "Supports WAV, MP3, OGG, FLAC",
     "emptyTitle": "Open an audio file to start",
     "infoChannels": "Channels",
@@ -30,8 +32,8 @@
   "dialogs": {
     "autoChart": {
       "applyButton": "Apply",
-      "audioLoadFailed": "Failed to load audio: {{message}}",
       "audioLoaded": "Loaded ({{duration}}s)",
+      "audioLoadFailed": "Failed to load audio: {{message}}",
       "audioLoading": "Loading...",
       "audioOpenButton": "Open audio file",
       "audioSection": "Audio source",
@@ -53,6 +55,8 @@
       "previewLabel_one": "Preview ({{count}} notes)",
       "previewLabel_other": "Preview ({{count}} notes)",
       "previewMore": "... +{{count}} more",
+      "previewMore_one": "... +{{count}} more",
+      "previewMore_other": "... +{{count}} more",
       "regenerateButton": "Regenerate with a new seed",
       "scratchToggle": "Include scratch",
       "seedLabel": "Seed",

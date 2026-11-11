@@ -136,6 +136,11 @@
       "tooltip": "Keysounds near the current position, in chronological order. Click to preview."
     },
     "bgmManager": {
+      "arrangeLabel": "Lanes",
+      "arrangePacked": "Pack left",
+      "arrangePackedTooltip": "Fill the BGM lanes from the left on each beat (Ctrl+Z to undo)",
+      "arrangeSource": "As in file",
+      "arrangeSourceTooltip": "Put each note on the lane of its #xxx01 line, like the B1, B2… columns of BMSE / iBMSC. Charts with one instrument per column get one instrument per lane (Ctrl+Z to undo)",
       "channelStats": "{{notes}} notes, {{keysounds}} keysounds",
       "clickToSelect": "Click: select · Ctrl+click: add to selection",
       "muteOff": "Unmute",
@@ -144,12 +149,7 @@
       "soloOn": "Solo this channel",
       "title": "BGM Manager ({{count}})",
       "title_one": "BGM Manager ({{count}})",
-      "title_other": "BGM Manager ({{count}})",
-      "arrangeLabel": "Lanes",
-      "arrangePacked": "Pack left",
-      "arrangePackedTooltip": "Fill the BGM lanes from the left on each beat (Ctrl+Z to undo)",
-      "arrangeSource": "As in file",
-      "arrangeSourceTooltip": "Put each note on the lane of its #xxx01 line, like the B1, B2… columns of BMSE / iBMSC. Charts with one instrument per column get one instrument per lane (Ctrl+Z to undo)"
+      "title_other": "BGM Manager ({{count}})"
     },
     "header": {
       "artistField": "Artist",
@@ -185,6 +185,8 @@
       "titleField": "Title"
     },
     "keysound": {
+      "checkedSummary": "Picked keysounds: {{count}}",
+      "clearChecked": "Clear picked keysounds",
       "contextMenu": {
         "deleteUnused": "Delete unused keysound",
         "findNotes": "Find notes using this keysound",
@@ -197,10 +199,16 @@
       "countSummary": "{{count}} keysound(s)",
       "empty": "No keysounds loaded",
       "filteredSummary": "({{count}} filtered)",
+      "multiSelectHint": "Ctrl/Shift+click to pick several",
+      "multiSelectHintDetail": "Ctrl+click: add / remove one\nShift+click: pick a range\nCtrl+click a folder name: the whole folder",
       "noSearchResults": "No matches",
       "noSilent": "Silent / No Sound",
       "previewHint": "Double-click to preview",
       "searchPlaceholder": "Search...",
+      "selectAllNotes": "Select all notes",
+      "selectAllNotesTooltip": "Select every note that uses these keysounds, on key lanes and BGM",
+      "selectBgmNotes": "Select BGM notes",
+      "selectBgmNotesTooltip": "Select every BGM note in the chart that uses these keysounds",
       "title": "Keysounds",
       "uploadButton": "Upload",
       "uploadDialog": {
@@ -217,15 +225,7 @@
         "unsupportedFormat": "Unsupported format: {{name}} (WAV/OGG/MP3 only)",
         "uploadFailed": "Upload failed"
       },
-      "uploadTooltip": "Upload keysound files",
-      "multiSelectHint": "Ctrl/Shift+click to pick several",
-      "checkedSummary": "Picked keysounds: {{count}}",
-      "clearChecked": "Clear picked keysounds",
-      "selectBgmNotes": "Select BGM notes",
-      "selectBgmNotesTooltip": "Select every BGM note in the chart that uses these keysounds",
-      "selectAllNotes": "Select all notes",
-      "selectAllNotesTooltip": "Select every note that uses these keysounds, on key lanes and BGM",
-      "multiSelectHintDetail": "Ctrl+click: add / remove one\nShift+click: pick a range\nCtrl+click a folder name: the whole folder"
+      "uploadTooltip": "Upload keysound files"
     },
     "minimap": {
       "navigationTooltip": "Click or drag to navigate",
@@ -328,6 +328,13 @@
         "saveAndLeave": "Save and leave",
         "title": "Unsaved changes"
       },
+      "bgmLanes": {
+        "arranged": "Moved {{count}} BGM notes to other lanes (Ctrl+Z to undo)",
+        "arranged_one": "Moved {{count}} BGM note to another lane (Ctrl+Z to undo)",
+        "arranged_other": "Moved {{count}} BGM notes to other lanes (Ctrl+Z to undo)",
+        "noSourceLines": "No BGM note has a source line. Notes placed in the editor and bmson charts have none.",
+        "unchanged": "The lanes are already laid out that way"
+      },
       "bookmarkDialog": {
         "add": "Add",
         "addPrompt": "Enter a bookmark name.",
@@ -378,6 +385,7 @@
         "aiChartLabel": "AI Chart Generator",
         "audioSlicerLabel": "Audio Slicer",
         "deleteMeasureTitle": "Delete measure (Ctrl+Shift+D)",
+        "editorOptionsLabel": "Editor options",
         "insertMeasureTitle": "Insert measure (Ctrl+Shift+I)",
         "keyBindingsLabel": "Key Bindings",
         "measureLabel": "measure",
@@ -389,8 +397,7 @@
         "saveBtnUnsaved": "Save (Ctrl+S)",
         "saveTitle": "Save (Ctrl+S)",
         "settingsLabel": "Settings",
-        "settingsTitle": "Settings menu",
-        "editorOptionsLabel": "Editor options"
+        "settingsTitle": "Settings menu"
       },
       "inputDialog": {
         "bpmAdd": "Add BPM",
@@ -404,6 +411,12 @@
         "timeSigHint": "1.0 = 4/4, 0.75 = 3/4, 1.25 = 5/4, 0.875 = 7/8"
       },
       "keysoundNoNotes": "No notes use this keysound",
+      "keysoundSelection": {
+        "none": "No notes use the picked keysounds",
+        "selected": "Selected {{count}} notes",
+        "selected_one": "Selected {{count}} note",
+        "selected_other": "Selected {{count}} notes"
+      },
       "layerPanel": {
         "hideAria": "Hide {{layer}}",
         "hideTitle": "Hide",
@@ -450,10 +463,6 @@
         "sidebarLabel": "Map"
       },
       "navGuardMessage": "You have unsaved changes. Leave anyway?",
-      "playTest": {
-        "label": "Play test",
-        "returnToEditor": "Return to editor (Esc)"
-      },
       "playback": {
         "audioErrorTitle": "Audio failed to load, click to retry",
         "bpmTapTitle": "BPM tap",
@@ -471,6 +480,10 @@
         "stopTitle": "Stop",
         "unmuteTitle": "Unmute",
         "volumeTitle": "Volume: {{percent}}%"
+      },
+      "playTest": {
+        "label": "Play test",
+        "returnToEditor": "Return to editor (Esc)"
       },
       "replaceKeysound": {
         "cancel": "Cancel",
@@ -500,7 +513,11 @@
       "toast": {
         "audioLoadFailed": "Failed to load audio: {{message}}",
         "autoChartNoKeysound": "Skipped {{count}} notes with no BGM keysound at their beat",
+        "autoChartNoKeysound_one": "Skipped {{count}} notes with no BGM keysound at their beat",
+        "autoChartNoKeysound_other": "Skipped {{count}} notes with no BGM keysound at their beat",
         "autoChartSkipped": "Skipped {{count}} generated notes overlapping existing ones",
+        "autoChartSkipped_one": "Skipped {{count}} generated notes overlapping existing ones",
+        "autoChartSkipped_other": "Skipped {{count}} generated notes overlapping existing ones",
         "encodingFallback": "Some characters cannot be written in the original encoding ({{encoding}}); saved as UTF-8 with BOM",
         "highResWarning": "{{count}} note(s) outside standard resolution (192), may cause compatibility issues",
         "highResWarning_one": "{{count}} note(s) outside standard resolution (192), may cause compatibility issues",
@@ -523,6 +540,7 @@
         "keysoundsNoFreeId_one": "{{count}} file(s) were not added: all 1295 keysound IDs are in use",
         "keysoundsNoFreeId_other": "{{count}} file(s) were not added: all 1295 keysound IDs are in use",
         "longNoteUnchanged": "No note could be changed. Only playable notes can be long notes, and a long note needs at least one grid step before the next note in its lane.",
+        "metaSaveFailed": "Could not save the editor sidecar (.bms.meta); the key mode and editor settings may not be restored next time",
         "notesGenerated": "{{count}} notes generated",
         "notesGenerated_one": "{{count}} notes generated",
         "notesGenerated_other": "{{count}} notes generated",
@@ -533,9 +551,9 @@
         "pasteDropped_one": "{{count}} note(s) outside key mode range excluded",
         "pasteDropped_other": "{{count}} note(s) outside key mode range excluded",
         "redoAction": "Redo: {{description}}",
-        "saveFailed": "Save failed: {{message}}",
         "saved": "Saved",
         "savedAs": "Saved as",
+        "saveFailed": "Save failed: {{message}}",
         "sliceLoadFailed": "Failed to load audio file: {{message}}",
         "sliceSaveFailed": "Failed to save slices: {{message}}",
         "slicesSaved": "{{count}} slices saved",
@@ -551,10 +569,6 @@
         "writerInvalidValue": "{{count}} invalid BPM/STOP value(s) were skipped",
         "writerInvalidValue_one": "{{count}} invalid BPM/STOP value(s) were skipped",
         "writerInvalidValue_other": "{{count}} invalid BPM/STOP value(s) were skipped",
-        "writerUnmappedLane": "{{count}} note(s) in a lane this key mode cannot write were skipped",
-        "writerUnmappedLane_one": "{{count}} note(s) in a lane this key mode cannot write were skipped",
-        "writerUnmappedLane_other": "{{count}} note(s) in a lane this key mode cannot write were skipped",
-        "metaSaveFailed": "Could not save the editor sidecar (.bms.meta); the key mode and editor settings may not be restored next time",
         "writerLnShortened": "{{count}} long note end(s) touched the next note in the lane and were shortened by 1/192 measure",
         "writerLnShortened_one": "{{count}} long note end(s) touched the next note in the lane and were shortened by 1/192 measure",
         "writerLnShortened_other": "{{count}} long note end(s) touched the next note in the lane and were shortened by 1/192 measure",
@@ -566,20 +580,10 @@
         "writerSlotDropped_other": "{{count}} overlapping landmine(s) could not be saved",
         "writerSlotRerouted": "{{count}} object(s) shared a position with another note in the same lane; their keysounds were saved on the BGM channel",
         "writerSlotRerouted_one": "{{count}} object(s) shared a position with another note in the same lane; their keysounds were saved on the BGM channel",
-        "writerSlotRerouted_other": "{{count}} object(s) shared a position with another note in the same lane; their keysounds were saved on the BGM channel"
-      },
-      "keysoundSelection": {
-        "selected": "Selected {{count}} notes",
-        "selected_other": "Selected {{count}} notes",
-        "selected_one": "Selected {{count}} note",
-        "none": "No notes use the picked keysounds"
-      },
-      "bgmLanes": {
-        "arranged": "Moved {{count}} BGM notes to other lanes (Ctrl+Z to undo)",
-        "arranged_other": "Moved {{count}} BGM notes to other lanes (Ctrl+Z to undo)",
-        "arranged_one": "Moved {{count}} BGM note to another lane (Ctrl+Z to undo)",
-        "unchanged": "The lanes are already laid out that way",
-        "noSourceLines": "No BGM note has a source line. Notes placed in the editor and bmson charts have none."
+        "writerSlotRerouted_other": "{{count}} object(s) shared a position with another note in the same lane; their keysounds were saved on the BGM channel",
+        "writerUnmappedLane": "{{count}} note(s) in a lane this key mode cannot write were skipped",
+        "writerUnmappedLane_one": "{{count}} note(s) in a lane this key mode cannot write were skipped",
+        "writerUnmappedLane_other": "{{count}} note(s) in a lane this key mode cannot write were skipped"
       }
     }
   },

@@ -314,7 +314,7 @@
     "editor": {
       "audioLoading": "로딩 {{loaded}}/{{total}}",
       "autoSaveRecovery": {
-        "body": "이전 세션의 자동 저장 데이터가 발견되었습니다. 복구하시겠습니까?",
+        "body": "저장하지 않은 이전 세션의 자동 저장 데이터가 있습니다. 복구하면 편집기로 불러오며, 원본 파일은 저장(Ctrl+S)하기 전까지 바뀌지 않습니다.",
         "ignore": "무시",
         "recover": "복구",
         "title": "자동 저장 복구"

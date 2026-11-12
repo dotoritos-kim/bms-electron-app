@@ -12,8 +12,8 @@ const DRAG_AXIS_OPTIONS = [
   { value: 'vertical', label: 'dialogs.editorOptions.dragAxis.options.vertical' },
 ] as const satisfies readonly { value: DragAxisLock; label: string }[];
 const BGM_LAYOUT_OPTIONS = [
-  { value: 'packed', label: 'dialogs.editorOptions.bgmLayout.options.packed' },
   { value: 'source', label: 'dialogs.editorOptions.bgmLayout.options.source' },
+  { value: 'packed', label: 'dialogs.editorOptions.bgmLayout.options.packed' },
 ] as const satisfies readonly { value: BgmLaneLayout; label: string }[];
 
 interface EditorOptionsDialogProps {

@@ -685,6 +685,8 @@ interface EditorState {
    * in the file" follows the file that was saved, not the one that was opened.
    */
   markSaved: () => void;
+  /** The chart shown is not what is on disk (e.g. an opened autosave): unsaved until saved, undo included. */
+  markUnsaved: () => void;
   setInputDialog: (dialog: InputDialog | null) => void;
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
@@ -2074,6 +2076,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       : s.notes;
     return { notes, hasUnsavedChanges: false, _savedPoint: savedPointOf({ ...s, notes }) };
   }),
+  markUnsaved: () => set({ hasUnsavedChanges: true, _savedPoint: null }),
   setInputDialog: (dialog) => set({ inputDialog: dialog }),
   toggleLeftPanel: () => set((s) => ({ showLeftPanel: !s.showLeftPanel })),
   toggleRightPanel: () => set((s) => ({ showRightPanel: !s.showRightPanel })),

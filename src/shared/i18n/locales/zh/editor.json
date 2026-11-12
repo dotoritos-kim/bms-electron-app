@@ -25,7 +25,7 @@
     "editor": {
       "audioLoading": "加载中 {{loaded}}/{{total}}",
       "autoSaveRecovery": {
-        "body": "发现上次会话的自动保存数据，是否恢复？",
+        "body": "发现上次会话未保存的自动保存数据。恢复后会在编辑器中打开，原文件在保存 (Ctrl+S) 之前不会改变。",
         "ignore": "忽略",
         "recover": "恢复",
         "title": "自动保存恢复"

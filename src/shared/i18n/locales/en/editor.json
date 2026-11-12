@@ -316,7 +316,7 @@
     "editor": {
       "audioLoading": "Loading {{loaded}}/{{total}}",
       "autoSaveRecovery": {
-        "body": "Auto-save data from a previous session was found. Recover it?",
+        "body": "Unsaved auto-save data from a previous session was found. Recovering opens it in the editor; the file itself does not change until you save (Ctrl+S).",
         "ignore": "Ignore",
         "recover": "Recover",
         "title": "Auto-save recovery"

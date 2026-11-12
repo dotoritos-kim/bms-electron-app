@@ -1235,6 +1235,20 @@ describe('Simple Setters', () => {
     });
   });
 
+  describe('markUnsaved', () => {
+    it('keeps an opened autosave unsaved, even after an edit is undone, until it is saved', () => {
+      seedNotes([mockNote({ id: 'b', noteType: 'bgm', column: undefined, bgmChannel: 2, sourceBgmLine: 0 })]);
+      act().markSaved();
+      act().markUnsaved();
+      expect(store().hasUnsavedChanges).toBe(true);
+      act().deleteNotes(['b']);
+      act().undo();
+      expect(store().hasUnsavedChanges).toBe(true);
+      act().markSaved();
+      expect(store().hasUnsavedChanges).toBe(false);
+    });
+  });
+
   it('setInputDialog', () => {
     act().setInputDialog({ type: 'bpm-add', defaultValue: '120', beat: 0 });
     expect(store().inputDialog?.type).toBe('bpm-add');

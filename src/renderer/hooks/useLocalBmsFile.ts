@@ -4,7 +4,7 @@ import { BMSParser, Timing, Positioning, Spacing, SongInfo, KeySounds, Notes, DE
 import type { BMSChart, BMSNote, EditableChartStyle, ISongInfoData } from '@rhythm-archive/bms-core';
 import { detectKeyMode } from '@rhythm-archive/bms-editor';
 import type { KeyMode, BpmChange, StopEvent, ScrollSpeedChange } from '@rhythm-archive/bms-editor';
-import { metaKeyMode, readWithLayout, readWithSavedKeyMode } from '../lib/keyModePersistence';
+import { contentHash, metaKeyMode, readWithLayout, readWithSavedKeyMode } from '../lib/keyModePersistence';
 import { isScratchColumn, playedLanes } from '../lib/keyModeLanes';
 
 export interface LocalBmsChartInfo {
@@ -74,6 +74,17 @@ export function isEditableNote(note: Pick<BMSNote, 'noteType' | 'column'>): bool
   return note.noteType === 'bgm' || !!note.column;
 }
 
+/**
+ * Chart text to open in place of what is on disk (autosave recovery). The file
+ * is still read for its encoding, so a later save keeps it; nothing is written.
+ */
+export interface LoadOverride {
+  text: string;
+  /** Key mode the text was written in (already validated). */
+  keyMode?: KeyMode;
+  style?: EditableChartStyle;
+}
+
 interface UseLocalBmsFileState {
   chart: LocalBmsChartInfo | null;
   isLoading: boolean;
@@ -93,7 +104,7 @@ export function useLocalBmsFile() {
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
 
-  const load = useCallback(async (filePath: string) => {
+  const load = useCallback(async (filePath: string, override?: LoadOverride) => {
     const requestId = ++requestIdRef.current;
     const isCurrent = () => mountedRef.current && requestIdRef.current === requestId;
     setState({ chart: null, isLoading: true, error: null });
@@ -104,7 +115,8 @@ export function useLocalBmsFile() {
       const buffer = await window.api.file.readBms(filePath);
       const parser = new BMSParser();
       // readBuffer is async: reads buffer → detects encoding → returns string
-      const bmsString = await parser.readBuffer(buffer);
+      const fileText = await parser.readBuffer(buffer);
+      const bmsString = override ? override.text : fileText;
       // compileString parses the BMS text into a BMSChart structure
       const chart = parser.compileString(bmsString);
       // Yield one frame so the loading spinner can animate before sync work continues
@@ -122,7 +134,11 @@ export function useLocalBmsFile() {
       let keyMode = detectKeyMode(notes, chart.headers);
       // A key mode recorded at save time wins, read with the layout it was written in
       const metaJson = await metaPromise;
-      let saved = readWithSavedKeyMode(chart, notes, metaKeyMode(metaJson), bmsString);
+      // Recovered text carries its own key mode (the sidecar belongs to the file on disk)
+      const savedKeyMode = override
+        ? (override.keyMode ? { keyMode: override.keyMode, contentHash: contentHash(bmsString), ...(override.style ? { style: override.style } : {}) } : undefined)
+        : metaKeyMode(metaJson);
+      let saved = readWithSavedKeyMode(chart, notes, savedKeyMode, bmsString);
       if (!isCurrent()) return;
       if (!saved && playedLanes(keyMode)) {
         // #4K / #6K / #8K lanes sit on fixed IIDX channels whatever the channel usage suggests

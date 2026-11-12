@@ -26,7 +26,7 @@
     "editor": {
       "audioLoading": "Laden {{loaded}}/{{total}}",
       "autoSaveRecovery": {
-        "body": "Automatisch gespeicherte Daten einer früheren Sitzung gefunden. Wiederherstellen?",
+        "body": "Nicht gespeicherte automatische Sicherung einer früheren Sitzung gefunden. Wiederherstellen öffnet sie im Editor; die Datei selbst ändert sich erst beim Speichern (Strg+S).",
         "ignore": "Ignorieren",
         "recover": "Wiederherstellen",
         "title": "Automatische Wiederherstellung"

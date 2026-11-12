@@ -5,7 +5,7 @@
  *
  * Fixture: test-bgm-columns.bms — 16 BGM lines in measure 1 (one instrument
  * per line, each on its own tick), so a packed layout needs a single lane and
- * the source layout needs 16. One key note (key.wav) on lane 1 at beat 0.
+ * the source layout (the default) needs 16. One key note (key.wav) on lane 1 at beat 0.
  */
 import { test, expect } from './electron-app';
 import type { Page } from '@playwright/test';
@@ -50,13 +50,8 @@ async function bgmChannels(window: Page): Promise<string[]> {
 }
 
 test.describe('BGM lanes as in file', () => {
-  test('packed by default; "as in file" spreads the instruments and adds a horizontal scrollbar', async ({ window }) => {
+  test('as in file by default (horizontal scrollbar for many lanes); "packed" moves them to the left', async ({ window }) => {
     await openBgmColumns(window);
-    expect(await bgmChannels(window)).toEqual(['CH 0']);
-    await expect(window.getByTestId('editor-hscroll')).toHaveCount(0);
-
-    await window.getByTestId('bgm-arrange-source').click();
-    await window.waitForTimeout(500);
     const channels = await bgmChannels(window);
     expect(channels).toHaveLength(16);
     expect(channels[15]).toBe('CH 15');
@@ -74,14 +69,27 @@ test.describe('BGM lanes as in file', () => {
     expect(await hscroll.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
     await window.screenshot({ path: 'test-results/bgm-lanes-source.png' });
 
-    // Undo goes back to the packed layout
+    await window.getByTestId('bgm-arrange-packed').click();
+    await window.waitForTimeout(500);
+    expect(await bgmChannels(window)).toEqual(['CH 0']);
+    await expect(window.getByTestId('editor-hscroll')).toHaveCount(0);
+
+    // Undo goes back to the layout of the file
     await window.keyboard.press('Control+z');
     await window.waitForTimeout(300);
-    expect(await bgmChannels(window)).toEqual(['CH 0']);
+    expect(await bgmChannels(window)).toHaveLength(16);
   });
 
   test('editor options: lanes on screen and the layout used when opening', async ({ window }) => {
     // test-chart.bms is open (beforeEach): the layout option applies when a chart is opened
+    await openEditorOptions(window);
+    await window.getByTestId('editor-option-bgm-layout-packed').check();
+    await window.keyboard.press('Escape');
+    await openBgmColumns(window);
+    expect(await bgmChannels(window)).toEqual(['CH 0']);
+
+    // Another chart first, so the next open loads test-bgm-columns.bms afresh
+    await openFixture(window, 'test-chart.bms');
     await openEditorOptions(window);
     await window.getByTestId('editor-option-bgm-layout-source').check();
     await window.getByTestId('editor-option-bgm-lanes').fill('32');
@@ -97,7 +105,7 @@ test.describe('BGM lanes as in file', () => {
     await window.getByTestId('editor-option-bgm-lanes').fill('4');
     await expect(window.getByTestId('editor-hscroll')).toBeVisible();
     await window.getByText(RESTORE_DEFAULTS).click();
-    await expect(window.getByTestId('editor-option-bgm-layout-packed')).toBeChecked();
+    await expect(window.getByTestId('editor-option-bgm-layout-source')).toBeChecked();
     await window.keyboard.press('Escape');
   });
 });
@@ -182,6 +190,10 @@ test.describe('Drag direction lock', () => {
   }
 
   test('horizontal keeps the timing, vertical keeps the lane, auto follows the first direction', async ({ window }) => {
+    // One BGM lane, so the key lanes and the note stay in view
+    await openEditorOptions(window);
+    await window.getByTestId('editor-option-bgm-layout-packed').check();
+    await window.keyboard.press('Escape');
     await openBgmColumns(window);
     await selectKeyNote(window);
     const start = await noteInfo(window);

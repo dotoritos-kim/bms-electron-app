@@ -27,7 +27,7 @@
     "editor": {
       "audioLoading": "Cargando {{loaded}}/{{total}}",
       "autoSaveRecovery": {
-        "body": "Se encontraron datos de guardado automático de una sesión anterior. ¿Deseas recuperarlos?",
+        "body": "Se encontraron datos de guardado automático sin guardar de una sesión anterior. Al recuperarlos se abren en el editor; el archivo no cambia hasta que guardes (Ctrl+S).",
         "ignore": "Ignorar",
         "recover": "Recuperar",
         "title": "Recuperación de guardado automático"

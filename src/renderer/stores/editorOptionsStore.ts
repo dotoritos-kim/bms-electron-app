@@ -8,7 +8,10 @@ import type { BgmLaneLayout } from '../lib/bgmLanes';
 export interface EditorOptions {
   /** How a dragged note may move: freely, or along one axis only. */
   dragAxisLock: DragAxisLock;
-  /** BGM lane layout used when a chart is opened (a .bms.meta layout wins). */
+  /**
+   * BGM lane layout used when a chart is opened (a .bms.meta layout wins).
+   * Default: as written in the file (#xxx01 line order, as BMSE / iBMSC show it).
+   */
   bgmLaneLayout: BgmLaneLayout;
   /** BGM lanes kept on screen next to the key lanes; more scroll sideways. */
   bgmLanesInView: number;
@@ -16,13 +19,20 @@ export interface EditorOptions {
 
 export const DEFAULT_EDITOR_OPTIONS: EditorOptions = {
   dragAxisLock: 'free',
-  bgmLaneLayout: 'packed',
+  bgmLaneLayout: 'source',
   bgmLanesInView: 12,
 };
 
 export const BGM_LANES_IN_VIEW_RANGE = { min: 1, max: 64 } as const;
 
 const STORAGE_KEY = 'editor-options';
+/**
+ * Version of the stored options. Unversioned records (0.6.0-0.8.0) hold
+ * `bgmLaneLayout: 'packed'` because that was the default whenever any option
+ * was changed, not because it was chosen: their layout is dropped so the
+ * current default applies.
+ */
+const STORAGE_VERSION = 2;
 const DRAG_AXIS_LOCKS: readonly DragAxisLock[] = ['free', 'auto', 'horizontal', 'vertical'];
 const BGM_LANE_LAYOUTS: readonly BgmLaneLayout[] = ['packed', 'source'];
 
@@ -41,10 +51,18 @@ export function parseEditorOptions(raw: unknown): EditorOptions {
   };
 }
 
+/** Options from the stored JSON value, older records migrated. */
+export function migrateStoredOptions(stored: unknown): EditorOptions {
+  if (!stored || typeof stored !== 'object') return parseEditorOptions(null);
+  const o = { ...(stored as Record<string, unknown>) };
+  if (o.version !== STORAGE_VERSION) delete o.bgmLaneLayout;
+  return parseEditorOptions(o);
+}
+
 function load(): EditorOptions {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return parseEditorOptions(raw ? JSON.parse(raw) : null);
+    return migrateStoredOptions(raw ? JSON.parse(raw) : null);
   } catch {
     return { ...DEFAULT_EDITOR_OPTIONS };
   }
@@ -56,7 +74,7 @@ interface EditorOptionsState extends EditorOptions {
 }
 
 const persist = (options: EditorOptions) => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(options)); } catch { /* quota */ }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...options, version: STORAGE_VERSION })); } catch { /* quota */ }
 };
 
 export const useEditorOptions = create<EditorOptionsState>((set, get) => ({

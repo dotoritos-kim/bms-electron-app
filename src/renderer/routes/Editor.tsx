@@ -17,7 +17,7 @@ import {
   getLaneIds,
 } from '@rhythm-archive/bms-editor';
 import type { BmsChartDiffInfo, NoteChartEditorProps, NoteConvertTarget, ZoomControl } from '@rhythm-archive/bms-editor';
-import type { EditableBMSNote, EditableBMSChart, EditableChartStyle, TimingAction } from '@rhythm-archive/bms-core';
+import type { EditableBMSNote, EditableBMSChart, TimingAction } from '@rhythm-archive/bms-core';
 import { BMSWriter, Timing, allocateObjectIds, canonicalObjectId, isBase62Headers, keysoundKey } from '@rhythm-archive/bms-core';
 import { beatToTick } from '../lib/tickUtils';
 import { AudioPreloader, WorkerAudioScheduler } from '@rhythm-archive/bms-player';
@@ -277,33 +277,11 @@ const WRITER_WARNING_KEYS = {
 } as const;
 type WriterWarningKey = typeof WRITER_WARNING_KEYS[keyof typeof WRITER_WARNING_KEYS];
 
-/**
- * Brings the sidecar key mode in line with BMS text written outside handleSave
- * (autosave recovery), so a stale mode from an earlier save is not applied to it.
- */
-async function syncMetaKeyMode(
-  bmsPath: string,
-  bmsContent: string,
-  keyMode: string | undefined,
-  style: EditableChartStyle | undefined,
-): Promise<void> {
-  const metaJson = await window.api.file.readMeta(bmsPath).catch(() => null);
-  let meta = createDefaultMeta();
-  try {
-    if (metaJson) meta = deserializeMeta(metaJson);
-  } catch { /* unreadable sidecar: start over */ }
-  const known = keyMode ? applyMetaToState({ version: meta.version, keyMode }).keyMode : undefined;
-  const fields = known ? keyModeMetaFields(bmsContent, known, style) : {};
-  if (!metaJson && !fields.keyMode) return;
-  delete meta.keyMode;
-  delete meta.keyModeContentHash;
-  delete meta.keyModeStyle;
-  await window.api.file.saveMeta(bmsPath, serializeMeta({ ...meta, ...fields })).catch(() => {});
-}
-
 export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard }: EditorProps) {
   const { t } = useTranslation(['editor', 'app', 'common']);
   const { chart, isLoading, error, load } = useLocalBmsFile();
+  // Set while an autosave is being opened in place of the file (recovery)
+  const recoveredLoadRef = useRef(false);
 
   // --- Zustand store (selective subscription, excludes high-frequency playbackTime/audioLoadProgress) ---
   const {
@@ -480,6 +458,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
   useEffect(() => {
     store.reset();
+    recoveredLoadRef.current = false;
     load(file.path);
   }, [file.path, load]);
 
@@ -563,6 +542,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       // Phase C: commit to store (triggers re-render with notes)
       store.initFromChart(ec, notesToCommit, notesToCommit.length + 1, chart.keyMode);
       if (metaUpdate) useEditorStore.setState(metaUpdate);
+      // An autosave opened in place of the file: unsaved until the user saves
+      if (recoveredLoadRef.current) {
+        recoveredLoadRef.current = false;
+        store.markUnsaved();
+      }
       // Notes on lanes the mode has no column for stay in the file but are not shown
       const shownLanes = new Set(getLaneIds(chart.keyMode));
       const hidden = notesToCommit.filter((n) => n.noteType !== 'bgm' && n.column && !shownLanes.has(n.column)).length;
@@ -2664,15 +2648,19 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
             className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 rounded hover:bg-zinc-800 transition-colors"
           >{t('editor:routes.editor.autoSaveRecovery.ignore')}</button>
           <button
-            onClick={async () => {
-              if (autoSaveContentRef.current) {
-                const recovered = untagAutoSave(autoSaveContentRef.current);
-                await window.api.file.saveBms(file.path, encodeForSave(recovered.content, chart).content);
-                await syncMetaKeyMode(file.path, recovered.content, recovered.keyMode, recovered.style);
-                await window.api.file.deleteAutoSave(file.path).catch(() => {});
-                lastAutoSaveRef.current = null;
+            onClick={() => {
+              // Opens the autosaved chart as unsaved changes. The file on disk
+              // is left alone until the user saves; the autosave stays until then.
+              const content = autoSaveContentRef.current;
+              if (content) {
+                const recovered = untagAutoSave(content);
+                const keyMode = recovered.keyMode
+                  ? applyMetaToState({ version: createDefaultMeta().version, keyMode: recovered.keyMode }).keyMode
+                  : undefined;
                 autoSaveContentRef.current = null;
-                load(file.path);
+                lastAutoSaveRef.current = content;
+                recoveredLoadRef.current = true;
+                load(file.path, { text: recovered.content, keyMode, style: keyMode ? recovered.style : undefined });
               }
               setActiveModal(null);
             }}

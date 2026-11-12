@@ -14,7 +14,7 @@ import { isKeyLane } from '../lib/autoChart';
 import type { GeneratedNote } from '../lib/autoChart';
 import { playedLanes } from '../lib/keyModeLanes';
 import type { EditorTool, SelectedNoteType, GridSnap, KeyMode } from '@rhythm-archive/bms-editor';
-import { getLaneIds } from '@rhythm-archive/bms-editor';
+import { getLaneIds, snapBeatToMeasureGrid, gridStepAt } from '@rhythm-archive/bms-editor';
 import type { PatternTemplate, PatternNote } from '../lib/patternTemplates';
 import { createBeatConverter, beatToMF44 } from '../lib/beatConverter';
 import type { BeatConverter, MeasureFraction } from '../lib/beatConverter';
@@ -182,19 +182,59 @@ function getConverter(getState: () => EditorState): BeatConverter {
   return getState()._beatConverter ?? createBeatConverter(new Map());
 }
 
-/** Sync helper: tick → { tick, beat, measure, fraction }. tick is the primary source. */
-function syncFromTick(tick: number, converter: BeatConverter): { tick: number; beat: number; measure: number; fraction: number } {
-  const beat = tickToBeat(tick);
-  const { measure, fraction } = converter.beatToMF(beat);
-  return { tick, beat, measure, fraction };
-}
-
-/** Sync helper: beat → { tick, beat, measure, fraction }. tick is derived from beat (legacy compatibility). */
+/**
+ * Sync helper: beat → { tick, beat, measure, fraction }. The tick (and `beat`)
+ * are rounded to the 960-ticks-per-beat grid; measure/fraction keep the exact
+ * position, so a note on a grid the ticks cannot hold (septuplets, measures of
+ * odd length) is written to the file exactly where it was placed.
+ */
 function syncFromBeat(beat: number, converter: BeatConverter): { tick: number; beat: number; measure: number; fraction: number } {
   const tick = beatToTick(beat);
-  const resolvedBeat = tickToBeat(tick); // normalize to tick boundary
-  const { measure, fraction } = converter.beatToMF(resolvedBeat);
-  return { tick, beat: resolvedBeat, measure, fraction };
+  const { measure, fraction } = exactMF(beat, converter);
+  return { tick, beat: tickToBeat(tick), measure, fraction };
+}
+
+/** measure/fraction of an exact beat; float noise at a barline goes to the barline. */
+function exactMF(beat: number, converter: BeatConverter): MeasureFraction {
+  const mf = converter.beatToMF(Math.max(0, beat));
+  if (mf.fraction > 1 - 1e-9) return { measure: mf.measure + 1, fraction: 0 };
+  if (mf.fraction < 1e-9) return { measure: mf.measure, fraction: 0 };
+  return mf;
+}
+
+/**
+ * Exact beat of a position: its measure/fraction when they still match the
+ * tick (within the tick's rounding), the tick otherwise. Moving or shifting a
+ * note from here keeps it on its grid instead of on the nearest tick.
+ */
+function exactBeat(tick: number, measure: number | undefined, fraction: number | undefined, converter: BeatConverter): number {
+  if (typeof measure === 'number' && typeof fraction === 'number' && fraction >= 0 && fraction < 1) {
+    const beat = converter.mfToBeat(measure, fraction);
+    if (Math.abs(beat * TICKS_PER_BEAT - tick) <= 0.5 + 1e-3) return beat;
+  }
+  return tickToBeat(tick);
+}
+
+/** Exact start beat of a note (see exactBeat). */
+function noteStartBeat(n: EditableBMSNote, converter: BeatConverter): number {
+  return exactBeat(n.tick ?? beatToTick(n.beat), n.measure, n.fraction, converter);
+}
+
+/** Exact end beat of a long note, or undefined (see exactBeat). */
+function noteEndBeat(n: EditableBMSNote, converter: BeatConverter): number | undefined {
+  const endTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
+  if (endTick === undefined) return undefined;
+  return exactBeat(endTick, n.endMeasure, n.endFraction, converter);
+}
+
+/** Long-note end fields for an exact end beat (all undefined for a short note). */
+function syncEndFromBeat(endBeat: number | undefined, converter: BeatConverter): {
+  endTick: number | undefined; endBeat: number | undefined; endMeasure: number | undefined; endFraction: number | undefined;
+} {
+  if (endBeat === undefined) return { endTick: undefined, endBeat: undefined, endMeasure: undefined, endFraction: undefined };
+  const endTick = beatToTick(endBeat);
+  const { measure, fraction } = exactMF(endBeat, converter);
+  return { endTick, endBeat: tickToBeat(endTick), endMeasure: measure, endFraction: fraction };
 }
 
 /** A note an action (pattern / AI chart) wants to place. */
@@ -239,7 +279,6 @@ function buildPlacement(
   for (const r of ordered) {
     const taken = noteLayer(r) === 'playable' ? matchOf.get(r) : { keysound: s.currentKeysound, additionalKeysounds: undefined };
     if (!taken) { noKeysound++; continue; }
-    const endTick = r.endBeat !== undefined ? beatToTick(r.endBeat) : undefined;
     notes.push({
       id: `note-${nextId++}`,
       ...syncFromBeat(r.beat, converter),
@@ -248,8 +287,7 @@ function buildPlacement(
       keysound: taken.keysound,
       additionalKeysounds: taken.additionalKeysounds,
       channel: '',
-      endBeat: endTick !== undefined ? tickToBeat(endTick) : undefined,
-      endTick,
+      ...syncEndFromBeat(r.endBeat, converter),
     } as EditableBMSNote);
   }
   return { notes, consumedIds: new Set(consumedIds), noKeysound, nextId };
@@ -272,11 +310,16 @@ function recalcMeasureFractions(
   return {
     timeSignatures: newTS,
     _beatConverter: newConverter,
+    // Notes keep their time; measure/fraction follow the new measure lengths.
     notes: s.notes.map((n) => {
       const tick = n.tick ?? beatToTick(n.beat);
-      const beat = tickToBeat(tick);
-      const { measure, fraction } = newConverter.beatToMF(beat);
-      return { ...n, tick, beat, measure, fraction };
+      const { measure, fraction } = exactMF(noteStartBeat(n, oldConverter), newConverter);
+      const end = noteEndBeat(n, oldConverter);
+      const endMF = end !== undefined ? exactMF(end, newConverter) : undefined;
+      return {
+        ...n, tick, beat: tickToBeat(tick), measure, fraction,
+        ...(endMF ? { endMeasure: endMF.measure, endFraction: endMF.fraction } : {}),
+      };
     }),
     bpmChanges: s.bpmChanges.map((b) => {
       const beat = oldConverter.mfToBeat(b.measure, b.fraction);
@@ -943,9 +986,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const id = `note-${s.nextNoteId}`;
     const converter = getConverter(get);
     const synced = syncFromBeat(note.beat, converter);
-    const endTick = note.endBeat !== undefined ? beatToTick(note.endBeat) : undefined;
-    const endBeat = endTick !== undefined ? tickToBeat(endTick) : undefined;
-    const newNote = { ...note, id, ...synced, endTick, endBeat } as EditableBMSNote;
+    const newNote = { ...note, id, ...synced, ...syncEndFromBeat(note.endBeat, converter) } as EditableBMSNote;
     const isPlayable = newNote.noteType === 'playable' && newNote.column;
 
     // Duplicate check for playable notes: auto-replace existing note at same beat+column
@@ -1034,14 +1075,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
     // The delta is already snapped by the caller; re-snapping each note's
     // absolute position would merge off-grid notes (1/192, triplets...) together.
-    const deltaTicks = delta.beat ? beatToTick(delta.beat) : 0;
+    // Moved from the exact position, so a note keeps its own grid (septuplets ...).
+    const deltaBeat = delta.beat ?? 0;
     const movedRaw = s.notes.map((n) => {
       if (!idsSet.has(n.id)) return n;
-      const curTick = n.tick ?? beatToTick(n.beat);
-      const newTick = Math.max(0, curTick + deltaTicks);
-      const curEndTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
-      const lnLength = curEndTick !== undefined ? curEndTick - curTick : undefined;
-      const newEndTick = lnLength !== undefined ? newTick + lnLength : undefined;
+      const start = noteStartBeat(n, converter);
+      const newStart = Math.max(0, start + deltaBeat);
+      const end = noteEndBeat(n, converter);
+      const newEnd = end !== undefined ? newStart + (end - start) : undefined;
       let newColumn = n.column;
       let newBgmChannel = n.bgmChannel;
       if (delta.columnDelta && n.noteType === 'bgm') {
@@ -1054,9 +1095,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           newColumn = laneIds[idx];
         }
       }
-      const synced = syncFromTick(newTick, converter);
-      const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
-      return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat, column: newColumn, bgmChannel: newBgmChannel };
+      return {
+        ...n, ...syncFromBeat(newStart, converter), ...syncEndFromBeat(newEnd, converter),
+        column: newColumn, bgmChannel: newBgmChannel,
+      };
     });
     // A moved BGM note must not land on a lane another BGM note has on that tick
     // (locked notes stay where they are and are placed around).
@@ -1107,10 +1149,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           updated.fraction = synced.fraction;
         }
         if (updates.endBeat !== undefined) {
-          updated.endTick = beatToTick(updates.endBeat);
-          updated.endBeat = tickToBeat(updated.endTick);
+          Object.assign(updated, syncEndFromBeat(updates.endBeat, converter));
         } else if ('endBeat' in updates) {
           updated.endTick = undefined;
+          updated.endMeasure = undefined;
+          updated.endFraction = undefined;
         }
         return updated;
       }),
@@ -1363,22 +1406,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       else newTS.set(m, size);
     }
     const newConverter = createBeatConverter(newTS);
+    const oldConverter = getConverter(get);
 
-    const shiftTicks = beatToTick(shiftAmount);
+    // Shifted from the exact positions (not the ticks), so notes off the tick
+    // grid (septuplets ...) are still on their grid in the shifted measures.
     set({
       notes: s.notes.map((n) => {
-        if (n.beat < shiftBeat) {
-          if (n.endBeat !== undefined && n.endBeat >= shiftBeat) {
-            const newEndTick = (n.endTick ?? beatToTick(n.endBeat)) + shiftTicks;
-            return { ...n, endBeat: tickToBeat(newEndTick), endTick: newEndTick };
+        const start = noteStartBeat(n, oldConverter);
+        const end = noteEndBeat(n, oldConverter);
+        if (start < shiftBeat - 1e-9) {
+          if (end !== undefined && end >= shiftBeat - 1e-9) {
+            return { ...n, ...syncEndFromBeat(end + shiftAmount, newConverter) };
           }
           return n;
         }
-        const newTick = (n.tick ?? beatToTick(n.beat)) + shiftTicks;
-        const synced = syncFromTick(newTick, newConverter);
-        const newEndTick = n.endBeat !== undefined ? (n.endTick ?? beatToTick(n.endBeat)) + shiftTicks : undefined;
-        const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
-        return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat };
+        return {
+          ...n,
+          ...syncFromBeat(start + shiftAmount, newConverter),
+          ...syncEndFromBeat(end !== undefined ? end + shiftAmount : undefined, newConverter),
+        };
       }),
       bpmChanges: s.bpmChanges.map((b) => {
         const beat = storeMfToBeat(get, b.measure, b.fraction);
@@ -1418,31 +1464,33 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       else newTS.set(m, size);
     }
     const newConverter = createBeatConverter(newTS);
+    const oldConverter = getConverter(get);
+    const EPS = 1e-9;
 
+    // Shifted from the exact positions (not the ticks), like insertMeasure.
     set({
       notes: s.notes
-        .filter((n) => n.beat < startBeat || n.beat >= endBeat)
+        .filter((n) => {
+          const start = noteStartBeat(n, oldConverter);
+          return start < startBeat - EPS || start >= endBeat - EPS;
+        })
         .map((n) => {
-          const shiftTicks = beatToTick(measureBeats);
-          const startTick = beatToTick(startBeat);
-          if (n.beat < startBeat) {
-            const curEndTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
-            if (curEndTick !== undefined && n.endBeat !== undefined && n.endBeat >= endBeat) {
-              const newEndTick = curEndTick - shiftTicks;
-              return { ...n, endBeat: tickToBeat(newEndTick), endTick: newEndTick };
+          const start = noteStartBeat(n, oldConverter);
+          const end = noteEndBeat(n, oldConverter);
+          if (start < startBeat - EPS) {
+            if (end !== undefined && end >= endBeat - EPS) {
+              return { ...n, ...syncEndFromBeat(end - measureBeats, newConverter) };
             }
-            if (curEndTick !== undefined && n.endBeat !== undefined && n.endBeat > startBeat) {
-              return { ...n, endBeat: startBeat, endTick: startTick };
+            if (end !== undefined && end > startBeat + EPS) {
+              return { ...n, ...syncEndFromBeat(startBeat, newConverter) };
             }
             return n;
           }
-          const curTick = n.tick ?? beatToTick(n.beat);
-          const newTick = curTick - shiftTicks;
-          const synced = syncFromTick(newTick, newConverter);
-          const curEndTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
-          const newEndTick = curEndTick !== undefined ? curEndTick - shiftTicks : undefined;
-          const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
-          return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat };
+          return {
+            ...n,
+            ...syncFromBeat(start - measureBeats, newConverter),
+            ...syncEndFromBeat(end !== undefined ? end - measureBeats : undefined, newConverter),
+          };
         }),
       bpmChanges: s.bpmChanges
         .filter((b) => {
@@ -1499,22 +1547,22 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (s.selectedNotes.size === 0) return;
     const selected = s.notes.filter((n) => s.selectedNotes.has(n.id) && !isNoteLocked(s.layerConfig, n));
     if (selected.length < 2) return;
-    // reduce, not Math.min(...spread): spreading 100k+ values overflows the stack
-    const minBeat = selected.reduce((m, n) => Math.min(m, n.beat), Infinity);
-    const maxBeat = selected.reduce((m, n) => Math.max(m, n.endBeat ?? n.beat), -Infinity);
-    const flipIds = new Set(selected.map((n) => n.id));
-    s.pushUndo('Flip notes');
     const converter = getConverter(get);
+    // Exact positions, so flipped off-grid notes (septuplets ...) stay on their grid
+    const exact = new Map(selected.map((n) => [n.id, { start: noteStartBeat(n, converter), end: noteEndBeat(n, converter) }]));
+    // reduce, not Math.min(...spread): spreading 100k+ values overflows the stack
+    const minBeat = [...exact.values()].reduce((m, p) => Math.min(m, p.start), Infinity);
+    const maxBeat = [...exact.values()].reduce((m, p) => Math.max(m, p.end ?? p.start), -Infinity);
+    s.pushUndo('Flip notes');
     set({
       notes: s.notes.map((n) => {
-        if (!flipIds.has(n.id)) return n;
-        const flippedBeat = maxBeat - (n.beat - minBeat);
-        const flippedEnd = n.endBeat !== undefined ? maxBeat - (n.endBeat - minBeat) : undefined;
+        const p = exact.get(n.id);
+        if (!p) return n;
+        const flippedBeat = maxBeat - (p.start - minBeat);
+        const flippedEnd = p.end !== undefined ? maxBeat - (p.end - minBeat) : undefined;
         const newBeat = flippedEnd !== undefined ? Math.min(flippedBeat, flippedEnd) : flippedBeat;
         const newEndBeat = flippedEnd !== undefined ? Math.max(flippedBeat, flippedEnd) : undefined;
-        const synced = syncFromBeat(newBeat, converter);
-        const newEndTick = newEndBeat !== undefined ? beatToTick(newEndBeat) : undefined;
-        return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat !== undefined ? tickToBeat(newEndTick!) : undefined };
+        return { ...n, ...syncFromBeat(newBeat, converter), ...syncEndFromBeat(newEndBeat, converter) };
       }),
       hasUnsavedChanges: true,
     });
@@ -1548,24 +1596,21 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     if (s.selectedNotes.size === 0) return;
     s.pushUndo('Quantize notes');
-    const gridTicks = Math.round(TICKS_PER_BEAT * 4 / s.gridSnap);
     const converter = getConverter(get);
+    // The grid the editor draws: per measure (its length and grid override)
+    const snap = (beat: number) => snapBeatToMeasureGrid(beat, s.gridSnap, s.timeSignatures, s.gridSnapOverrides);
     set({
       notes: s.notes.map((n) => {
         if (!s.selectedNotes.has(n.id) || isNoteLocked(s.layerConfig, n)) return n;
-        const curTick = n.tick ?? beatToTick(n.beat);
-        const newTick = Math.round(curTick / gridTicks) * gridTicks;
-        let newEndTick = n.endTick !== undefined
-          ? Math.round(n.endTick / gridTicks) * gridTicks
-          : (n.endBeat !== undefined ? Math.round(beatToTick(n.endBeat) / gridTicks) * gridTicks : undefined);
-        // Prevent LN collapse: ensure endTick > tick by at least minLnLength
-        const minLnTicks = Math.max(gridTicks, beatToTick(s.minLnLength));
-        if (newEndTick !== undefined && newEndTick - newTick < minLnTicks) {
-          newEndTick = newTick + minLnTicks;
+        const start = snap(noteStartBeat(n, converter));
+        const end = noteEndBeat(n, converter);
+        let newEnd = end !== undefined ? snap(end) : undefined;
+        // Prevent LN collapse: keep at least one grid step / minLnLength
+        const minLn = Math.max(gridStepAt(start, s.gridSnap, s.timeSignatures, s.gridSnapOverrides), s.minLnLength);
+        if (newEnd !== undefined && newEnd - start < minLn - 1e-9) {
+          newEnd = start + minLn;
         }
-        const synced = syncFromTick(newTick, converter);
-        const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
-        return { ...n, ...synced, endTick: newEndTick, endBeat: newEndBeat };
+        return { ...n, ...syncFromBeat(start, converter), ...syncEndFromBeat(newEnd, converter) };
       }),
       hasUnsavedChanges: true,
     });
@@ -1640,26 +1685,21 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   paste: () => {
     const s = get();
     if (s.clipboard.length === 0) return;
-    const minBeat = Math.min(...s.clipboard.map((n) => n.beat));
-    const offset = Math.max(-minBeat, s.currentBeat - minBeat);
     s.pushUndo('Paste notes');
     const converter = getConverter(get);
+    // Offsets from the exact positions, so a pasted septuplet stays one
+    const starts = s.clipboard.map((n) => noteStartBeat(n, converter));
+    const minBeat = starts.reduce((m, b) => Math.min(m, b), Infinity);
+    const offset = Math.max(-minBeat, s.currentBeat - minBeat);
     const newIndex = new Map(s._noteIndex);
     let nextId = s.nextNoteId;
-    const offsetTicks = beatToTick(offset);
-    const pasted = settleBgm(s.notes, s.clipboard.map((n) => {
-      const curTick = n.tick ?? beatToTick(n.beat);
-      const newTick = curTick + offsetTicks;
-      const synced = syncFromTick(newTick, converter);
-      const lnLength = n.endTick !== undefined ? n.endTick - curTick : (n.endBeat !== undefined ? beatToTick(n.endBeat) - curTick : undefined);
-      const newEndTick = lnLength !== undefined ? newTick + lnLength : undefined;
-      const newEndBeat = newEndTick !== undefined ? tickToBeat(newEndTick) : undefined;
+    const pasted = settleBgm(s.notes, s.clipboard.map((n, i) => {
+      const end = noteEndBeat(n, converter);
       return {
         ...n,
         id: `note-${nextId++}`,
-        ...synced,
-        endTick: newEndTick,
-        endBeat: newEndBeat,
+        ...syncFromBeat(starts[i] + offset, converter),
+        ...syncEndFromBeat(end !== undefined ? end + offset : undefined, converter),
       };
     }));
     // Update index for pasted playable notes
@@ -1680,27 +1720,22 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const s = get();
     if (s.clipboard.length === 0) return null;
     const laneSet = new Set(laneIds);
-    const minBeat = Math.min(...s.clipboard.map((n) => n.beat));
-    const offset = Math.max(-minBeat, s.currentBeat - minBeat);
     const converter = getConverter(get);
+    // Offsets from the exact positions, so a pasted septuplet stays one
+    const starts = s.clipboard.map((n) => noteStartBeat(n, converter));
+    const minBeat = starts.reduce((m, b) => Math.min(m, b), Infinity);
+    const offset = Math.max(-minBeat, s.currentBeat - minBeat);
     let nextId = s.nextNoteId;
     let droppedCount = 0;
 
     const pastedRaw: EditableBMSNote[] = [];
-    const offsetTicks = beatToTick(offset);
-    for (const n of s.clipboard) {
-      const curTick = n.tick ?? beatToTick(n.beat);
-      const newTick = curTick + offsetTicks;
-      const synced = syncFromTick(newTick, converter);
-      const curEndTick = n.endTick ?? (n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined);
-      const lnLength = curEndTick !== undefined ? curEndTick - curTick : undefined;
-      const newEndTick = lnLength !== undefined ? newTick + lnLength : undefined;
+    for (const [i, n] of s.clipboard.entries()) {
+      const end = noteEndBeat(n, converter);
       const newNote = {
         ...n,
         id: `note-${nextId++}`,
-        ...synced,
-        endBeat: newEndTick !== undefined ? tickToBeat(newEndTick) : undefined,
-        endTick: newEndTick,
+        ...syncFromBeat(starts[i] + offset, converter),
+        ...syncEndFromBeat(end !== undefined ? end + offset : undefined, converter),
       };
       // Drop notes with columns outside current key mode (BGM/invisible OK)
       if (newNote.noteType === 'playable' && newNote.column && !laneSet.has(newNote.column)) {
@@ -1905,9 +1940,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     s.pushUndo(description);
     const converter = getConverter(get);
     const normalised = incoming.map((n) => {
-      const sync = syncFromBeat(n.beat, converter);
-      const endTick = n.endBeat !== undefined ? beatToTick(n.endBeat) : undefined;
-      return { ...n, ...sync, endTick, endBeat: endTick !== undefined ? tickToBeat(endTick) : undefined };
+      return { ...n, ...syncFromBeat(n.beat, converter), ...syncEndFromBeat(n.endBeat, converter) };
     });
     const notes = [...s.notes, ...normalised];
     set({ notes, _noteIndex: buildNoteIndex(notes), hasUnsavedChanges: true });

@@ -15,6 +15,8 @@ import {
   NoteSearchDialog,
   BmsChartDiff,
   getLaneIds,
+  snapBeatToMeasureGrid,
+  gridStepAt,
 } from '@rhythm-archive/bms-editor';
 import type { BmsChartDiffInfo, NoteChartEditorProps, NoteConvertTarget, ZoomControl } from '@rhythm-archive/bms-editor';
 import type { EditableBMSNote, EditableBMSChart, TimingAction } from '@rhythm-archive/bms-core';
@@ -856,10 +858,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     if (!lane) return;
 
     const s = useEditorStore.getState();
-    const gridStep = 4 / s.gridSnap;
-    // Snap to grid in both modes
+    // Snap to the drawn grid (per measure, time-signature aware) in both modes
     const rawBeat = mode === 'realtime' ? playbackBeatRef.current : s.currentBeat;
-    const beat = Math.round(rawBeat / gridStep) * gridStep;
+    const beat = snapBeatToMeasureGrid(rawBeat, s.gridSnap, s.timeSignatures, s.gridSnapOverrides);
 
     const { measure, fraction } = store.beatToMF(beat);
     store.addNote({
@@ -879,7 +880,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
     // Step mode: advance cursor
     if (mode === 'step') {
-      store.setCurrentBeat(beat + gridStep);
+      store.setCurrentBeat(beat + gridStepAt(beat, s.gridSnap, s.timeSignatures, s.gridSnapOverrides));
     }
   }, []);
 
@@ -1155,8 +1156,10 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
       e.preventDefault();
       const s = useEditorStore.getState();
-      const gridStep = 4 / s.gridSnap;
       const ids = Array.from(s.selectedNotes);
+      // One step of the grid drawn in the measure of the (first) selected note
+      const stepBeat = s.notes.find((n) => n.id === ids[0])?.beat ?? s.currentBeat;
+      const gridStep = gridStepAt(stepBeat, s.gridSnap, s.timeSignatures, s.gridSnapOverrides);
 
       // Tool shortcuts
       const tool = TOOL_ACTION_MAP[action];

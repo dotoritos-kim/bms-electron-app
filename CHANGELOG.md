@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.8.2](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.8.1...v0.8.2) (2026-11-12)
+
+
+### Bug Fixes
+
+* **editor:** keep notes on their grid through edits and saves ([de8646a](https://github.com/dotoritos-kim/bms-electron-app/commit/de8646aa9d098092b916f978d29d69b60939c977))
+
 ## [0.8.1](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.8.0...v0.8.1) (2026-11-12)
 
 

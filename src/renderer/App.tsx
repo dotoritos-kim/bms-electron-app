@@ -6,6 +6,7 @@ import { Player } from './routes/Player';
 import { Editor } from './routes/Editor';
 import { Layout } from './components/Layout';
 import { basename, dirname } from './lib/pathUtils';
+import { commitFocusedField, waitForStoreUpdate } from './lib/focusCommit';
 import { loadSession, saveSession } from './lib/sessionStorage';
 import i18next from 'i18next';
 import { localeService } from './services/LocaleService';
@@ -101,12 +102,18 @@ export function App() {
     targetRoute: AppRoute | 'quit';
     message: string;
     onSave?: () => Promise<boolean | void>;
+    /** Action to run once leaving is confirmed, in place of the route change (File > Open). */
+    then?: () => void;
   } | null>(null);
 
   /** Complete a confirmed navigation: either switch route or let the window close. */
-  const completeNavigation = useCallback((target: AppRoute | 'quit') => {
+  const completeNavigation = useCallback((target: AppRoute | 'quit', then?: () => void) => {
     if (target === 'quit') {
       void window.api.app.confirmClose();
+      return;
+    }
+    if (then) {
+      then();
       return;
     }
     setRoute(target);
@@ -138,6 +145,7 @@ export function App() {
 
   const handleNavigate = useCallback((targetRoute: AppRoute) => {
     if (targetRoute === route) return;
+    commitFocusedField();
     const guard = navigationGuardRef.current;
     if (guard) {
       const result = guard();
@@ -177,19 +185,36 @@ export function App() {
   useEffect(() => {
     const cleanups: Array<() => void> = [];
 
+    // File > Open / Open Folder leave the current editor, so they go through the
+    // same unsaved-changes guard as sidebar navigation: the action runs now, or
+    // after the leave dialog is confirmed.
+    const whenLeaveAllowed = async (action: () => void): Promise<void> => {
+      if (commitFocusedField()) await waitForStoreUpdate();
+      const result = navigationGuardRef.current?.();
+      if (result?.blocked) {
+        // targetRoute is not used once `then` is set (completeNavigation runs it instead)
+        setNavConfirm({ targetRoute: 'home', message: result.message, onSave: result.onSave, then: action });
+        return;
+      }
+      action();
+    };
+
     cleanups.push(
       window.api.on('menu:openFile', async () => {
-        const filePath = await window.api.file.openBmsFile();
-        if (filePath) {
-          setCurrentFile({ path: filePath, name: basename(filePath), folderPath: dirname(filePath) });
-        }
+        await whenLeaveAllowed(() => {
+          void window.api.file.openBmsFile().then((filePath) => {
+            if (filePath) {
+              setCurrentFile({ path: filePath, name: basename(filePath), folderPath: dirname(filePath) });
+            }
+          });
+        });
       }),
     );
 
     cleanups.push(
-      window.api.on('menu:openFolder', () => {
+      window.api.on('menu:openFolder', async () => {
         // Navigate to home where folder browsing is available
-        setRoute('home');
+        await whenLeaveAllowed(() => setRoute('home'));
       }),
     );
 
@@ -210,7 +235,8 @@ export function App() {
     // Window close: run the same guard as in-app navigation. Unsaved work
     // opens the leave dialog with a 'quit' target; otherwise close right away.
     cleanups.push(
-      window.api.on('app:closeRequested', () => {
+      window.api.on('app:closeRequested', async () => {
+        if (commitFocusedField()) await waitForStoreUpdate();
         const guard = navigationGuardRef.current;
         const result = guard?.();
         if (result?.blocked) {
@@ -272,7 +298,7 @@ export function App() {
                   onClick={() => {
                     const target = navConfirm.targetRoute;
                     setNavConfirm(null);
-                    completeNavigation(target);
+                    completeNavigation(target, navConfirm.then);
                   }}
                   className="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
                 >
@@ -286,14 +312,14 @@ export function App() {
                     if (result === false) return;
                     const target = navConfirm.targetRoute;
                     setNavConfirm(null);
-                    completeNavigation(target);
+                    completeNavigation(target, navConfirm.then);
                   } catch (err) {
                     console.error('[Nav] Save failed:', err);
                   }
                 } : () => {
                   const target = navConfirm.targetRoute;
                   setNavConfirm(null);
-                  completeNavigation(target);
+                  completeNavigation(target, navConfirm.then);
                 }}
                 className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
               >

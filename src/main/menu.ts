@@ -1,4 +1,4 @@
-import { Menu, BrowserWindow } from 'electron';
+import { Menu, BrowserWindow, app } from 'electron';
 import { sendToRenderer } from './ipc/handle';
 import { t } from './i18n/menu';
 import type { SupportedLocale } from '../shared/ipc-contract';
@@ -60,8 +60,15 @@ export function createMenu(locale: SupportedLocale = 'en'): void {
     {
       label: t(locale, 'menu.view'),
       submenu: [
-        { role: 'reload', label: t(locale, 'menu.reload') },
-        { role: 'forceReload', label: t(locale, 'menu.forceReload') },
+        // Reload calls webContents.reload() from the main process, which skips
+        // the renderer's unsaved-changes guard and discards unsaved edits. A
+        // shipped build therefore has no reload item (dev server keeps it).
+        ...(!app.isPackaged || process.env['ELECTRON_RENDERER_URL']
+          ? [
+              { role: 'reload' as const, label: t(locale, 'menu.reload') },
+              { role: 'forceReload' as const, label: t(locale, 'menu.forceReload') },
+            ]
+          : []),
         { role: 'toggleDevTools', label: t(locale, 'menu.toggleDevTools') },
         { type: 'separator' },
         { role: 'resetZoom', label: t(locale, 'menu.resetZoom') },

@@ -32,6 +32,7 @@ import { Player } from './Player';
 import { useEditorStore } from '../stores/editorStore';
 import type { AudioPhase, PasteAnalysis, LayerConfig } from '../stores/editorStore';
 import { deserializeMeta, serializeMeta, buildMetaFromState, applyMetaToState, restoreMetaNoteRefs, createDefaultMeta } from '../lib/bmsMeta';
+import { commitFocusedField } from '../lib/focusCommit';
 import { keyModeMetaFields, tagAutoSave, untagAutoSave } from '../lib/keyModePersistence';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { PatternLibraryPanel } from '../components/PatternLibraryPanel';
@@ -276,6 +277,7 @@ const WRITER_WARNING_KEYS = {
   'definition-keys-exhausted': 'writerDefsExhausted',
   'invalid-value': 'writerInvalidValue',
   'unmapped-lane': 'writerUnmappedLane',
+  'silent-note-dropped': 'writerSilentDropped',
 } as const;
 type WriterWarningKey = typeof WRITER_WARNING_KEYS[keyof typeof WRITER_WARNING_KEYS];
 
@@ -543,6 +545,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
       // Phase C: commit to store (triggers re-render with notes)
       store.initFromChart(ec, notesToCommit, notesToCommit.length + 1, chart.keyMode);
+      useEditorStore.setState({ loadedPath: file.path });
       if (metaUpdate) useEditorStore.setState(metaUpdate);
       // An autosave opened in place of the file: unsaved until the user saves
       if (recoveredLoadRef.current) {
@@ -555,6 +558,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       if (hidden > 0) {
         showToast(t('editor:store.orphanNotes', { keyMode: chart.keyMode, count: hidden }), 'warning');
       }
+      // #RANDOM / #IF branches are not written back: say so when the chart opens
+      if (chart.hasControlFlow) showToast(t('editor:routes.editor.toast.controlFlowWarning'), 'warning');
       // Save original chart info for diff
       originalChartInfoRef.current = {
         notes: chart.notes,
@@ -986,6 +991,12 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
   const handleSave = useCallback(async (): Promise<boolean> => {
     if (!chart || savingRef.current) return false;
+    // The store holds whichever chart was opened last. A leave dialog kept from an
+    // earlier editor must not write that chart over this file.
+    if (useEditorStore.getState().loadedPath !== file.path) return false;
+    // A value still typed in a chart-info field reaches the store only on blur:
+    // take it in first, or the save writes the previous value and says "saved".
+    commitFocusedField();
     const chartToSave = store.savableChart();
     if (!chartToSave) return false;
     savingRef.current = true;
@@ -997,9 +1008,11 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       const wavKeys = new Set(chartToSave.headers.wav.keys());
       const undefinedKeys = new Set<string>();
       for (const note of chartToSave.notes) {
-        if (note.keysound && note.keysound !== '00' && !wavKeys.has(note.keysound.toUpperCase())) {
-          undefinedKeys.add(note.keysound.toUpperCase());
-        }
+        // A landmine's id is its damage value, not a keysound. #BASE 62 ids are
+        // case-sensitive, so the id as written is looked up before the upper-case form.
+        if (note.noteType === 'landmine' || !note.keysound || note.keysound === '00') continue;
+        if (wavKeys.has(note.keysound) || wavKeys.has(note.keysound.toUpperCase())) continue;
+        undefinedKeys.add(note.keysound.toUpperCase());
       }
       if (undefinedKeys.size > 0) {
         console.warn('[Editor] Notes reference undefined WAV keys:', [...undefinedKeys]);
@@ -1070,6 +1083,8 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
 
   // Save As
   const handleSaveAs = useCallback(async () => {
+    if (useEditorStore.getState().loadedPath !== file.path) return;
+    commitFocusedField();
     const chartToSave = store.savableChart();
     if (!chart || !chartToSave) return;
     try {
@@ -1097,6 +1112,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
         });
         const metaSaved = await window.api.file.saveMeta(newPath, serializeMeta(meta)).then(() => true, () => false);
         if (!metaSaved) showToast(t('editor:routes.editor.toast.metaSaveFailed'), 'warning');
+        // The sidecar now exists on disk. Without this flag a later Ctrl+S that has
+        // no sidecar content skips the write and leaves the older sidecar in place.
+        if (metaSaved) metaSidecarExistsRef.current = true;
         store.markSaved();
         showToast(t('editor:routes.editor.toast.savedAs'), 'success');
         // Continue editing the file just written, not the old path.
@@ -1152,7 +1170,9 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
       if (!action) return;
       // A full-screen overlay (slicer, diff, play test) or a modal owns the
       // keyboard: chart-editing shortcuts must not fire behind it.
-      if ((activeOverlay !== null || activeModal !== null) && action !== 'escape') return;
+      // Any open dialog (the app's leave / quit confirmation included) owns the keyboard.
+      const dialogOpen = document.querySelector('[role="dialog"][aria-modal="true"]') !== null;
+      if ((activeOverlay !== null || activeModal !== null || dialogOpen) && action !== 'escape') return;
 
       e.preventDefault();
       const s = useEditorStore.getState();
@@ -1643,6 +1663,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
     autoSaveRef.current = setInterval(async () => {
       const chartToSave = store.savableChart();
       if (!useEditorStore.getState().hasUnsavedChanges || !chartToSave) return;
+      if (useEditorStore.getState().loadedPath !== file.path) return;
       try {
         const origLnObj = chartToSave.headers.lnobj;
         const writer = new BMSWriter({ lnMode: origLnObj ? 'lnobj' : 'channel', lnObjValue: origLnObj || undefined });
@@ -2177,6 +2198,7 @@ export function Editor({ file, onBack, onClearFile, onOpenFile, onRegisterGuard 
               )}
               {chart && (
                 <NoteChartEditorBridge
+                  keysInert={activeOverlay !== null || activeModal !== null}
                   notes={notes}
                   keyMode={keyMode}
                   totalBeats={totalBeats}

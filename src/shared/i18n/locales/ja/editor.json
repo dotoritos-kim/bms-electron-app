@@ -360,8 +360,8 @@
       },
       "copyErrorTemplate": "ファイル: {{path}}\nエラー: {{error}}",
       "createGroupPrompt": "グループ名:",
-      "deleteUnusedConfirm": "このキーサウンドは{{count}}個のノーツで使用中です。\n削除すると該当ノーツのキーサウンドが無音(00)に置き換えられます。\n\n削除しますか?",
-      "deleteUnusedConfirm_other": "このキーサウンドは{{count}}個のノーツで使用中です。\n削除すると該当ノーツのキーサウンドが無音(00)に置き換えられます。\n\n削除しますか?",
+      "deleteUnusedConfirm": "このキーサウンドは{{count}}個のノーツで使用中です。\n削除してもノーツとキーサウンド番号は譜面に残りますが、音は鳴らなくなります。\n\n削除しますか?",
+      "deleteUnusedConfirm_other": "このキーサウンドは{{count}}個のノーツで使用中です。\n削除してもノーツとキーサウンド番号は譜面に残りますが、音は鳴らなくなります。\n\n削除しますか?",
       "diff": {
         "close": "閉じる (Esc)",
         "title": "変更比較"
@@ -551,12 +551,15 @@
         "writerLnShortened_other": "次のノーツと接していたロングノーツ終端{{count}}個を1/192小節短くして保存しました",
         "writerOutOfRange": "999小節を超えるオブジェクト{{count}}個は保存されませんでした",
         "writerOutOfRange_other": "999小節を超えるオブジェクト{{count}}個は保存されませんでした",
+        "writerSilentDropped": "BMSに保存できない無音キーサウンド00のノーツ{{count}}個をファイルから除外しました",
+        "writerSilentDropped_other": "BMSに保存できない無音キーサウンド00のノーツ{{count}}個をファイルから除外しました",
         "writerSlotDropped": "重なった地雷ノーツ{{count}}個は保存できないため除外しました",
         "writerSlotDropped_other": "重なった地雷ノーツ{{count}}個は保存できないため除外しました",
         "writerSlotRerouted": "同じレーンの同じ位置に重なったオブジェクト{{count}}個は、キー音をBGMチャンネルに保存しました",
         "writerSlotRerouted_other": "同じレーンの同じ位置に重なったオブジェクト{{count}}個は、キー音をBGMチャンネルに保存しました",
         "writerUnmappedLane": "このキーモードで書き出せないレーンのノーツ{{count}}個をスキップしました",
-        "writerUnmappedLane_other": "このキーモードで書き出せないレーンのノーツ{{count}}個をスキップしました"
+        "writerUnmappedLane_other": "このキーモードで書き出せないレーンのノーツ{{count}}個をスキップしました",
+        "controlFlowWarning": "この譜面には #RANDOM / #IF の分岐があります。保存すると開いた時に選ばれた一つの分岐だけが残り、他の分岐はファイルから消えます。"
       }
     }
   },

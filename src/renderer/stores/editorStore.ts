@@ -497,6 +497,8 @@ interface EditorState {
   headers: BMSHeaderData | null;
   timeSignatures: Map<number, number>;
   editableChart: EditableBMSChart | null;
+  /** Path of the file whose chart is in the store. A save writes only to this path. */
+  loadedPath: string | null;
   hasUnsavedChanges: boolean;
   nextNoteId: number;
   keyMode: KeyMode;
@@ -799,6 +801,7 @@ const initialState = {
   headers: null as BMSHeaderData | null,
   timeSignatures: new Map<number, number>(),
   editableChart: null as EditableBMSChart | null,
+  loadedPath: null as string | null,
   hasUnsavedChanges: false,
   nextNoteId: 1,
   keyMode: '7K' as KeyMode,
@@ -845,6 +848,48 @@ const initialState = {
   _noteIndex: new Map<string, string>(),
   _savedPoint: null as SavedPoint | null,
 };
+
+/**
+ * BGA and extra channel objects move with the measures, as notes do: an insert
+ * moves measures >= atMeasure up by one; a delete drops the objects of the
+ * removed measure and moves the later ones down.
+ */
+function shiftMeasureObjects(chart: EditableBMSChart | null, atMeasure: number, delta: 1 | -1): EditableBMSChart | null {
+  if (!chart) return chart;
+  const shift = <T extends { measure: number }>(objs: T[]): T[] => {
+    const out: T[] = [];
+    for (const o of objs) {
+      if (delta > 0) out.push(o.measure >= atMeasure ? { ...o, measure: o.measure + 1 } : o);
+      else if (o.measure !== atMeasure) out.push(o.measure > atMeasure ? { ...o, measure: o.measure - 1 } : o);
+    }
+    return out;
+  };
+  return {
+    ...chart,
+    bgaEvents: shift(chart.bgaEvents),
+    ...(chart.extraObjects ? { extraObjects: shift(chart.extraObjects) } : {}),
+  };
+}
+
+/**
+ * A long note's end cannot run into the next note of its lane: the end stops one
+ * grid step before that note (the same rule as the long-note conversion), since
+ * BMS cannot hold a long-note end and the next head on one slot. Returns the
+ * allowed end beat, or null when there is no room past the head.
+ */
+function limitLongNoteEnd(notes: EditableBMSNote[], note: EditableBMSNote, endBeat: number, gridSnap: number): number | null {
+  if (note.column === undefined || note.noteType === 'bgm') return endBeat;
+  const gridTicks = Math.max(1, Math.round(TICKS_PER_BEAT * 4 / gridSnap));
+  let next: number | undefined;
+  for (const other of notes) {
+    if (other.id === note.id || other.column !== note.column || other.noteType === 'bgm') continue;
+    if (other.tick > note.tick && (next === undefined || other.tick < next)) next = other.tick;
+  }
+  if (next === undefined) return endBeat;
+  const limitTick = next - gridTicks;
+  if (Math.round(endBeat * TICKS_PER_BEAT) <= limitTick) return endBeat;
+  return limitTick > note.tick ? tickToBeat(limitTick) : null;
+}
 
 export const useEditorStore = create<EditorState>((set, get) => ({
   ...initialState,
@@ -1149,7 +1194,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           updated.fraction = synced.fraction;
         }
         if (updates.endBeat !== undefined) {
-          Object.assign(updated, syncEndFromBeat(updates.endBeat, converter));
+          const limited = limitLongNoteEnd(s.notes, n, updates.endBeat, s.gridSnap);
+          if (limited === null) return n; // no room before the next note in this lane
+          Object.assign(updated, syncEndFromBeat(limited, converter));
         } else if ('endBeat' in updates) {
           updated.endTick = undefined;
           updated.endMeasure = undefined;
@@ -1442,6 +1489,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }),
       timeSignatures: newTS,
       _beatConverter: newConverter,
+      editableChart: shiftMeasureObjects(s.editableChart, atMeasure, 1),
       ...shiftMeasureData(s.bookmarks, s.gridSnapOverrides, atMeasure, 1),
       hasUnsavedChanges: true,
     });
@@ -1518,6 +1566,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         }),
       timeSignatures: newTS,
       _beatConverter: newConverter,
+      editableChart: shiftMeasureObjects(s.editableChart, atMeasure, -1),
       ...shiftMeasureData(s.bookmarks, s.gridSnapOverrides, atMeasure, -1),
       hasUnsavedChanges: true,
     });
@@ -2252,16 +2301,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     for (const key of s.headers.wav.keys()) {
       if (removed.has(canon(key))) newWav.delete(key);
     }
-    // Notes and keysound layers that used a removed definition become silent
-    // in the same undo step (no dangling references to an undefined #WAV).
+    // Main keysounds keep their id (undefined #WAV = silent but still saved; '00' would be dropped on save),
+    // only additional layers that used a removed definition are removed, all in one undo step.
     const notes = s.notes.map((n) => {
-      const mainHit = removed.has(canon(n.keysound));
       const layers = n.additionalKeysounds?.filter((l) => !removed.has(canon(l.keysound)));
       const layersChanged = n.additionalKeysounds !== undefined && layers!.length !== n.additionalKeysounds.length;
-      if (!mainHit && !layersChanged) return n;
+      if (!layersChanged) return n;
       return {
         ...n,
-        ...(mainHit ? { keysound: '00' } : {}),
         ...(layersChanged ? { additionalKeysounds: layers!.length > 0 ? layers : undefined } : {}),
       };
     });

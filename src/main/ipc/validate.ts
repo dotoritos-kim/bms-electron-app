@@ -50,6 +50,21 @@ export function assertBmsPath(value: unknown, label = 'bmsPath'): string {
   return p;
 }
 
+/**
+ * Extensions the writer produces (BMS text). `.bmson` is a JSON chart format
+ * the app only reads (and refuses to open); it must never be written to.
+ */
+export const WRITABLE_BMS_EXTENSIONS = new Set(['.bms', '.bme', '.bml', '.pms']);
+
+/** Absolute path to a chart file the writer may replace (BMS text, not `.bmson`). */
+export function assertWritableBmsPath(value: unknown, label = 'bmsPath'): string {
+  const p = assertPathString(value, label);
+  if (!WRITABLE_BMS_EXTENSIONS.has(extname(p).toLowerCase())) {
+    throw new IpcValidationError(`${label} must point to a BMS text chart file`);
+  }
+  return p;
+}
+
 /** Absolute path to an audio file. */
 export function assertAudioPath(value: unknown, label = 'audioPath'): string {
   const p = assertPathString(value, label);

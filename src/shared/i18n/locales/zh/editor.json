@@ -68,7 +68,7 @@
       },
       "copyErrorTemplate": "文件：{{path}}\n错误：{{error}}",
       "createGroupPrompt": "组名称：",
-      "deleteUnusedConfirm_other": "此键音被 {{count}} 个音符使用。\n删除后这些音符将替换为静音（00）。\n\n确定删除吗？",
+      "deleteUnusedConfirm_other": "此键音被 {{count}} 个音符使用。\n删除后这些音符及其键音编号仍保留在谱面中，但不再发声。\n\n确定删除吗？",
       "diff": {
         "close": "关闭 (Esc)",
         "title": "差异对比视图"
@@ -235,9 +235,11 @@
         "writerInvalidValue_other": "已跳过 {{count}} 个无效的 BPM/STOP 值",
         "writerLnShortened_other": "{{count}} 个长音符结尾与下一个音符相接，已缩短 1/192 小节后保存",
         "writerOutOfRange_other": "超过第 999 小节的 {{count}} 个对象未保存",
+        "writerSilentDropped_other": "已排除 {{count}} 个使用静音键音 00 的音符（BMS 无法保存）",
         "writerSlotDropped_other": "{{count}} 个重叠的地雷音符无法保存",
         "writerSlotRerouted_other": "{{count}} 个对象与同一轨道同一位置的音符重叠，其键音已保存到 BGM 通道",
-        "writerUnmappedLane_other": "已跳过 {{count}} 个位于此键位模式无法写入的轨道上的音符"
+        "writerUnmappedLane_other": "已跳过 {{count}} 个位于此键位模式无法写入的轨道上的音符",
+        "controlFlowWarning": "该谱面包含 #RANDOM / #IF 分支。保存时只会保留打开时随机选中的一个分支，其余分支将从文件中删除。"
       }
     }
   },

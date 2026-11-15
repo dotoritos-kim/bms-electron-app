@@ -360,8 +360,8 @@
       },
       "copyErrorTemplate": "파일: {{path}}\n오류: {{error}}",
       "createGroupPrompt": "그룹 이름:",
-      "deleteUnusedConfirm": "이 키음은 {{count}}개 노트에서 사용 중입니다.\n삭제하면 해당 노트의 키음이 무음(00)으로 교체됩니다.\n\n삭제하시겠습니까?",
-      "deleteUnusedConfirm_other": "이 키음은 {{count}}개 노트에서 사용 중입니다.\n삭제하면 해당 노트의 키음이 무음(00)으로 교체됩니다.\n\n삭제하시겠습니까?",
+      "deleteUnusedConfirm": "이 키음은 {{count}}개 노트에서 사용 중입니다.\n삭제해도 노트와 키음 번호는 채보에 그대로 남지만 소리는 나지 않습니다.\n\n삭제하시겠습니까?",
+      "deleteUnusedConfirm_other": "이 키음은 {{count}}개 노트에서 사용 중입니다.\n삭제해도 노트와 키음 번호는 채보에 그대로 남지만 소리는 나지 않습니다.\n\n삭제하시겠습니까?",
       "diff": {
         "close": "닫기 (Esc)",
         "title": "변경사항 비교"
@@ -551,12 +551,15 @@
         "writerLnShortened_other": "다음 노트와 맞닿은 롱노트 끝 {{count}}개를 1/192 마디만큼 줄여 저장했습니다",
         "writerOutOfRange": "999마디를 넘는 오브젝트 {{count}}개는 저장하지 않았습니다",
         "writerOutOfRange_other": "999마디를 넘는 오브젝트 {{count}}개는 저장하지 않았습니다",
+        "writerSilentDropped": "무음(00) 키음 노트 {{count}}개는 BMS에 저장할 수 없어 파일에서 빠졌습니다",
+        "writerSilentDropped_other": "무음(00) 키음 노트 {{count}}개는 BMS에 저장할 수 없어 파일에서 빠졌습니다",
         "writerSlotDropped": "겹친 지뢰 노트 {{count}}개는 저장할 수 없어 제외했습니다",
         "writerSlotDropped_other": "겹친 지뢰 노트 {{count}}개는 저장할 수 없어 제외했습니다",
         "writerSlotRerouted": "같은 레인의 같은 위치에 겹친 오브젝트 {{count}}개는 키음을 BGM 채널에 저장했습니다",
         "writerSlotRerouted_other": "같은 레인의 같은 위치에 겹친 오브젝트 {{count}}개는 키음을 BGM 채널에 저장했습니다",
         "writerUnmappedLane": "이 키 모드에서 쓸 수 없는 레인의 노트 {{count}}개를 건너뛰었습니다",
-        "writerUnmappedLane_other": "이 키 모드에서 쓸 수 없는 레인의 노트 {{count}}개를 건너뛰었습니다"
+        "writerUnmappedLane_other": "이 키 모드에서 쓸 수 없는 레인의 노트 {{count}}개를 건너뛰었습니다",
+        "controlFlowWarning": "이 채보는 #RANDOM / #IF 분기가 있습니다. 저장하면 열 때 선택된 한 갈래만 남고 나머지 분기는 파일에서 빠집니다."
       }
     }
   },

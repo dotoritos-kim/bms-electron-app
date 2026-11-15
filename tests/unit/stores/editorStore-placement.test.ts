@@ -142,13 +142,13 @@ describe('locked layers', () => {
 });
 
 describe('removeWavDefinitions', () => {
-  it('silences notes and keysound layers using the removed id in one undo step', () => {
+  it('keeps the note keysound id and drops removed layers in one undo step', () => {
     const a = note({ tick: 0, keysound: '0A' });
     const b = note({ tick: 0, keysound: '0B', additionalKeysounds: [{ keysound: '0a', type: 'bgm' }, { keysound: '0C', type: 'bgm' }] });
     seed([a, b], { wav: new Map([['0A', 'a.wav'], ['0B', 'b.wav'], ['0C', 'c.wav']]) });
     act().removeWavDefinitions(['0a']);
     const [na, nb] = act().notes;
-    expect(na.keysound).toBe('00');
+    expect(na.keysound).toBe('0A');
     expect(nb.additionalKeysounds).toEqual([{ keysound: '0C', type: 'bgm' }]);
     expect([...act().headers!.wav.keys()]).toEqual(['0B', '0C']);
     expect(act().undoStack).toHaveLength(1);
@@ -247,7 +247,7 @@ describe('#BASE 62 keysound ids are case-sensitive', () => {
     useEditorStore.setState({ notes: [a, b], headers: base62Headers(new Map([['0a', 'x.wav'], ['0A', 'y.wav']])) });
     act().removeWavDefinitions(['0a']);
     expect([...act().headers!.wav.keys()]).toEqual(['0A']);
-    expect(act().notes.map((n) => n.keysound)).toEqual(['00', '0A']);
+    expect(act().notes.map((n) => n.keysound)).toEqual(['0a', '0A']);
   });
 
   it('filter and replace distinguish ids that differ only by case', () => {

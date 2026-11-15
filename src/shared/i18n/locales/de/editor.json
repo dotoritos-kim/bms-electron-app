@@ -71,8 +71,8 @@
       },
       "copyErrorTemplate": "Datei: {{path}}\nFehler: {{error}}",
       "createGroupPrompt": "Gruppenname:",
-      "deleteUnusedConfirm_one": "Dieser Schlüsselklang wird von {{count}} Note verwendet.\nDurch das Löschen werden diese Noten durch lautlos (00) ersetzt.\n\nTrotzdem löschen?",
-      "deleteUnusedConfirm_other": "Dieser Schlüsselklang wird von {{count}} Noten verwendet.\nDurch das Löschen werden diese Noten durch lautlos (00) ersetzt.\n\nTrotzdem löschen?",
+      "deleteUnusedConfirm_one": "Dieser Schlüsselklang wird von {{count}} Note(n) verwendet.\nBeim Löschen bleiben diese Noten und ihre Schlüsselklang-Nummer im Chart erhalten, spielen aber keinen Ton mehr.\n\nTrotzdem löschen?",
+      "deleteUnusedConfirm_other": "Dieser Schlüsselklang wird von {{count}} Note(n) verwendet.\nBeim Löschen bleiben diese Noten und ihre Schlüsselklang-Nummer im Chart erhalten, spielen aber keinen Ton mehr.\n\nTrotzdem löschen?",
       "diff": {
         "close": "Schließen (Esc)",
         "title": "Diff-Ansicht"
@@ -258,12 +258,15 @@
         "writerLnShortened_other": "{{count}} Long-Note-Ende(n) berührten die nächste Note und wurden um 1/192 Takt gekürzt",
         "writerOutOfRange_one": "{{count}} Objekt(e) jenseits von Takt 999 wurden nicht gespeichert",
         "writerOutOfRange_other": "{{count}} Objekt(e) jenseits von Takt 999 wurden nicht gespeichert",
+        "writerSilentDropped_one": "{{count}} Note(n) mit dem stummen Schlüsselklang 00 können nicht in BMS gespeichert werden und wurden weggelassen",
+        "writerSilentDropped_other": "{{count}} Note(n) mit dem stummen Schlüsselklang 00 können nicht in BMS gespeichert werden und wurden weggelassen",
         "writerSlotDropped_one": "{{count}} überlappende Minen konnten nicht gespeichert werden",
         "writerSlotDropped_other": "{{count}} überlappende Minen konnten nicht gespeichert werden",
         "writerSlotRerouted_one": "{{count}} Objekt(e) lagen an derselben Position derselben Spur; ihre Schlüsselklänge wurden im BGM-Kanal gespeichert",
         "writerSlotRerouted_other": "{{count}} Objekt(e) lagen an derselben Position derselben Spur; ihre Schlüsselklänge wurden im BGM-Kanal gespeichert",
         "writerUnmappedLane_one": "{{count}} Note(n) in einer Spur, die dieser Tastenmodus nicht schreiben kann, wurden übersprungen",
-        "writerUnmappedLane_other": "{{count}} Note(n) in einer Spur, die dieser Tastenmodus nicht schreiben kann, wurden übersprungen"
+        "writerUnmappedLane_other": "{{count}} Note(n) in einer Spur, die dieser Tastenmodus nicht schreiben kann, wurden übersprungen",
+        "controlFlowWarning": "Dieses Chart enthält #RANDOM-/#IF-Verzweigungen. Beim Speichern bleibt nur der beim Öffnen gewählte Zweig erhalten; die übrigen Zweige werden aus der Datei entfernt."
       }
     }
   },

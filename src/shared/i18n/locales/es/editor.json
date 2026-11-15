@@ -74,9 +74,9 @@
       },
       "copyErrorTemplate": "Archivo: {{path}}\nError: {{error}}",
       "createGroupPrompt": "Nombre del grupo:",
-      "deleteUnusedConfirm_one": "Este sonido de tecla es usado por {{count}} nota.\nEliminarlo reemplazará esas notas con silencio (00).\n\n¿Eliminar de todas formas?",
-      "deleteUnusedConfirm_many": "Este sonido de tecla es usado por {{count}} notas.\nEliminarlo reemplazará esas notas con silencio (00).\n\n¿Eliminar de todas formas?",
-      "deleteUnusedConfirm_other": "Este sonido de tecla es usado por {{count}} notas.\nEliminarlo reemplazará esas notas con silencio (00).\n\n¿Eliminar de todas formas?",
+      "deleteUnusedConfirm_one": "Este sonido de tecla es usado por {{count}} nota(s).\nAl eliminarlo, esas notas y su número de sonido de tecla se conservan en el chart, pero no sonarán.\n\n¿Eliminar de todos modos?",
+      "deleteUnusedConfirm_many": "Este sonido de tecla es usado por {{count}} nota(s).\nAl eliminarlo, esas notas y su número de sonido de tecla se conservan en el chart, pero no sonarán.\n\n¿Eliminar de todos modos?",
+      "deleteUnusedConfirm_other": "Este sonido de tecla es usado por {{count}} nota(s).\nAl eliminarlo, esas notas y su número de sonido de tecla se conservan en el chart, pero no sonarán.\n\n¿Eliminar de todos modos?",
       "diff": {
         "close": "Cerrar (Esc)",
         "title": "Vista de diferencias"
@@ -281,6 +281,9 @@
         "writerOutOfRange_one": "No se guardaron {{count}} objeto(s) más allá del compás 999",
         "writerOutOfRange_many": "No se guardaron {{count}} objeto(s) más allá del compás 999",
         "writerOutOfRange_other": "No se guardaron {{count}} objeto(s) más allá del compás 999",
+        "writerSilentDropped_one": "Se omitieron {{count}} nota(s) con el sonido de tecla silencioso 00, que no se puede guardar en BMS",
+        "writerSilentDropped_many": "Se omitieron {{count}} nota(s) con el sonido de tecla silencioso 00, que no se puede guardar en BMS",
+        "writerSilentDropped_other": "Se omitieron {{count}} nota(s) con el sonido de tecla silencioso 00, que no se puede guardar en BMS",
         "writerSlotDropped_one": "No se pudieron guardar {{count}} mina(s) superpuesta(s)",
         "writerSlotDropped_many": "No se pudieron guardar {{count}} mina(s) superpuesta(s)",
         "writerSlotDropped_other": "No se pudieron guardar {{count}} mina(s) superpuesta(s)",
@@ -289,7 +292,8 @@
         "writerSlotRerouted_other": "{{count}} objeto(s) coincidían en la misma posición del mismo carril; sus sonidos se guardaron en el canal BGM",
         "writerUnmappedLane_one": "Se omitieron {{count}} nota(s) en un carril que este modo de teclas no puede escribir",
         "writerUnmappedLane_many": "Se omitieron {{count}} nota(s) en un carril que este modo de teclas no puede escribir",
-        "writerUnmappedLane_other": "Se omitieron {{count}} nota(s) en un carril que este modo de teclas no puede escribir"
+        "writerUnmappedLane_other": "Se omitieron {{count}} nota(s) en un carril que este modo de teclas no puede escribir",
+        "controlFlowWarning": "Este chart tiene ramas #RANDOM / #IF. Al guardar solo se conserva la rama elegida al abrir; las demás se eliminan del archivo."
       }
     }
   },

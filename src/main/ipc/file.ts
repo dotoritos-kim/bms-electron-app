@@ -11,14 +11,91 @@ import {
   assertFileName,
   assertPathString,
   assertString,
+  assertWritableBmsPath,
   AUDIO_EXTENSIONS,
   BMS_EXTENSIONS,
+  IpcValidationError,
+  WRITABLE_BMS_EXTENSIONS,
 } from './validate';
 import { resolveInitialLocale } from '../store/localeStore';
 
 /** Text is written as UTF-8; bytes (an already-encoded chart) as they are. */
 function writeContent(path: string, content: string | Uint8Array): Promise<void> {
   return typeof content === 'string' ? writeFile(path, content, 'utf-8') : writeFile(path, content);
+}
+
+/**
+ * Replaces `filePath` through `<filePath>.tmp`. The temp file is removed in
+ * every outcome, so a save that fails (read-only or locked chart) leaves
+ * nothing behind in the chart folder.
+ */
+async function writeChartAtomically(filePath: string, content: string | Uint8Array): Promise<void> {
+  const tmpPath = filePath + '.tmp';
+  let renamed = false;
+  try {
+    await writeContent(tmpPath, content);
+    try {
+      await rename(tmpPath, filePath);
+      renamed = true;
+    } catch {
+      // rename can fail across drives on Windows; fall back to a direct write
+      await writeContent(filePath, content);
+    }
+  } finally {
+    // After a successful rename the temp name no longer exists; otherwise remove it
+    if (!renamed) await unlink(tmpPath).catch(() => {});
+  }
+}
+
+/**
+ * The name a chart is written under. The writer only produces BMS text, so a
+ * name with another extension (`.bmson`, `.txt`, none) gets `.bms` in place
+ * of it. A name that already ends in a chart extension is kept as it is.
+ */
+function toWritableChartPath(filePath: string): string {
+  if (WRITABLE_BMS_EXTENSIONS.has(extname(filePath).toLowerCase())) return filePath;
+  return join(dirname(filePath), basename(filePath, extname(filePath)) + '.bms');
+}
+
+/**
+ * Where a Save As / New File write goes. When the extension had to change, the
+ * adjusted name must not silently replace another chart the dialog did not show.
+ */
+async function resolveSaveTarget(dialogPath: string): Promise<string> {
+  const target = toWritableChartPath(dialogPath);
+  if (target !== dialogPath && (await stat(target).then(() => true, () => false))) {
+    throw new IpcValidationError(`${basename(target)} already exists`);
+  }
+  return target;
+}
+
+/** Upper bound for the `name (n)` search, so a crowded folder cannot loop forever. */
+const MAX_FREE_NAME_TRIES = 999;
+
+/** Lower-cased names already in the folder (case-insensitive on Windows). */
+async function folderNames(dir: string): Promise<Set<string>> {
+  try {
+    return new Set(((await readdir(dir)) ?? []).map((n) => String(n).toLowerCase()));
+  } catch {
+    return new Set(); // unreadable folder: nothing to collide with
+  }
+}
+
+/**
+ * `name` if it is not in `taken`, otherwise `name (2)`, `name (3)` ... The chosen
+ * name is added to `taken`, so one batch never reuses a name.
+ */
+function freeFileName(name: string, taken: Set<string>): string {
+  const ext = extname(name);
+  const base = basename(name, ext);
+  for (let n = 1; n <= MAX_FREE_NAME_TRIES; n++) {
+    const candidate = n === 1 ? name : `${base} (${n})${ext}`;
+    if (!taken.has(candidate.toLowerCase())) {
+      taken.add(candidate.toLowerCase());
+      return candidate;
+    }
+  }
+  throw new IpcValidationError(`no free file name left for ${name}`);
 }
 
 export type { BmsFileInfo };
@@ -122,17 +199,9 @@ export function registerFileIpc(): void {
 
   // Save BMS file (atomic: write to temp, then rename)
   handle('file:saveBms', async (_event, rawPath: string, rawContent: string | Uint8Array) => {
-    const filePath = assertBmsPath(rawPath, 'filePath');
+    const filePath = assertWritableBmsPath(rawPath, 'filePath');
     const content = assertFileContent(rawContent, 'content');
-    const tmpPath = filePath + '.tmp';
-    await writeContent(tmpPath, content);
-    try {
-      await rename(tmpPath, filePath);
-    } catch {
-      // rename can fail across drives on Windows; fall back to direct write + cleanup
-      await writeContent(filePath, content);
-      await unlink(tmpPath).catch(() => {});
-    }
+    await writeChartAtomically(filePath, content);
     return true;
   });
 
@@ -150,7 +219,7 @@ export function registerFileIpc(): void {
 
   // Write .bms.meta sidecar file
   handle('file:saveMeta', async (_event, rawPath: string, rawContent: string) => {
-    const bmsFilePath = assertBmsPath(rawPath, 'bmsFilePath');
+    const bmsFilePath = assertWritableBmsPath(rawPath, 'bmsFilePath');
     const content = assertString(rawContent, 'content');
     const metaPath = bmsFilePath + '.meta';
     await writeFile(metaPath, content, 'utf-8');
@@ -181,15 +250,9 @@ export function registerFileIpc(): void {
 
       refocusWindow(win);
       if (result.canceled || !result.filePath) return null;
-      const tmpPath = result.filePath + '.tmp';
-      await writeContent(tmpPath, content);
-      try {
-        await rename(tmpPath, result.filePath);
-      } catch {
-        await writeContent(result.filePath, content);
-        await unlink(tmpPath).catch(() => {});
-      }
-      return result.filePath;
+      const target = await resolveSaveTarget(result.filePath);
+      await writeChartAtomically(target, content);
+      return target;
     } finally {
       dialogOpen = false;
     }
@@ -238,6 +301,8 @@ export function registerFileIpc(): void {
       }
 
       for (const srcPath of result.filePaths) {
+        // Only audio is copied: a select-all pick must not bring charts or other files into the folder
+        if (!AUDIO_EXTENSIONS.has(extname(srcPath).toLowerCase())) continue;
         const original = basename(srcPath);
         const ext = extname(original);
         const base = basename(original, ext);
@@ -275,7 +340,7 @@ export function registerFileIpc(): void {
   handle('file:writeAutoSave', async (_event, rawPath: string, rawContent: string) => {
     // Autosave stays UTF-8 text: it is read back with checkAutoSave as text and
     // re-encoded on recovery like any other save.
-    const filePath = assertBmsPath(rawPath, 'filePath');
+    const filePath = assertWritableBmsPath(rawPath, 'filePath');
     const content = assertString(rawContent, 'content');
     const autoPath = filePath + '.autosave';
     await writeFile(autoPath, content, 'utf-8');
@@ -352,19 +417,16 @@ export function registerFileIpc(): void {
         ];
         const content = lines.join('\n');
 
-        const tmpPath = result.filePath + '.tmp';
-        await writeFile(tmpPath, content, 'utf-8');
-        try {
-          await rename(tmpPath, result.filePath);
-        } catch {
-          await writeFile(result.filePath, content, 'utf-8');
-          await unlink(tmpPath).catch(() => {});
-        }
+        const target = await resolveSaveTarget(result.filePath);
+        await writeChartAtomically(target, content);
+        // The replaced chart's sidecar and autosave belong to the old chart;
+        // the new one must not inherit its bookmarks, colours or key mode.
+        await Promise.all([target + '.meta', target + '.autosave'].map((p) => unlink(p).catch(() => {})));
 
         return {
-          path: result.filePath,
-          name: basename(result.filePath),
-          folderPath: dirname(result.filePath),
+          path: target,
+          name: basename(target),
+          folderPath: dirname(target),
         };
       } finally {
         dialogOpen = false;
@@ -465,8 +527,11 @@ export function registerFileIpc(): void {
     ) => {
       const bmsDir = assertDirPath(rawBmsDir, 'bmsDir');
       const saved: string[] = [];
+      const taken = await folderNames(bmsDir);
       for (const slice of slices) {
-        const destPath = join(bmsDir, assertFileName(slice.filename, 'slice.filename'));
+        // Never replace a file that is already in the chart folder: take the next free name.
+        const destName = freeFileName(assertFileName(slice.filename, 'slice.filename'), taken);
+        const destPath = join(bmsDir, destName);
         const numSamples = slice.pcmData.length / slice.channels;
         const byteRate = slice.sampleRate * slice.channels * 2;
         const blockAlign = slice.channels * 2;
@@ -494,7 +559,7 @@ export function registerFileIpc(): void {
         }
 
         await writeFile(destPath, buffer);
-        saved.push(slice.filename);
+        saved.push(destName);
       }
       return saved;
     },

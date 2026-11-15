@@ -531,6 +531,7 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, base62 = f
       };
 
       const slices: Array<{ filename: string; pcmData: Float32Array; sampleRate: number; channels: number }> = [];
+      const sliceWavIds: string[] = [];
       const wavDefs: Record<string, string> = {};
 
       for (let i = 0; i < uniqueBounds.length - 1; i++) {
@@ -562,11 +563,14 @@ export function AudioSlicer({ open, onClose, bmsFilePath, usedWavIds, base62 = f
         // folder does not overwrite slice_001.wav... from the first one.
         const filename = `${sliceBaseName}_${String(i + 1).padStart(3, '0')}.wav`;
         slices.push({ filename, pcmData: pcm, sampleRate, channels });
+        sliceWavIds.push(wavId);
         wavDefs[wavId] = filename;
       }
 
       if (slices.length > 0) {
-        await window.api.file.saveWavSlices(bmsDir, slices);
+        // Files already in the folder are never replaced: a slice may have been written under the next free name
+        const savedNames = await window.api.file.saveWavSlices(bmsDir, slices);
+        savedNames.forEach((name, k) => { wavDefs[sliceWavIds[k]] = name; });
         onSlicesCreated(wavDefs);
       }
     } catch (err) {

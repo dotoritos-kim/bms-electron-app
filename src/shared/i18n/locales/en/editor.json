@@ -364,9 +364,9 @@
       },
       "copyErrorTemplate": "File: {{path}}\nError: {{error}}",
       "createGroupPrompt": "Group name:",
-      "deleteUnusedConfirm": "This keysound is used by {{count}} note(s).\nDeleting it will replace those notes with silent (00).\n\nDelete anyway?",
-      "deleteUnusedConfirm_one": "This keysound is used by {{count}} note(s).\nDeleting it will replace those notes with silent (00).\n\nDelete anyway?",
-      "deleteUnusedConfirm_other": "This keysound is used by {{count}} note(s).\nDeleting it will replace those notes with silent (00).\n\nDelete anyway?",
+      "deleteUnusedConfirm": "This keysound is used by {{count}} note(s).\nDeleting it keeps those notes and their keysound number in the chart, but they will play no sound.\n\nDelete anyway?",
+      "deleteUnusedConfirm_one": "This keysound is used by {{count}} note(s).\nDeleting it keeps those notes and their keysound number in the chart, but they will play no sound.\n\nDelete anyway?",
+      "deleteUnusedConfirm_other": "This keysound is used by {{count}} note(s).\nDeleting it keeps those notes and their keysound number in the chart, but they will play no sound.\n\nDelete anyway?",
       "diff": {
         "close": "Close (Esc)",
         "title": "Diff View"
@@ -575,6 +575,9 @@
         "writerOutOfRange": "{{count}} object(s) beyond measure 999 were not saved",
         "writerOutOfRange_one": "{{count}} object(s) beyond measure 999 were not saved",
         "writerOutOfRange_other": "{{count}} object(s) beyond measure 999 were not saved",
+        "writerSilentDropped": "{{count}} note(s) with the silent keysound 00 cannot be stored in BMS and were left out of the file",
+        "writerSilentDropped_one": "{{count}} note(s) with the silent keysound 00 cannot be stored in BMS and were left out of the file",
+        "writerSilentDropped_other": "{{count}} note(s) with the silent keysound 00 cannot be stored in BMS and were left out of the file",
         "writerSlotDropped": "{{count}} overlapping landmine(s) could not be saved",
         "writerSlotDropped_one": "{{count}} overlapping landmine(s) could not be saved",
         "writerSlotDropped_other": "{{count}} overlapping landmine(s) could not be saved",
@@ -583,7 +586,8 @@
         "writerSlotRerouted_other": "{{count}} object(s) shared a position with another note in the same lane; their keysounds were saved on the BGM channel",
         "writerUnmappedLane": "{{count}} note(s) in a lane this key mode cannot write were skipped",
         "writerUnmappedLane_one": "{{count}} note(s) in a lane this key mode cannot write were skipped",
-        "writerUnmappedLane_other": "{{count}} note(s) in a lane this key mode cannot write were skipped"
+        "writerUnmappedLane_other": "{{count}} note(s) in a lane this key mode cannot write were skipped",
+        "controlFlowWarning": "This chart has #RANDOM / #IF branches. Saving keeps only the branch picked on open; the other branches are dropped from the file."
       }
     }
   },

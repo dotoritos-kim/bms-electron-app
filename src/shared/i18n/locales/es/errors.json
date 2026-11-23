@@ -4,6 +4,7 @@
     "fileBusy": "El archivo está siendo usado por otro programa.",
     "fileNotFound": "Archivo no encontrado. Es posible que haya sido movido o eliminado.",
     "fileReadFailed": "Error al leer el archivo.",
-    "parseError": "Ocurrió un error al analizar el archivo BMS."
+    "parseError": "Ocurrió un error al analizar el archivo BMS.",
+    "bmsonUnsupported": "Los charts BMSON aún no son compatibles. El archivo no se abrió para que no se sobrescriba."
   }
 }

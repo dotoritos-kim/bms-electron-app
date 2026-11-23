@@ -7,6 +7,9 @@ import type { KeyMode, BpmChange, StopEvent, ScrollSpeedChange } from '@rhythm-a
 import { contentHash, metaKeyMode, readWithLayout, readWithSavedKeyMode } from '../lib/keyModePersistence';
 import { isScratchColumn, playedLanes } from '../lib/keyModeLanes';
 
+/** Control-flow lines (#RANDOM, #IF, #ENDIF, #ENDRANDOM, #SWITCH ...): their branches are not kept on save. */
+const CONTROL_FLOW_LINE = /^\s*#(RANDOM|IF|ENDIF|ENDRANDOM|SETRANDOM|SWITCH|CASE|DEF|SKIP|ENDSW)\b/im;
+
 export interface LocalBmsChartInfo {
   songInfo: ISongInfoData | null;
   notes: BMSNote[];
@@ -42,6 +45,8 @@ export interface LocalBmsChartInfo {
   sourceEncoding: string;
   /** Whether the file started with a byte order mark. */
   sourceBom: boolean;
+  /** The file has #RANDOM / #IF branches; a save keeps only the branch picked on open. */
+  hasControlFlow?: boolean;
   /** The .bms.meta sidecar as read with the chart (null when absent), so the editor need not read it again. */
   metaJson: string | null;
 }
@@ -113,6 +118,11 @@ export function useLocalBmsFile() {
       // Read file and sidecar from disk via IPC (the sidecar once, in parallel)
       const metaPromise = Promise.resolve().then(() => window.api.file.readMeta(filePath)).catch(() => null);
       const buffer = await window.api.file.readBms(filePath);
+      // .bmson is a JSON chart format the parser does not read: compiling it
+      // gives an empty chart, and the next save would overwrite the JSON.
+      if (filePath.toLowerCase().endsWith('.bmson')) {
+        throw new Error(i18next.t('errors:bms.bmsonUnsupported'));
+      }
       const parser = new BMSParser();
       // readBuffer is async: reads buffer → detects encoding → returns string
       const fileText = await parser.readBuffer(buffer);
@@ -288,6 +298,7 @@ export function useLocalBmsFile() {
           bmsChart: chart,
           sourceEncoding: parser.encoding ?? 'utf-8',
           sourceBom: parser.bom,
+          hasControlFlow: CONTROL_FLOW_LINE.test(bmsString),
           metaJson,
         },
         isLoading: false,

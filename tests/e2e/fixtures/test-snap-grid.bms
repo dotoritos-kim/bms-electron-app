@@ -1,0 +1,19 @@
+
+*---------------------- HEADER FIELD
+
+#PLAYER 1
+#GENRE Test
+#TITLE Snap Grid
+#ARTIST QA Tester
+#BPM 120
+#PLAYLEVEL 1
+#RANK 3
+#TOTAL 300
+
+*---------------------- WAV DEFINITIONS
+#WAV01 kick.wav
+
+*---------------------- MAIN DATA FIELD
+
+#00102:0.75
+#00401:01

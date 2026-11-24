@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please) based on [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [0.8.3](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.8.2...v0.8.3) (2026-11-24)
+
+
+### Bug Fixes
+
+* **editor:** save integrity and visible grid snap ([#41](https://github.com/dotoritos-kim/bms-electron-app/issues/41)) ([c440935](https://github.com/dotoritos-kim/bms-electron-app/commit/c440935aade6e430cee3333c70cf6de5d884442c))
+* **editor:** stop saves from tampering with charts or losing input ([#39](https://github.com/dotoritos-kim/bms-electron-app/issues/39)) ([3a0fa04](https://github.com/dotoritos-kim/bms-electron-app/commit/3a0fa04fd22fdca3f9dd0cd63eab3def6bada4d8))
+
 ## [0.8.2](https://github.com/dotoritos-kim/bms-electron-app/compare/v0.8.1...v0.8.2) (2026-11-12)
 
 

@@ -22,7 +22,59 @@ async function openSnapChart(window: Page) {
   // The file load lands late and would wipe early edits
   await window.waitForTimeout(7000);
   await window.keyboard.press('a'); // add-note tool
-  await window.waitForTimeout(200);
+  await window.waitForTimeout(300);
+  laneCenters = await detectLaneCenters(window);
+}
+
+/**
+ * Screen x (CSS, page coords) of every lane, read from the canvas: lanes have
+ * alternating backgrounds, so colour steps along a row mark their edges. The
+ * layout scales with the window, so fixed pixel offsets break on other
+ * screens (CI).
+ */
+let laneCenters: { x: number; width: number }[] = [];
+async function detectLaneCenters(window: Page) {
+  const box = await canvasBox(window);
+  const png = (await window.locator('canvas').first().screenshot()).toString('base64');
+  const best = await window.evaluate(async ({ data, cssW }) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${data}`;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const ctx = c.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+    const scale = img.width / cssW;
+    const { data: px } = ctx.getImageData(0, 0, c.width, c.height);
+    const segmentsAt = (y: number) => {
+      const col = (x: number) => { const i = (y * c.width + x) * 4; return [px[i], px[i + 1], px[i + 2]]; };
+      const edges = [0];
+      for (let x = 1; x < c.width; x++) {
+        const a = col(x - 1), b = col(x);
+        if (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) > 10) edges.push(x);
+      }
+      edges.push(c.width);
+      const segs: { x0: number; x1: number; rgb: number[] }[] = [];
+      for (let i = 0; i + 1 < edges.length; i++) {
+        const x0 = edges[i], x1 = edges[i + 1];
+        if ((x1 - x0) / scale < 15) continue; // lane borders, grid noise
+        segs.push({ x0, x1, rgb: col(Math.floor((x0 + x1) / 2)) });
+      }
+      // drop the empty background left/right of the lanes
+      return segs
+        .filter((sg) => !(sg.rgb[0] < 16 && sg.rgb[1] < 16 && sg.rgb[2] < 32))
+        .map((sg) => ({ x: (sg.x0 + sg.x1) / 2 / scale, width: (sg.x1 - sg.x0) / scale }));
+    };
+    let res: { x: number; width: number }[] = [];
+    for (const f of [0.52, 0.55, 0.58, 0.61]) {
+      const r = segmentsAt(Math.floor(c.height * f));
+      if (r.length > res.length) res = r;
+    }
+    return res;
+  }, { data: png, cssW: box.width });
+  // 7K: scratch, keys 1-7, then free zone / BGM lanes
+  expect(best.length, `lanes found: ${JSON.stringify(best)}`).toBeGreaterThanOrEqual(8);
+  return best.map((l) => ({ x: box.x + l.x, width: l.width }));
 }
 
 async function canvasBox(window: Page) {
@@ -31,11 +83,11 @@ async function canvasBox(window: Page) {
   return box!;
 }
 
-/** CSS x of the centre of key lane k (1..7); lanes are centred in the canvas. */
-function keyLaneX(box: { x: number; width: number }, k: number) {
-  const LANES_WIDTH = 611, SCRATCH = 70.4, KEY = 57.6;
-  return box.x + box.width / 2 - LANES_WIDTH / 2 + SCRATCH + KEY * (k - 0.5);
+/** CSS x of the centre of key lane k (1..7); lane 0 is the scratch. */
+function keyLaneX(_box: { x: number; width: number }, k: number) {
+  return laneCenters[k].x;
 }
+const keyLaneWidth = (k: number) => laneCenters[k].width;
 
 /** Deterministic pseudo-random in [0,1) */
 function rng(seed: number) {
@@ -54,7 +106,7 @@ function scatterPoints(box: { x: number; y: number; width: number; height: numbe
     for (const band of [0, 1]) {
       const span = (bottom - top) / 2;
       const y = bottom - band * span - (0.1 + 0.8 * r()) * span;
-      pts.push({ x: keyLaneX(box, k) + (r() - 0.5) * 20, y });
+      pts.push({ x: keyLaneX(box, k) + (r() - 0.5) * keyLaneWidth(k) * 0.5, y });
     }
   }
   return pts;
@@ -87,10 +139,22 @@ async function save(window: Page) {
  * Row (CSS y) of the snap lock line in key lane k: the near-white horizontal
  * line, found in a screenshot. null when it is not drawn.
  */
-async function lockLineY(window: Page, k: number): Promise<number | null> {
+async function lockLineY(window: Page, k: number, expectLine = true): Promise<number | null> {
+  // The canvas redraws on the next frame; retry until it shows what we expect
+  let y: number | null = null;
+  for (let i = 0; i < 10; i++) {
+    y = await lockLineYOnce(window, k);
+    if ((y !== null) === expectLine) return y;
+    await window.waitForTimeout(150);
+  }
+  return y;
+}
+
+async function lockLineYOnce(window: Page, k: number): Promise<number | null> {
   const box = await canvasBox(window);
   const png = (await window.locator('canvas').first().screenshot()).toString('base64');
-  const x0 = keyLaneX(box, k) - box.x - 20, x1 = keyLaneX(box, k) - box.x + 20;
+  const half = keyLaneWidth(k) * 0.35;
+  const x0 = keyLaneX(box, k) - box.x - half, x1 = keyLaneX(box, k) - box.x + half;
   const row = await window.evaluate(async ({ data, x0, x1, cssW }) => {
     const img = new Image();
     img.src = `data:image/png;base64,${data}`;
@@ -120,6 +184,27 @@ async function lockLineY(window: Page, k: number): Promise<number | null> {
 }
 
 test.describe('Editor grid snap', () => {
+  test('lanes are found and clicks snap in a small window too', async ({ electronApp, window }) => {
+    await electronApp.evaluate(({ BrowserWindow }) => {
+      const w = BrowserWindow.getAllWindows()[0];
+      w.unmaximize();
+      w.setSize(1100, 760);
+    });
+    await window.waitForTimeout(500);
+    await openSnapChart(window);
+    const box = await canvasBox(window);
+    const pts = scatterPoints(box, 4321);
+    for (const p of pts) {
+      await window.mouse.move(p.x, p.y);
+      await window.mouse.click(p.x, p.y);
+      await window.waitForTimeout(60);
+    }
+    await save(window);
+    const notes = savedNotes();
+    expect(notes.length).toBe(pts.length);
+    expect(notes.filter((n) => !onGrid(n))).toEqual([]);
+  });
+
   test('clicks between grid lines all land on the grid (incl. a 3/4 measure)', async ({ window }) => {
     await openSnapChart(window);
     const box = await canvasBox(window);
@@ -229,7 +314,7 @@ test.describe('Editor grid snap', () => {
     await window.waitForTimeout(150);
     await window.keyboard.down('Shift');
     await window.waitForTimeout(200);
-    expect(await lockLineY(window, 3), 'no lock line while Shift is held').toBeNull();
+    expect(await lockLineY(window, 3, false), 'no lock line while Shift is held').toBeNull();
     await window.keyboard.up('Shift');
     await window.waitForTimeout(200);
     expect(await lockLineY(window, 3), 'lock line back after Shift').not.toBeNull();
@@ -239,7 +324,7 @@ test.describe('Editor grid snap', () => {
     await window.mouse.move(x, line! + 0.3 * step);
     await window.mouse.move(x, line! + 0.31 * step);
     await window.waitForTimeout(200);
-    expect(await lockLineY(window, 3), 'no lock line with snap off').toBeNull();
+    expect(await lockLineY(window, 3, false), 'no lock line with snap off').toBeNull();
   });
 
   test('the placed note sits on the lock line it showed', async ({ window }) => {

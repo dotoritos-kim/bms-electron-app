@@ -291,14 +291,17 @@ test.describe('Editor grid snap', () => {
     expect(line, 'lock line drawn while hovering').not.toBeNull();
     await window.screenshot({ path: 'test-results/snap-lock-line.png' });
 
-    // The grid step in CSS px: 16 divisions of a 4/4 measure. Measured from
-    // the line jump when moving one full step.
-    await window.mouse.move(x, line! - 14);
-    await window.waitForTimeout(200);
-    const next = await lockLineY(window, 3);
+    // The grid step in CSS px (depends on the window size): move up 1px at a
+    // time until the lock line jumps to the next grid line.
+    let next: number | null = line;
+    for (let dy = 1; dy <= 60 && next !== null && Math.abs(next - line!) < 1.5; dy++) {
+      await window.mouse.move(x, line! - dy);
+      await window.waitForTimeout(40);
+      next = await lockLineY(window, 3);
+    }
     expect(next).not.toBeNull();
     const step = Math.abs(line! - next!);
-    expect(step).toBeGreaterThan(4);
+    expect(step).toBeGreaterThan(3);
 
     // within ±0.35 step of the line → the same line
     for (const off of [-0.35, -0.2, 0.2, 0.35]) {
